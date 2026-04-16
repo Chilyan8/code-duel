@@ -1,7 +1,7 @@
 {
   "name": "code-de-la-route-duel",
-  "version": "1.0.0",
-  "description": "Révise le code de la route en mode duel 1v1",
+  "version": "3.0.0",
+  "description": "Révise le code de la route en mode duel",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^9.4.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "firebase-admin": "^12.0.0",
     "jsonwebtoken": "^9.0.0",
     "socket.io": "^4.6.1",
     "uuid": "^9.0.0"
