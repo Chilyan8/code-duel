@@ -1,136 +1,408 @@
-/* CODE DUEL v3 — Multi-joueurs, MongoDB, Rematch, Images */
+/* CODE DUEL v4 — Solo + Duel + Progression + Replay + Coach IA */
 const state = {
-  token: localStorage.getItem('token'),
-  pseudo: localStorage.getItem('pseudo'),
-  elo: parseInt(localStorage.getItem('elo') || '0'),
-  roomCode: null, isHost: false,
-  gameOptions: {}, selectedOptions: { players:2, questions:40, time:30, category:'all', mode:'normal' },
+  token: localStorage.getItem('token'), pseudo: localStorage.getItem('pseudo'), elo: parseInt(localStorage.getItem('elo')||'1000'),
+  roomCode: null, isHost: false, gameOptions: {},
+  selectedOptions: { players:2, questions:40, time:30, category:'all', mode:'normal' },
   currentQuestion: null, selectedAnswers: [], answered: false,
   timerInterval: null, timerSeconds: 30,
   powerups: { fifty50:1, timeBonus:1, stress:1 },
   allPlayers: [], gameMode: 'normal', hostPseudo: null,
+  // Solo
+  soloMode: 'training', soloCategory: 'all',
+  soloQuestions: [], soloAnswers: [], soloIndex: 0, soloCorrect: 0, soloWrong: 0, soloStreak: 0, soloMaxStreak: 0,
+  soloTimerInterval: null, soloTimerSeconds: 30,
+  replayData: null,
 };
 
 const socket = io({ auth: { token: state.token } });
 
 // ── Audio ──────────────────────────────────────────────
 let audioCtx = null;
-function getAudio() { if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)(); return audioCtx; }
-function playTone(f,t='sine',d=.15,v=.3) { try { const c=getAudio(),o=c.createOscillator(),g=c.createGain(); o.connect(g);g.connect(c.destination); o.frequency.value=f;o.type=t; g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d); o.start();o.stop(c.currentTime+d); } catch{} }
-function playCorrect() { playTone(523,'sine',.1); setTimeout(()=>playTone(659,'sine',.15),100); }
-function playWrong() { playTone(220,'sawtooth',.2,.2); }
-function playStart() { [261,329,392,523].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.15),i*100)); }
-function playVictory() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2),i*150)); }
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playTone(f,t='sine',d=.15,v=.3){try{const c=getAudio(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;o.type=t;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch{}}
+function playCorrect(){playTone(523,'sine',.1);setTimeout(()=>playTone(659,'sine',.15),100);}
+function playWrong(){playTone(220,'sawtooth',.2,.2);}
+function playStart(){[261,329,392,523].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.15),i*100));}
+function playVictory(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2),i*150));}
+function playMicro(){playTone(880,'sine',.08,.2);}
 
-// ── Helpers ────────────────────────────────────────────
-function showScreen(id) {
+// ── Helpers ──────────────────────────────────────────────
+function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id)?.classList.add('active');
-  if (id==='screen-leaderboard') loadLeaderboard();
-  if (id==='screen-play') updatePlayScreen();
+  if(id==='screen-leaderboard')loadLeaderboard();
+  if(id==='screen-play'||id==='screen-solo')updateChips();
+  if(id==='screen-solo')updateSoloChip();
 }
-function showToast(msg,d=2500) {
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.remove('hidden');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.add('hidden'),d);
+function showToast(msg,d=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),d);}
+function showError(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.classList.remove('hidden');}}
+function hideError(id){document.getElementById(id)?.classList.add('hidden');}
+function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation',international:'🌍 International'};
+function catName(c){return catNames[c]||c;}
+function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',international:'🌍 International',training:'🧠 Entraînement',libre:'📚 Libre'}[m]||m;}
+function rankEmoji(r){return['🥇','🥈','🥉'][r-1]||`${r}.`;}
+const coachTips = {
+  priorites: ["Mémorise : priorité à droite SAUF panneau contraire 🚦","Le STOP = arrêt TOTAL obligatoire, même si vide 🛑","Le cédez-le-passage ≠ arrêt obligatoire ! 🔺"],
+  panneaux: ["Rouge = interdit, Bleu = obligation, Triangle = danger 🪧","Le carré jaune = route prioritaire 💛","Rond bleu + chiffre = vitesse MINIMALE, pas maximale ! 🔵"],
+  vitesse: ["Autoroute : 130 sec, 110 pluie, 50 brouillard < 50m ⚡","En ville = 50 km/h par défaut 🏙️","Permis probatoire : -10 km/h partout sur autoroute 🔰"],
+  alcool: ["0,5 g/L pour les conducteurs standards 🍺","0,2 g/L pour les jeunes conducteurs","Seul le TEMPS élimine l'alcool, pas le café ☕"],
+  securite: ["Gilet AVANT de sortir du véhicule 🦺","Triangle à 100m hors agglo, 30m en ville","PAS = Protéger, Alerter, Secourir 🚨"],
+  regles: ["Ligne continue = jamais la franchir ⚡","Ceinture obligatoire à l'avant ET à l'arrière 🔒","Téléphone en main interdit même au feu rouge 📵"],
+  international: ["En UK on roule à gauche ! 🇬🇧","L'Autobahn est souvent sans limite en Allemagne 🇩🇪","Phares de jour obligatoires dans plusieurs pays nordiques 💡"],
+};
+function getCoachTip(category) {
+  const tips = coachTips[category] || ["Lis bien la question et toutes les réponses ! 📖","Ne te laisse pas piéger ! 🧐","Prends le temps de réfléchir ⏱️"];
+  return tips[Math.floor(Math.random()*tips.length)];
 }
-function showError(id,msg) { const e=document.getElementById(id); if(e){e.textContent=msg;e.classList.remove('hidden');} }
-function hideError(id) { document.getElementById(id)?.classList.add('hidden'); }
-function setText(id,v) { const e=document.getElementById(id); if(e) e.textContent=v; }
-const catNames = {priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation'};
-function categoryName(c) { return catNames[c] || c; }
-function modeName(m) { return {normal:'🎯 Normal',blitz:'⚡ Blitz',examen:'📋 Examen',tournoi:'🏆 Tournoi'}[m]||m; }
-function rankEmoji(r) { return ['🥇','🥈','🥉'][r-1]||`${r}.`; }
 
-// ── Auth ───────────────────────────────────────────────
-async function doLogin() {
+// ── Auth ──────────────────────────────────────────────
+async function doLogin(){
   hideError('login-error');
   const pseudo=document.getElementById('login-pseudo').value.trim();
   const password=document.getElementById('login-password').value;
-  if(!pseudo||!password) return showError('login-error','Remplis tous les champs');
-  try {
+  if(!pseudo||!password)return showError('login-error','Remplis tous les champs');
+  try{
     const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const data=await res.json();
-    if(!res.ok) return showError('login-error',data.error);
-    saveAuth(data); showToast(`Bienvenue, ${pseudo} ! 🎉`); showScreen('screen-play');
-  } catch { showError('login-error','Erreur réseau'); }
+    if(!res.ok)return showError('login-error',data.error);
+    saveAuth(data);showToast(`Bienvenue, ${pseudo} ! 🎉`);showScreen('screen-home');
+  }catch{showError('login-error','Erreur réseau');}
 }
-async function doRegister() {
+async function doRegister(){
   hideError('reg-error');
   const pseudo=document.getElementById('reg-pseudo').value.trim();
   const password=document.getElementById('reg-password').value;
-  if(!pseudo||!password) return showError('reg-error','Remplis tous les champs');
-  try {
+  if(!pseudo||!password)return showError('reg-error','Remplis tous les champs');
+  try{
     const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const data=await res.json();
-    if(!res.ok) return showError('reg-error',data.error);
-    saveAuth(data); showToast(`Compte créé et enregistré ! Bienvenue ${pseudo} 🚗`); showScreen('screen-play');
-  } catch { showError('reg-error','Erreur réseau'); }
+    if(!res.ok)return showError('reg-error',data.error);
+    saveAuth(data);showToast(`Compte créé ! Bienvenue ${pseudo} 🚗`);showScreen('screen-home');
+  }catch(e){showError('reg-error','Erreur serveur: '+e.message);}
 }
-function saveAuth(data) {
-  state.token=data.token; state.pseudo=data.pseudo; state.elo=data.elo||1000;
-  localStorage.setItem('token',data.token); localStorage.setItem('pseudo',data.pseudo); localStorage.setItem('elo',data.elo||1000);
+function saveAuth(data){
+  state.token=data.token;state.pseudo=data.pseudo;state.elo=data.elo||1000;
+  localStorage.setItem('token',data.token);localStorage.setItem('pseudo',data.pseudo);localStorage.setItem('elo',data.elo||1000);
   socket.auth={token:data.token};
 }
-function switchTab(tab) {
+function switchTab(tab){
   document.getElementById('auth-login').classList.toggle('hidden',tab!=='login');
   document.getElementById('auth-register').classList.toggle('hidden',tab!=='register');
   document.getElementById('tab-login').classList.toggle('active',tab==='login');
   document.getElementById('tab-register').classList.toggle('active',tab==='register');
 }
-function promptGuest() {
-  const p=prompt('Choisis un pseudo invité :');
-  if(p&&p.trim().length>=2) { state.pseudo=p.trim().slice(0,20); showScreen('screen-play'); }
+function promptGuest(){const p=prompt('Choisis un pseudo invité :');if(p&&p.trim().length>=2){state.pseudo=p.trim().slice(0,20);showScreen('screen-home');}}
+function updateChips(){
+  ['play-user-info'].forEach(id=>{const c=document.getElementById(id);if(!c)return;if(state.pseudo){c.textContent=`👤 ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');});
 }
-function updatePlayScreen() {
-  const chip=document.getElementById('play-user-info');
-  if(state.pseudo) { chip.textContent=`👤 ${state.pseudo}${state.elo?' · '+state.elo+' Elo':''}`; chip.classList.remove('hidden'); }
-  else chip.classList.add('hidden');
+function updateSoloChip(){
+  const c=document.getElementById('solo-user-info');if(!c)return;
+  if(state.pseudo){c.textContent=`👤 ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');
 }
 
-// ── Game options ───────────────────────────────────────
-function showCreateForm() {
+// ── Profile ───────────────────────────────────────────
+async function showProfile(){
+  if(!state.token){showScreen('screen-auth');return;}
+  showScreen('screen-profile');
+  const pc=document.getElementById('profile-content');
+  pc.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
+  try{
+    const data=await(await fetch('/api/profile',{headers:{Authorization:`Bearer ${state.token}`}})).json();
+    const level=data.level||{name:'🔰 Apprenti',next:1020};
+    const acc=data.total_questions>0?Math.round(data.total_correct/data.total_questions*100):0;
+    const catStats=data.category_stats||{};
+    const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,3);
+    const badges=data.badges||[];
+    const eloToNext=level.next?level.next-data.elo:null;
+
+    pc.innerHTML=`
+      <div class="profile-header">
+        <div class="profile-avatar-big">🧑‍🎓</div>
+        <div class="profile-level">${level.name}</div>
+        <div class="profile-elo">${data.elo} Elo${eloToNext?` · encore ${eloToNext} pts pour le niveau suivant`:' · Niveau max ! 🏆'}</div>
+      </div>
+      <div class="profile-stats-grid">
+        <div class="profile-stat"><div class="ps-num">${data.total_games||0}</div><div class="ps-label">Parties</div></div>
+        <div class="profile-stat"><div class="ps-num">${data.wins||0}</div><div class="ps-label">Victoires</div></div>
+        <div class="profile-stat"><div class="ps-num">${acc}%</div><div class="ps-label">Précision</div></div>
+      </div>
+      ${badges.length?`<div class="profile-badges"><div class="analysis-title">🎖️ Badges obtenus</div>${badges.map(b=>`<span class="badge-item">${b}</span>`).join('')}</div>`:''}
+      ${weakCats.length?`<div class="profile-weakness"><div class="analysis-title">🎯 Tes failles — à travailler</div>${weakCats.map(([cat,s])=>{
+        const pct=Math.round(s.errors/s.sessions*100);
+        return `<div class="cat-bar-item"><div class="cat-bar-label"><span>${catName(cat)}</span><span style="color:var(--red)">${pct}% d'erreurs</span></div><div class="cat-bar-bg"><div class="cat-bar-fill bad" style="width:${pct}%"></div></div></div>`;
+      }).join('')}<button class="btn btn-primary w-full" onclick="startSolo('training')">🧠 Entraînement ciblé</button></div>`:'<div style="color:var(--text2);text-align:center;padding:1rem">Joue des parties pour voir tes statistiques !</div>'}
+    `;
+  }catch{pc.innerHTML='<p style="color:var(--red);text-align:center">Erreur de chargement</p>';}
+}
+
+// ── SOLO MODE ─────────────────────────────────────────
+async function startSolo(mode){
+  if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
+  state.soloMode=mode;
+  state.soloAnswers=[];state.soloIndex=0;state.soloCorrect=0;state.soloWrong=0;state.soloStreak=0;state.soloMaxStreak=0;
+  document.getElementById('solo-category-picker').classList.add('hidden');
+
+  let questions=[];
+  const timeLimit=mode==='micro'?15:mode==='examen_blanc'?30:30;
+  const count=mode==='micro'?5:mode==='examen_blanc'?40:10;
+
+  if(mode==='training'&&state.token){
+    try{
+      const res=await fetch(`/api/training/session?mode=training&count=10`,{headers:{Authorization:`Bearer ${state.token}`}});
+      const data=await res.json();
+      questions=data.fullQuestions||[];
+      if(data.weakCategories?.length) showToast(`🧠 Session ciblée : ${data.weakCategories.map(c=>catName(c)).join(', ')}`,3000);
+      else showToast('🧠 Session générale — joue plus pour cibler tes failles !',3000);
+    }catch{questions=getLocalQuestions({count,mode});}
+  } else {
+    questions=getLocalQuestions({count,mode,category:state.soloCategory});
+  }
+
+  if(!questions.length){showToast('Pas assez de questions pour ce mode','3000');return;}
+  state.soloQuestions=questions;
+  setText('solo-mode-badge',modeName(mode));
+  showScreen('screen-solo-game');
+  renderSoloQuestion();
+}
+
+function startSoloCategory(){
+  document.getElementById('solo-category-picker').classList.toggle('hidden');
+}
+function selectSoloCat(cat,el){
+  document.querySelectorAll('#solo-category-picker .pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');state.soloCategory=cat;
+}
+
+function getLocalQuestions({count=10,mode='normal',category='all'}){
+  // Fetch questions from a global cache (set after first load)
+  let pool=window._allQuestions||[];
+  if(!pool.length)return[];
+  if(mode==='piege')pool=pool.filter(q=>q.is_trap);
+  else if(mode==='international')pool=pool.filter(q=>q.category==='international');
+  else if(category&&category!=='all')pool=pool.filter(q=>q.category===category);
+  return pool.sort(()=>Math.random()-.5).slice(0,Math.min(count,pool.length));
+}
+
+function renderSoloQuestion(){
+  const q=state.soloQuestions[state.soloIndex];
+  if(!q)return endSoloGame();
+  const total=state.soloQuestions.length;
+  const timeLimit=state.soloMode==='micro'?15:30;
+
+  setText('sq-counter',`${state.soloIndex+1}/${total}`);
+  setText('sq-category',catName(q.category));
+  setText('sq-text',q.question);
+  document.getElementById('solo-progress').style.width=`${(state.soloIndex/total)*100}%`;
+  document.getElementById('sq-correct').textContent=`✅ ${state.soloCorrect}`;
+  document.getElementById('sq-wrong').textContent=`❌ ${state.soloWrong}`;
+  document.getElementById('sq-streak').textContent=state.soloStreak>=3?`🔥${state.soloStreak}`:'';
+  document.getElementById('sq-trap-indicator').classList.toggle('hidden',!q.is_trap);
+
+  const sitBox=document.getElementById('sq-situation-box');
+  if(q.situation){sitBox.textContent=`📍 ${q.situation}`;sitBox.classList.remove('hidden');}else sitBox.classList.add('hidden');
+  const imgWrap=document.getElementById('sq-image-wrap');
+  if(q.image_url){document.getElementById('sq-image').src=q.image_url;imgWrap.classList.remove('hidden');}else imgWrap.classList.add('hidden');
+
+  const cont=document.getElementById('sq-answers');cont.innerHTML='';
+  q.answers.forEach(a=>{
+    const btn=document.createElement('button');
+    btn.className='answer-btn';btn.dataset.id=a.id;
+    btn.textContent=`${a.id.toUpperCase()}) ${a.text}`;
+    if(q.correct.length>1){
+      btn.addEventListener('click',()=>{btn.classList.toggle('selected');});
+    }else{
+      btn.addEventListener('click',()=>submitSoloAnswer([a.id]));
+    }
+    cont.appendChild(btn);
+  });
+
+  // Multiple confirm
+  let cb=document.getElementById('solo-confirm-btn');
+  if(q.correct.length>1){
+    if(!cb){cb=document.createElement('button');cb.id='solo-confirm-btn';cb.className='btn btn-primary confirm-btn';cb.textContent='Valider ✅';cb.addEventListener('click',()=>{const sel=[...cont.querySelectorAll('.answer-btn.selected')].map(b=>b.dataset.id);if(sel.length)submitSoloAnswer(sel);});}
+    cont.after(cb);
+  }else{if(cb)cb.remove();}
+
+  const fb=document.getElementById('sq-feedback');fb.classList.add('hidden');fb.className='answer-feedback hidden';
+  document.getElementById('sq-coach').classList.add('hidden');
+  startSoloTimer(timeLimit);
+}
+
+function submitSoloAnswer(answers){
+  clearInterval(state.soloTimerInterval);
+  const q=state.soloQuestions[state.soloIndex];
+  const isCorrect=[...answers].sort().join(',')===[...q.correct].sort().join(',');
+  state.soloAnswers.push({questionIndex:state.soloIndex,answers,isCorrect,timeTaken:q.timeLimit-(state.soloTimerSeconds||0)});
+
+  document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{
+    b.disabled=true;
+    if(q.correct.includes(b.dataset.id))b.classList.add('correct');
+    else if(answers.includes(b.dataset.id))b.classList.add('wrong');
+  });
+  document.getElementById('solo-confirm-btn')?.setAttribute('disabled','true');
+
+  if(isCorrect){state.soloCorrect++;state.soloStreak++;state.soloMaxStreak=Math.max(state.soloMaxStreak,state.soloStreak);playCorrect();}
+  else{state.soloWrong++;state.soloStreak=0;playWrong();}
+
+  // Feedback
+  const fb=document.getElementById('sq-feedback');
+  let html='';
+  if(isCorrect)html=`<strong>✅ Bonne réponse !</strong>${state.soloStreak>=3?` <span class="streak-fire">🔥 ${state.soloStreak} en série !</span>`:''}<br>`;
+  else html=`<strong>❌ Mauvaise réponse</strong>${q.is_trap&&q.trap_message?`<br><em>😏 ${q.trap_message}</em>`:''}<br>`;
+  if(q.explanation&&state.soloMode!=='blitz')html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>`;
+  // Trap stat
+  if(q.is_trap)html+=`<br><span style="color:var(--yellow);font-size:.78rem">📊 ${Math.floor(Math.random()*40+40)}% des joueurs se trompent ici</span>`;
+  fb.className=`answer-feedback ${isCorrect?'correct-fb':'wrong-fb'}`;
+  fb.innerHTML=html;fb.classList.remove('hidden');
+
+  // Coach IA
+  const coach=document.getElementById('sq-coach');
+  if(!isCorrect){
+    coach.textContent=getCoachTip(q.category);
+    coach.classList.remove('hidden');
+  }
+
+  setText('sq-correct',`✅ ${state.soloCorrect}`);
+  setText('sq-wrong',`❌ ${state.soloWrong}`);
+  setText('sq-streak',state.soloStreak>=3?`🔥${state.soloStreak}`:'');
+
+  document.getElementById('screen-solo-game').classList.add(isCorrect?'flash-correct':'flash-wrong');
+  setTimeout(()=>document.getElementById('screen-solo-game').classList.remove('flash-correct','flash-wrong'),600);
+
+  const delay=state.soloMode==='micro'?1200:state.soloMode==='blitz'?1000:3000;
+  setTimeout(()=>{state.soloIndex++;renderSoloQuestion();},delay);
+}
+
+function startSoloTimer(s){
+  clearInterval(state.soloTimerInterval);
+  state.soloTimerSeconds=s;
+  const arc=document.getElementById('solo-timer-arc'),maxD=163.36;
+  function tick(){
+    setText('solo-timer-text',state.soloTimerSeconds);
+    arc.style.strokeDashoffset=maxD*(1-state.soloTimerSeconds/s);
+    arc.style.stroke=state.soloTimerSeconds<=5?'#f87171':state.soloTimerSeconds<=10?'#fbbf24':'#4ade80';
+    if(state.soloTimerSeconds>0)state.soloTimerSeconds--;
+    else{clearInterval(state.soloTimerInterval);onSoloTimeout();}
+  }
+  tick();state.soloTimerInterval=setInterval(tick,1000);
+}
+function onSoloTimeout(){
+  const q=state.soloQuestions[state.soloIndex];
+  state.soloAnswers.push({questionIndex:state.soloIndex,answers:[],isCorrect:false,timeTaken:q.timeLimit||30,timeout:true});
+  state.soloWrong++;state.soloStreak=0;playWrong();
+  const fb=document.getElementById('sq-feedback');
+  fb.className='answer-feedback wrong-fb';
+  let html=`<strong>⏰ Temps écoulé !</strong><br>`;
+  if(q.explanation)html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>`;
+  fb.innerHTML=html;fb.classList.remove('hidden');
+  document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{b.disabled=true;if(q.correct.includes(b.dataset.id))b.classList.add('correct');});
+  setText('sq-correct',`✅ ${state.soloCorrect}`);
+  setText('sq-wrong',`❌ ${state.soloWrong}`);
+  setTimeout(()=>{state.soloIndex++;renderSoloQuestion();},2000);
+}
+
+async function endSoloGame(){
+  clearInterval(state.soloTimerInterval);
+  const total=state.soloQuestions.length;
+  const pct=Math.round(state.soloCorrect/total*100);
+  showScreen('screen-solo-results');
+
+  // Banner
+  const banner=document.getElementById('solo-result-banner');
+  if(pct>=90)banner.textContent='🌟 Excellent !';
+  else if(pct>=70)banner.textContent='👍 Bien joué !';
+  else if(pct>=50)banner.textContent='📚 À retravailler...';
+  else banner.textContent='💪 Ne lâche pas !';
+  if(pct===100)playVictory();
+
+  // Score
+  document.getElementById('solo-score-display').innerHTML=`<div class="big-num">${state.soloCorrect}/${total}</div><div class="big-label">${pct}% de réussite · streak max : 🔥${state.soloMaxStreak}</div>`;
+
+  // Exam verdict
+  if(state.soloMode==='examen_blanc'){
+    const vd=document.getElementById('exam-verdict');
+    vd.className=`exam-verdict ${pct>=87?'admis':'recale'}`;
+    vd.textContent=pct>=87?`✅ ADMIS — ${pct}% (seuil : 87%)`:`❌ RECALÉ — ${pct}% (seuil : 87%)`;
+    vd.classList.remove('hidden');
+  }
+
+  // Category breakdown
+  const catErrors={};
+  state.soloAnswers.filter(a=>!a.isCorrect).forEach(a=>{
+    const cat=state.soloQuestions[a.questionIndex]?.category;
+    if(cat)catErrors[cat]=(catErrors[cat]||0)+1;
+  });
+  const catEl=document.getElementById('solo-category-breakdown');
+  if(Object.keys(catErrors).length){
+    catEl.innerHTML=`<div class="analysis-title">📊 Erreurs par thème</div>`+Object.entries(catErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`).join('');
+  }else{catEl.innerHTML=`<div style="text-align:center;color:var(--green);padding:1rem">🌟 Aucune erreur !</div>`;}
+
+  // Replay (first 5 wrong)
+  const replayEl=document.getElementById('solo-replay');
+  const wrongs=state.soloAnswers.filter(a=>!a.isCorrect).slice(0,5);
+  if(wrongs.length){
+    replayEl.innerHTML=`<div class="analysis-title">📹 Questions manquées</div>`+wrongs.map(a=>{
+      const q=state.soloQuestions[a.questionIndex];
+      return `<div class="replay-item wrong-q"><div class="replay-q">${q.question}</div><div style="color:var(--green);font-size:.8rem">✅ ${q.correct.join(', ')} — ${q.explanation?.slice(0,80)}...</div></div>`;
+    }).join('');
+  }
+
+  // Coach advice
+  const adviceEl=document.getElementById('solo-coach-advice');
+  const weakCat=Object.keys(catErrors)[0];
+  if(weakCat){
+    const tips=coachTips[weakCat]||[];
+    adviceEl.innerHTML=`<div class="coach-advice-title">🧑‍🏫 Conseils du coach sur ${catName(weakCat)}</div>`+tips.map(t=>`<div class="coach-advice-tip">${t}</div>`).join('');
+  }else adviceEl.style.display='none';
+
+  // Send to server if logged in
+  if(state.token){
+    try{
+      const res=await fetch('/api/training/complete',{method:'POST',headers:{Authorization:`Bearer ${state.token}`,'Content-Type':'application/json'},body:JSON.stringify({answers:state.soloAnswers.map(a=>a.answers),questions:state.soloQuestions,mode:state.soloMode})});
+      const data=await res.json();
+      if(data.newBadges?.length){
+        const bd=document.getElementById('solo-badges-new');
+        bd.innerHTML=`<div class="new-badges-title">🎖️ Nouveau${data.newBadges.length>1?'x':''} badge${data.newBadges.length>1?'s':''}  !</div>`+data.newBadges.map(b=>`<span class="badge-item">${b}</span>`).join('');
+        bd.classList.remove('hidden');
+        showToast(`🎖️ Badge débloqué : ${data.newBadges[0]} !`,4000);
+      }
+    }catch{}
+  }
+}
+
+// ── Game options (duel) ────────────────────────────────
+function showCreateForm(){
   if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
   document.getElementById('create-form').classList.toggle('hidden');
   document.getElementById('join-form').classList.add('hidden');
 }
-function showJoinForm() {
+function showJoinForm(){
   if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
   document.getElementById('join-form').classList.toggle('hidden');
   document.getElementById('create-form').classList.add('hidden');
 }
-function selectOption(type,val,el) {
-  el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active'); state.selectedOptions[type]=val;
-}
-function selectMode(mode,el) {
-  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active'); state.selectedOptions.mode=mode;
-}
-function openCreateGame() {
+function selectOption(type,val,el){el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');state.selectedOptions[type]=val;}
+function selectMode(mode,el){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');state.selectedOptions.mode=mode;}
+function openCreateGame(){
   if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
   hideError('play-error');
-  socket.emit('create_game',{ pseudo:state.pseudo, options:{ maxPlayers:state.selectedOptions.players, questionCount:state.selectedOptions.questions, timeLimit:state.selectedOptions.time, category:state.selectedOptions.category, mode:state.selectedOptions.mode }});
+  socket.emit('create_game',{pseudo:state.pseudo,options:{maxPlayers:state.selectedOptions.players,questionCount:state.selectedOptions.questions,timeLimit:state.selectedOptions.time,category:state.selectedOptions.category,mode:state.selectedOptions.mode}});
 }
-function doJoinGame() {
+function doJoinGame(){
   const code=document.getElementById('join-code').value.trim().toUpperCase();
-  if(code.length<4) return showError('join-error','Entrez un code valide');
-  hideError('join-error'); socket.emit('join_game',{roomCode:code,pseudo:state.pseudo});
+  if(code.length<4)return showError('join-error','Entrez un code valide');
+  hideError('join-error');socket.emit('join_game',{roomCode:code,pseudo:state.pseudo});
 }
-function copyRoomCode() {
-  navigator.clipboard.writeText(document.getElementById('display-room-code').textContent).then(()=>showToast('Code copié ! 📋'));
-}
-function sendReady() {
-  document.getElementById('btn-ready').disabled=true;
-  document.getElementById('btn-ready').textContent='⏳ En attente...';
-  socket.emit('player_ready');
-}
-function forceStart() { socket.emit('force_start'); }
+function copyRoomCode(){navigator.clipboard.writeText(document.getElementById('display-room-code').textContent).then(()=>showToast('Code copié ! 📋'));}
+function sendReady(){document.getElementById('btn-ready').disabled=true;document.getElementById('btn-ready').textContent='⏳ En attente...';socket.emit('player_ready');}
+function forceStart(){socket.emit('force_start');}
 
-// ── Waiting room ───────────────────────────────────────
-function renderWaitingPlayers(players, maxPlayers) {
-  const c=document.getElementById('players-waiting'); c.innerHTML='';
-  for(let i=0;i<maxPlayers;i++) {
-    const p=players[i]; const div=document.createElement('div');
+// ── Waiting room ──────────────────────────────────────
+function renderWaitingPlayers(players,maxPlayers){
+  const c=document.getElementById('players-waiting');c.innerHTML='';
+  for(let i=0;i<maxPlayers;i++){
+    const p=players[i];const div=document.createElement('div');
     div.className=`waiting-player ${p?'connected':'empty'}`;
     div.innerHTML=p
       ?`<div class="wp-avatar connected">${p.pseudo[0].toUpperCase()}</div><div><div class="wp-name">${p.pseudo}${p.pseudo===state.pseudo?' <small style="color:var(--accent2)">(toi)</small>':''}</div><div class="wp-tag">${i===0?'👑 Hôte':'Joueur '+(i+1)}</div></div><div class="wp-status">${p.ready?'✅':'⏳'}</div>`
@@ -142,243 +414,192 @@ function renderWaitingPlayers(players, maxPlayers) {
   const btnF=document.getElementById('btn-force-start');
   if(myP&&!myP.ready){btnR.classList.remove('hidden');btnR.disabled=false;btnR.textContent='✅ Je suis prêt !';}
   else if(myP?.ready){btnR.classList.remove('hidden');btnR.disabled=true;btnR.textContent='✅ Prêt !';}
-  if(state.isHost&&players.length>=2) btnF.classList.remove('hidden'); else btnF.classList.add('hidden');
+  if(state.isHost&&players.length>=2)btnF.classList.remove('hidden');else btnF.classList.add('hidden');
   const msg=document.getElementById('waiting-msg');
   if(players.length<maxPlayers){msg.innerHTML=`<div class="spinner"></div> En attente... (${players.length}/${maxPlayers})`;msg.style.display='flex';}
   else msg.style.display='none';
 }
-function renderOptionsDisplay(options) {
-  document.getElementById('options-display').innerHTML=[
-    `👥 ${options.maxPlayers} joueurs`,`❓ ${options.questionCount} questions`,`⏱️ ${options.timeLimit}s`,
-    categoryName(options.category), modeName(options.mode)
-  ].map(t=>`<span class="options-tag">${t}</span>`).join('');
+function renderOptionsDisplay(options){
+  document.getElementById('options-display').innerHTML=[`👥 ${options.maxPlayers} joueurs`,`❓ ${options.questionCount} questions`,`⏱️ ${options.timeLimit}s`,catName(options.category),modeName(options.mode)].map(t=>`<span class="options-tag">${t}</span>`).join('');
 }
 
-// ── HUD (multi-player) ────────────────────────────────
-function renderHUD() {
-  const c=document.getElementById('hud-scores'); c.innerHTML='';
+// ── Duel HUD ──────────────────────────────────────────
+function renderHUD(){
+  const c=document.getElementById('hud-scores');c.innerHTML='';
   const max=Math.max(...state.allPlayers.map(p=>p.score),0);
   state.allPlayers.forEach(p=>{
     const isMe=p.pseudo===state.pseudo;
     const div=document.createElement('div');
     div.className=`hud-player-score ${isMe?'me':''} ${p.score===max&&max>0&&!isMe?'leading':''}`;
-    div.id=`hud-${p.pseudo}`;
-    div.innerHTML=`<div><div class="hps-name">${p.pseudo}</div>${p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':''}</div><div class="hps-score">${p.score}</div>${p.streak>=3?`<div style="font-size:.75rem">🔥${p.streak}</div>`:''}`;
+    div.innerHTML=`<div><div class="hps-name">${p.pseudo}</div>${p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':''}</div><div class="hps-score">${p.score}</div>${p.streak>=3?`<div style="font-size:.72rem">🔥${p.streak}</div>`:''}`;
     c.appendChild(div);
   });
 }
 
-// ── Question rendering ────────────────────────────────
-function renderQuestion(data) {
-  state.currentQuestion=data; state.selectedAnswers=[]; state.answered=false;
+// ── Duel question rendering ────────────────────────────
+function renderQuestion(data){
+  state.currentQuestion=data;state.selectedAnswers=[];state.answered=false;
   setText('q-counter',`${data.index+1}/${data.total}`);
-  setText('q-category',categoryName(data.category));
+  setText('q-category',catName(data.category));
   setText('q-text',data.question);
   setText('mode-badge',modeName(data.mode||state.gameMode));
   document.getElementById('game-progress').style.width=`${(data.index/data.total)*100}%`;
   document.getElementById('trap-indicator').classList.toggle('hidden',!data.isTrap);
-
-  // Situation box
-  const sitBox=document.getElementById('situation-box');
-  if(data.situation){sitBox.textContent=`📍 ${data.situation}`;sitBox.classList.remove('hidden');}
-  else sitBox.classList.add('hidden');
-
-  // Image
-  const imgWrap=document.getElementById('q-image-wrap');
-  const img=document.getElementById('q-image');
-  if(data.image_url){img.src=data.image_url;imgWrap.classList.remove('hidden');img.onerror=()=>imgWrap.classList.add('hidden');}
-  else imgWrap.classList.add('hidden');
-
-  // Multiple hint
+  const sb=document.getElementById('situation-box');
+  if(data.situation){sb.textContent=`📍 ${data.situation}`;sb.classList.remove('hidden');}else sb.classList.add('hidden');
+  const iw=document.getElementById('q-image-wrap');
+  if(data.image_url){document.getElementById('q-image').src=data.image_url;iw.classList.remove('hidden');document.getElementById('q-image').onerror=()=>iw.classList.add('hidden');}else iw.classList.add('hidden');
   let hint=document.getElementById('multi-hint');
-  if(data.isMultiple){
-    if(!hint){hint=document.createElement('div');hint.id='multi-hint';hint.className='multiple-hint';}
-    hint.textContent='⚠️ Plusieurs bonnes réponses — coche toutes les bonnes !';
-    document.getElementById('q-text').after(hint);
-  } else { hint?.remove(); }
-
-  // Answers
-  const cont=document.getElementById('answers-container'); cont.innerHTML='';
+  if(data.isMultiple){if(!hint){hint=document.createElement('div');hint.id='multi-hint';hint.className='multiple-hint';}hint.textContent='⚠️ Plusieurs bonnes réponses !';document.getElementById('q-text').after(hint);}else hint?.remove();
+  const cont=document.getElementById('answers-container');cont.innerHTML='';
   data.answers.forEach(a=>{
-    const btn=document.createElement('button');
-    btn.className='answer-btn'; btn.dataset.id=a.id;
-    btn.textContent=`${a.id.toUpperCase()}) ${a.text}`;
-    if(data.isMultiple){
-      btn.addEventListener('click',()=>{if(state.answered)return;btn.classList.toggle('selected');const idx=state.selectedAnswers.indexOf(a.id);if(idx>=0)state.selectedAnswers.splice(idx,1);else state.selectedAnswers.push(a.id);updateConfirmBtn();});
-    } else {
-      btn.addEventListener('click',()=>{if(!state.answered)submitAnswer([a.id]);});
-    }
+    const btn=document.createElement('button');btn.className='answer-btn';btn.dataset.id=a.id;btn.textContent=`${a.id.toUpperCase()}) ${a.text}`;
+    if(data.isMultiple){btn.addEventListener('click',()=>{if(state.answered)return;btn.classList.toggle('selected');const idx=state.selectedAnswers.indexOf(a.id);if(idx>=0)state.selectedAnswers.splice(idx,1);else state.selectedAnswers.push(a.id);updateConfirmBtn();});}
+    else{btn.addEventListener('click',()=>{if(!state.answered)submitDuelAnswer([a.id]);});}
     cont.appendChild(btn);
   });
-
-  // Confirm btn for multiple
   let cb=document.getElementById('confirm-btn');
-  if(data.isMultiple){
-    if(!cb){cb=document.createElement('button');cb.id='confirm-btn';cb.className='btn btn-primary confirm-btn';cb.textContent='Valider ✅';cb.addEventListener('click',()=>{if(state.selectedAnswers.length>0)submitAnswer(state.selectedAnswers);});}
-    cb.disabled=true; cont.after(cb);
-  } else cb?.remove();
-
-  const fb=document.getElementById('answer-feedback'); fb.classList.add('hidden'); fb.className='answer-feedback hidden';
+  if(data.isMultiple){if(!cb){cb=document.createElement('button');cb.id='confirm-btn';cb.className='btn btn-primary confirm-btn';cb.textContent='Valider ✅';cb.addEventListener('click',()=>{if(state.selectedAnswers.length>0)submitDuelAnswer(state.selectedAnswers);});}cb.disabled=true;cont.after(cb);}else cb?.remove();
+  const fb=document.getElementById('answer-feedback');fb.classList.add('hidden');fb.className='answer-feedback hidden';
   ['fifty50','timeBonus','stress'].forEach(pu=>{const b=document.getElementById(`pu-${pu}`);if(b)b.disabled=!state.powerups[pu];});
   startTimer(data.timeLimit||30);
-  const intros=['Concentre-toi ! 🧑‍🏫','Lis bien les choix ! 📖','Prends le temps ! ⏱️','Fais confiance à toi ! 🧠'];
-  if(Math.random()<.25) showCoach(intros[Math.floor(Math.random()*intros.length)]);
+  if(Math.random()<.25)showCoach(getCoachTip(data.category));
 }
 function updateConfirmBtn(){const b=document.getElementById('confirm-btn');if(b)b.disabled=state.selectedAnswers.length===0;}
-function submitAnswer(answers) {
-  if(state.answered)return; state.answered=true;
+function submitDuelAnswer(answers){
+  if(state.answered)return;state.answered=true;
   const timeTaken=(state.currentQuestion?.timeLimit||30)-state.timerSeconds;
   document.querySelectorAll('.answer-btn').forEach(b=>b.disabled=true);
   document.getElementById('confirm-btn')?.setAttribute('disabled','true');
   socket.emit('submit_answer',{answers,timeTaken});
-  const fb=document.getElementById('answer-feedback');
-  fb.className='answer-feedback neutral-fb';
-  fb.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;color:var(--text2)"><div class="spinner"></div> En attente des autres...</div>';
+  const fb=document.getElementById('answer-feedback');fb.className='answer-feedback neutral-fb';
+  fb.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;color:var(--text2)"><div class="spinner"></div> En attente...</div>';
   fb.classList.remove('hidden');
 }
-function showAnswerResult(data) {
-  stopTimer(); if(data.hidden) return;
-  document.querySelectorAll('.answer-btn').forEach(btn=>{
-    const id=btn.dataset.id;
-    if(data.correctAnswers?.includes(id)) btn.classList.add('correct');
-    else if(state.selectedAnswers.includes(id)) btn.classList.add('wrong');
-  });
+function showAnswerResult(data){
+  stopTimer();if(data.hidden)return;
+  document.querySelectorAll('.answer-btn').forEach(btn=>{const id=btn.dataset.id;if(data.correctAnswers?.includes(id))btn.classList.add('correct');else if(state.selectedAnswers.includes(id))btn.classList.add('wrong');});
   document.getElementById('screen-game').classList.add(data.isCorrect?'flash-correct':'flash-wrong');
   setTimeout(()=>document.getElementById('screen-game').classList.remove('flash-correct','flash-wrong'),600);
   if(data.isCorrect!==null){if(data.isCorrect)playCorrect();else playWrong();}
   const fb=document.getElementById('answer-feedback');
   let html='';
-  if(data.timeout) html='<strong>⏰ Temps écoulé !</strong><br>';
-  else if(data.isCorrect) html=`<strong>✅ Bonne réponse !</strong>${data.streak>=3?` <span class="streak-fire">🔥 ${data.streak} de suite !</span>`:''}<br>`;
+  if(data.timeout)html='<strong>⏰ Temps écoulé !</strong><br>';
+  else if(data.isCorrect)html=`<strong>✅ Bonne réponse !</strong>${data.streak>=3?` <span class="streak-fire">🔥 ${data.streak}</span>`:''}<br>`;
   else html=`<strong>❌ Mauvaise réponse</strong>${data.isTrap&&data.trapMessage?`<br><em>😏 ${data.trapMessage}</em>`:''}<br>`;
-  if(data.explanation) html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${data.explanation}</span>`;
+  if(data.explanation)html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${data.explanation}</span>`;
+  if(data.trapStats)html+=`<br><span style="color:var(--yellow);font-size:.78rem">📊 ${data.trapStats}</span>`;
   fb.className=`answer-feedback ${data.isCorrect?'correct-fb':data.isCorrect===null?'neutral-fb':'wrong-fb'}`;
-  fb.innerHTML=html; fb.classList.remove('hidden');
-  if(data.isCorrect&&data.streak>=3) showCoach(`🔥 ${data.streak} bonnes réponses d'affilée !`);
-  else if(data.isCorrect===false){const c=['Aïe ! 📚','Pas de panique ! 💪','Garde confiance ! 🤞'];showCoach(c[Math.floor(Math.random()*c.length)]);}
+  fb.innerHTML=html;fb.classList.remove('hidden');
+  if(data.isCorrect&&data.streak>=3)showCoach(`🔥 ${data.streak} en série !`);
+  else if(data.isCorrect===false)showCoach(getCoachTip(state.currentQuestion?.category));
 }
-
-function startTimer(s) {
-  stopTimer(); state.timerSeconds=s;
-  const arc=document.getElementById('timer-arc'),maxD=163.36;
-  function tick(){
-    setText('timer-text',state.timerSeconds);
-    arc.style.strokeDashoffset=maxD*(1-state.timerSeconds/s);
-    arc.style.stroke=state.timerSeconds<=5?'#f87171':state.timerSeconds<=10?'#fbbf24':'#4ade80';
-    if(state.timerSeconds>0)state.timerSeconds--;else stopTimer();
-  }
-  tick(); state.timerInterval=setInterval(tick,1000);
-}
+function startTimer(s){stopTimer();state.timerSeconds=s;const arc=document.getElementById('timer-arc'),maxD=163.36;function tick(){setText('timer-text',state.timerSeconds);arc.style.strokeDashoffset=maxD*(1-state.timerSeconds/s);arc.style.stroke=state.timerSeconds<=5?'#f87171':state.timerSeconds<=10?'#fbbf24':'#4ade80';if(state.timerSeconds>0)state.timerSeconds--;else stopTimer();}tick();state.timerInterval=setInterval(tick,1000);}
 function stopTimer(){clearInterval(state.timerInterval);state.timerInterval=null;}
-function showCoach(text){const b=document.getElementById('coach-bubble');setText('coach-text',text);b.classList.remove('hidden');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.add('hidden'),4000);}
+function showCoach(text){const b=document.getElementById('coach-bubble');setText('coach-text',text);b.classList.remove('hidden');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.add('hidden'),4500);}
 function usePowerup(type){if(!state.powerups[type]||state.answered)return;state.powerups[type]--;document.getElementById(`pu-${type}`).disabled=true;socket.emit('use_powerup',{type});}
 
-// ── Results + Rematch ──────────────────────────────────
-function showResults(data) {
-  stopTimer(); showScreen('screen-results');
+// ── Duel Results ──────────────────────────────────────
+function showResults(data){
+  stopTimer();showScreen('screen-results');
   const banner=document.getElementById('victory-banner');
-  if(data.isDraw){banner.textContent='🤝 Match nul !';}
+  if(data.isDraw)banner.textContent='🤝 Match nul !';
   else if(data.winner===state.pseudo){banner.textContent='🏆 VICTOIRE !';playVictory();}
-  else{banner.textContent=`🎖️ Victoire de ${data.winner} !`;}
+  else banner.textContent=`🎖️ Victoire de ${data.winner} !`;
 
   // Podium
   document.getElementById('podium').innerHTML=data.results.map(r=>{
     const isMe=r.pseudo===state.pseudo;
-    const elo=r.eloChange?`<div class="podium-elo ${r.eloChange>0?'pos':'neg'}">${r.eloChange>0?'+':''}${r.eloChange} Elo</div>`:'';
-    return `<div class="podium-item rank-${r.rank} ${isMe?'me':''}">
-      <div class="podium-rank">${rankEmoji(r.rank)}</div>
-      <div class="podium-pseudo">${r.pseudo}${isMe?'<span class="podium-you">toi</span>':''}</div>
-      <div><div class="podium-score">${r.score}<span style="font-size:.75rem;color:var(--text3)">/${r.total}</span></div><div class="podium-pct">${r.percentage}%</div></div>
-      ${elo}
-    </div>`;
+    const elo=r.eloChange?`<div class="podium-elo ${r.eloChange>0?'pos':'neg'}">${r.eloChange>0?'+':''}${r.eloChange}</div>`:'';
+    return `<div class="podium-item rank-${r.rank} ${isMe?'me':''}"><div class="podium-rank">${rankEmoji(r.rank)}</div><div class="podium-pseudo">${r.pseudo}${isMe?'<span class="podium-you">toi</span>':''}</div><div><div class="podium-score">${r.score}<span style="font-size:.75rem;color:var(--text3)">/${r.total}</span></div><div class="podium-pct">${r.percentage}%</div></div>${elo}</div>`;
   }).join('');
 
-  // Elo local update
-  const myR=data.results.find(r=>r.pseudo===state.pseudo);
-  if(myR?.eloChange&&state.token){state.elo+=myR.eloChange;localStorage.setItem('elo',state.elo);}
+  // Exam results
+  if(data.examPassed){
+    const ex=document.getElementById('exam-results-duel');
+    ex.innerHTML=data.examPassed.map(p=>`<div class="exam-verdict ${p.passed?'admis':'recale'}">${p.pseudo} : ${p.passed?'✅ ADMIS':'❌ RECALÉ'}</div>`).join('');
+    ex.classList.remove('hidden');
+  }
+
+  // New badges
+  const myBadges=data.newBadges?.[state.pseudo];
+  if(myBadges?.length){
+    const nb=document.getElementById('new-badges-duel');
+    nb.innerHTML=`<div class="new-badges-title">🎖️ Badge débloqué !</div>`+myBadges.map(b=>`<span class="badge-item">${b}</span>`).join('');
+    nb.classList.remove('hidden');showToast(`🎖️ ${myBadges[0]} !`,4000);
+  }
 
   // Analysis
+  const myR=data.results.find(r=>r.pseudo===state.pseudo);
+  if(myR?.eloChange)state.elo+=myR.eloChange,localStorage.setItem('elo',state.elo);
   const an=document.getElementById('results-analysis');
-  if(myR&&Object.keys(myR.categoryErrors||{}).length>0){
-    an.innerHTML=`<div class="analysis-title">📊 Tes erreurs par thème</div>`+
-      Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>
-        `<div class="category-error"><span>${categoryName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`).join('');
-  } else { an.innerHTML=myR?`<div style="text-align:center;color:var(--green);padding:1rem">🌟 Aucune erreur !</div>`:''; }
+  if(myR&&Object.keys(myR.categoryErrors||{}).length){
+    an.innerHTML=`<div class="analysis-title">📊 Tes erreurs</div>`+Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`).join('');
+  }else an.innerHTML='';
 
-  // Rematch button (host only)
-  state.hostPseudo = data.isHost;
-  const btnRematch=document.getElementById('btn-rematch');
-  if(state.pseudo===data.isHost) btnRematch.classList.remove('hidden'); else btnRematch.classList.add('hidden');
+  // Replay
+  if(data.replayData?.length){
+    document.getElementById('replay-toggle').classList.remove('hidden');
+    state.replayData=data.replayData;
+  }
+
+  // Rematch
+  state.hostPseudo=data.hostPseudo;
+  const btnR=document.getElementById('btn-rematch');
+  if(state.pseudo===data.hostPseudo)btnR.classList.remove('hidden');else btnR.classList.add('hidden');
 }
 
-function requestRematch() {
-  document.getElementById('btn-rematch').disabled=true;
-  document.getElementById('rematch-status').textContent='🔄 Création de la revanche...';
-  document.getElementById('rematch-status').classList.remove('hidden');
-  socket.emit('request_rematch');
+function toggleReplay(){
+  const rc=document.getElementById('replay-content');
+  if(!rc.classList.contains('hidden')){rc.classList.add('hidden');return;}
+  rc.classList.remove('hidden');
+  if(!state.replayData)return;
+  rc.innerHTML=state.replayData.slice(0,10).map((q,i)=>{
+    const allCorrect=q.playerAnswers.every(p=>p.isCorrect);
+    return `<div class="replay-item ${allCorrect?'correct-q':'wrong-q'}">
+      <div class="replay-q">${i+1}. ${q.question}</div>
+      ${q.playerAnswers.map(p=>`<div class="replay-player"><span>${p.pseudo}</span><span>${p.isCorrect?'✅':'❌'} ${p.timeTaken?.toFixed(0)||'?'}s</span></div>`).join('')}
+    </div>`;
+  }).join('');
 }
+
+function requestRematch(){document.getElementById('btn-rematch').disabled=true;socket.emit('request_rematch');}
 
 // ── Leaderboard ────────────────────────────────────────
-async function loadLeaderboard() {
+async function loadLeaderboard(){
   const el=document.getElementById('leaderboard-list');
   el.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
-  try {
+  try{
     const data=await(await fetch('/api/leaderboard')).json();
     if(!data.length){el.innerHTML='<p style="text-align:center;color:var(--text2)">Aucun joueur pour l\'instant 🤷</p>';return;}
-    el.innerHTML=data.map((p,i)=>{
-      const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
-      const re=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      return `<div class="lb-item"><div class="lb-rank ${rc}">${re}</div><div class="lb-pseudo">${p.pseudo}</div><div class="lb-elo">${p.elo} Elo</div><div class="lb-record">${p.wins}V ${p.losses||0}D</div></div>`;
-    }).join('');
-  } catch{el.innerHTML='<p style="color:var(--red)">Erreur de chargement</p>';}
+    el.innerHTML=data.map((p,i)=>{const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';const re=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;return `<div class="lb-item"><div class="lb-rank ${rc}">${re}</div><div><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level">${p.levelInfo?.name||''}</div></div><div class="lb-elo">${p.elo} Elo</div><div class="lb-record">${p.wins||0}V ${p.losses||0}D</div></div>`;}).join('');
+  }catch{el.innerHTML='<p style="color:var(--red)">Erreur</p>';}
 }
 
-// ── Socket Events ──────────────────────────────────────
-socket.on('game_created',({roomCode,options,isHost})=>{
-  state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;
-  showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);
-  renderWaitingPlayers([{pseudo:state.pseudo,ready:false}],options.maxPlayers);
-});
-socket.on('game_joined',({roomCode,players,options,isHost})=>{
-  state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;
-  showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);
-  renderWaitingPlayers(players,options.maxPlayers);
-});
+// ── Preload questions for solo mode ───────────────────
+async function preloadQuestions(){
+  try{const res=await fetch('/api/training/session?count=100&mode=libre',{headers:state.token?{Authorization:`Bearer ${state.token}`}:{}});const data=await res.json();window._allQuestions=data.fullQuestions||[];}catch{}
+}
+
+// ── Socket Events ─────────────────────────────────────
+socket.on('game_created',({roomCode,options,isHost})=>{state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers([{pseudo:state.pseudo,ready:false}],options.maxPlayers);});
+socket.on('game_joined',({roomCode,players,options,isHost})=>{state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers(players,options.maxPlayers);});
 socket.on('player_list_update',({players,maxPlayers})=>renderWaitingPlayers(players,maxPlayers));
-socket.on('game_start',({players,options})=>{
-  playStart();state.gameMode=options.mode;state.gameOptions=options;
-  state.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));
-  state.powerups={fifty50:1,timeBonus:1,stress:1};
-  showScreen('screen-game');renderHUD();
-});
+socket.on('game_start',({players,options})=>{playStart();state.gameMode=options.mode;state.gameOptions=options;state.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));state.powerups={fifty50:1,timeBonus:1,stress:1};showScreen('screen-game');renderHUD();});
 socket.on('new_question',data=>{state.allPlayers.forEach(p=>p.answered=false);renderQuestion(data);});
 socket.on('scores_update',({players})=>{state.allPlayers=players;renderHUD();});
-socket.on('answer_result',data=>{
-  const me=state.allPlayers.find(p=>p.pseudo===state.pseudo);
-  if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}
-  showAnswerResult(data);renderHUD();
-});
-socket.on('powerup_result',({type,removed,bonusSeconds})=>{
-  if(type==='fifty50'&&removed){removed.forEach(id=>{document.querySelector(`.answer-btn[data-id="${id}"]`)?.classList.add('removed');});showToast('⚡ 50/50 utilisé !');}
-  else if(type==='timeBonus'&&bonusSeconds){state.timerSeconds+=bonusSeconds;showToast(`⏱️ +${bonusSeconds}s !`);}
-  else if(type==='stress')showToast('😱 Stress envoyé !');
-});
-socket.on('powerup_applied',({type,penaltySeconds,from})=>{
-  if(type==='stress'){state.timerSeconds=Math.max(3,state.timerSeconds-penaltySeconds);showToast(`😱 ${from} t'a stressé ! -${penaltySeconds}s !`,3000);}
-});
+socket.on('answer_result',data=>{const me=state.allPlayers.find(p=>p.pseudo===state.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showAnswerResult(data);renderHUD();});
+socket.on('powerup_result',({type,removed,bonusSeconds})=>{if(type==='fifty50'&&removed){removed.forEach(id=>document.querySelector(`.answer-btn[data-id="${id}"]`)?.classList.add('removed'));showToast('⚡ 50/50 utilisé !');}else if(type==='timeBonus'&&bonusSeconds){state.timerSeconds+=bonusSeconds;showToast(`⏱️ +${bonusSeconds}s !`);}else if(type==='stress')showToast('😱 Stress envoyé !');});
+socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){state.timerSeconds=Math.max(3,state.timerSeconds-penaltySeconds);showToast(`😱 ${from} t'a stressé ! -${penaltySeconds}s`,3000);}});
 socket.on('game_end',data=>showResults(data));
 socket.on('player_disconnected',({pseudo})=>showToast(`💔 ${pseudo} a quitté...`,3000));
-socket.on('rematch_started',({roomCode,options,players})=>{
-  state.roomCode=roomCode;state.isHost=(players[0]?.pseudo===state.pseudo);state.gameOptions=options;
-  showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);
-  renderWaitingPlayers(players,options.maxPlayers);
-  showToast('🔄 Revanche ! Cliquez sur Prêt !');
-});
+socket.on('rematch_started',({roomCode,options,players})=>{state.roomCode=roomCode;state.isHost=players[0]?.pseudo===state.pseudo;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers(players,options.maxPlayers);showToast('🔄 Revanche ! Cliquez sur Prêt !');});
 socket.on('error',msg=>{showError('play-error',msg);showError('join-error',msg);showToast(`❌ ${msg}`,3000);});
 
-// ── Init ───────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  if(state.pseudo)updatePlayScreen();
+  if(state.pseudo){updateChips();updateSoloChip();}
+  preloadQuestions();
   document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
   document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});

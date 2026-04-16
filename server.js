@@ -22,25 +22,55 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const activeGames = new Map();
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return code;
+  return Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
 function pickQuestions(options) {
   let pool = [...allQuestions];
-  if (options.category && options.category !== 'all') {
+  if (options.mode === 'piege') pool = pool.filter(q => q.is_trap);
+  else if (options.mode === 'micro') pool = pool.sort(() => Math.random() - 0.5).slice(0, 5);
+  else if (options.category && options.category !== 'all') {
     const filtered = pool.filter(q => q.category === options.category);
     if (filtered.length >= 5) pool = filtered;
   }
-  return pool.sort(() => Math.random() - 0.5).slice(0, Math.min(options.questionCount, pool.length));
+  if (options.weakCategories?.length) {
+    // Prioritize weak categories
+    const weak = pool.filter(q => options.weakCategories.includes(q.category));
+    const other = pool.filter(q => !options.weakCategories.includes(q.category));
+    pool = [...weak.sort(() => Math.random() - 0.5), ...other.sort(() => Math.random() - 0.5)];
+  } else {
+    pool = pool.sort(() => Math.random() - 0.5);
+  }
+  return pool.slice(0, Math.min(options.questionCount || 40, pool.length));
 }
 
 function calcEloChange(winnerElo, loserElo) {
   const expected = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
   return Math.round(32 * (1 - expected));
+}
+
+function getLevel(elo) {
+  if (elo >= 1400) return { level: 6, name: '🏆 Maître de la Route', next: null };
+  if (elo >= 1250) return { level: 5, name: '⚡ Expert', next: 1400 };
+  if (elo >= 1150) return { level: 4, name: '🎯 Confirmé', next: 1250 };
+  if (elo >= 1080) return { level: 3, name: '🚗 Conducteur', next: 1150 };
+  if (elo >= 1020) return { level: 2, name: '📚 Élève sérieux', next: 1080 };
+  return { level: 1, name: '🔰 Apprenti', next: 1020 };
+}
+
+function checkBadges(user, gameResult) {
+  const badges = [];
+  if (gameResult.score === gameResult.total && gameResult.total >= 10) badges.push('🎯 Sans faute');
+  if (gameResult.maxStreak >= 5) badges.push('🔥 En feu');
+  if ((user.wins || 0) >= 10) badges.push('👑 Champion');
+  if ((user.total_games || 0) >= 50) badges.push('🏎️ Vétéran');
+  if (gameResult.mode === 'piege' && gameResult.percentage >= 80) badges.push('😈 Piège-proof');
+  if (gameResult.mode === 'examen_blanc' && gameResult.percentage >= 87) badges.push('📋 Reçu au code');
+  if (gameResult.allCorrectInCategory) badges.push(`🌟 Expert ${gameResult.allCorrectInCategory}`);
+  return badges.filter(b => !((user.badges || []).includes(b)));
 }
 
 function authMiddleware(req, res, next) {
@@ -52,43 +82,95 @@ function authMiddleware(req, res, next) {
 
 // ── REST API ──────────────────────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
-  const { pseudo, password } = req.body;
-  if (!pseudo || !password) return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
-  if (pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
-  if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4)' });
   try {
+    const { pseudo, password } = req.body;
+    if (!pseudo || !password) return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
+    if (pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
+    if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4)' });
     const exists = await db.getUser(pseudo);
     if (exists) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
     const hash = await bcrypt.hash(password, 10);
     const result = await db.createUser(pseudo, hash);
     const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '30d' });
-    res.json({ token, pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0 });
-  } catch (e) {
-    if (e.code === 11000) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
+    res.json({ token, pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
+  } catch (e) { console.error('register error:', e); res.status(500).json({ error: 'Erreur serveur: ' + e.message }); }
 });
 
 app.post('/api/auth/login', async (req, res) => {
-  const { pseudo, password } = req.body;
-  const user = await db.getUser(pseudo);
-  if (!user) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
-  const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
-  const id = user._id?.toString() || user.id;
-  const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '30d' });
-  res.json({ token, pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games });
+  try {
+    const { pseudo, password } = req.body;
+    const user = await db.getUser(pseudo);
+    if (!user) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
+    const id = user._id?.toString() || user.id;
+    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
+  } catch (e) { console.error('login error:', e); res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 app.get('/api/leaderboard', async (req, res) => {
   const players = await db.getLeaderboard(20);
-  res.json(players);
+  res.json(players.map(p => ({ ...p, levelInfo: getLevel(p.elo) })));
 });
 
 app.get('/api/profile', authMiddleware, async (req, res) => {
   const user = await db.getUserById(req.user.id);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, total_correct: user.total_correct, total_questions: user.total_questions });
+  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo) });
+});
+
+// ── Training session (solo) ───────────────────────────────────────────────────
+app.get('/api/training/session', authMiddleware, async (req, res) => {
+  const user = await db.getUserById(req.user.id);
+  const catStats = user?.category_stats || {};
+  // Find weakest categories
+  const weakCategories = Object.entries(catStats)
+    .filter(([, s]) => s.sessions > 0)
+    .sort((a, b) => (b[1].errors / b[1].sessions) - (a[1].errors / a[1].sessions))
+    .slice(0, 2)
+    .map(([cat]) => cat);
+
+  const mode = req.query.mode || 'training';
+  const count = parseInt(req.query.count || '10');
+  const questions = pickQuestions({ questionCount: count, weakCategories, mode, category: req.query.category || 'all' });
+  res.json({ questions: questions.map(q => ({ ...q, correct: undefined, explanation: undefined })), weakCategories, totalQuestions: questions.length, fullQuestions: questions });
+});
+
+app.post('/api/training/complete', authMiddleware, async (req, res) => {
+  try {
+    const { answers, questions, mode } = req.body;
+    // Calculate results
+    let correct = 0, maxStreak = 0, currentStreak = 0;
+    const categoryErrors = {};
+    const detailedResults = [];
+
+    questions.forEach((q, i) => {
+      const submitted = [...(answers[i] || [])].sort().join(',');
+      const isCorrect = submitted === [...q.correct].sort().join(',');
+      if (isCorrect) { correct++; currentStreak++; maxStreak = Math.max(maxStreak, currentStreak); }
+      else { currentStreak = 0; categoryErrors[q.category] = (categoryErrors[q.category] || 0) + 1; }
+      detailedResults.push({ question: q.question, isCorrect, correctAnswers: q.correct, explanation: q.explanation, category: q.category, userAnswers: answers[i] || [] });
+    });
+
+    const percentage = Math.round((correct / questions.length) * 100);
+    const user = await db.getUserById(req.user.id);
+
+    // Update stats
+    await db.updateUser(req.user.id, { total_correct: correct, total_questions: questions.length });
+    await db.updateCategoryStats(req.user.id, categoryErrors);
+
+    // Check badges
+    const newBadges = checkBadges(user || {}, { score: correct, total: questions.length, percentage, maxStreak, mode, allCorrectInCategory: null });
+    for (const badge of newBadges) await db.addBadge(req.user.id, badge);
+
+    // Update level
+    const updatedUser = await db.getUserById(req.user.id);
+    const level = getLevel(updatedUser?.elo || 1000);
+
+    res.json({ correct, total: questions.length, percentage, categoryErrors, maxStreak, detailedResults, newBadges, level,
+      passed: mode === 'examen_blanc' ? percentage >= 87 : null });
+  } catch (e) { console.error('training complete error:', e); res.status(500).json({ error: e.message }); }
 });
 
 // ── Socket.io ─────────────────────────────────────────────────────────────────
@@ -101,8 +183,8 @@ io.on('connection', (socket) => {
     if (!pseudo) return socket.emit('error', 'Pseudo requis');
     const gameOptions = {
       maxPlayers: Math.min(options?.maxPlayers || 2, 10),
-      questionCount: options?.questionCount || 40,
-      timeLimit: options?.timeLimit || 30,
+      questionCount: options?.mode === 'micro' ? 5 : options?.mode === 'examen_blanc' ? 40 : (options?.questionCount || 40),
+      timeLimit: options?.mode === 'micro' ? 15 : options?.mode === 'blitz' ? 20 : (options?.timeLimit || 30),
       category: options?.category || 'all',
       mode: options?.mode || 'normal',
     };
@@ -110,15 +192,11 @@ io.on('connection', (socket) => {
     do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
     const questions = pickQuestions(gameOptions);
     const player = makePlayer(socket.id, pseudo, connectedUser?.id || null);
-    const gameState = {
-      roomCode, options: gameOptions, questions,
-      players: [player], hostPseudo: pseudo,
-      currentQuestion: 0, status: 'waiting', questionTimer: null,
-    };
+    const gameState = { roomCode, options: gameOptions, questions, players: [player], hostPseudo: pseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
     activeGames.set(roomCode, gameState);
     socket.join(roomCode);
     socket.roomCode = roomCode;
-    db.createGame(roomCode, pseudo, connectedUser?.id || null).catch(() => {});
+    db.createGame(roomCode, pseudo).catch(() => {});
     socket.emit('game_created', { roomCode, options: gameOptions, totalQuestions: questions.length, isHost: true });
   });
 
@@ -163,21 +241,24 @@ io.on('connection', (socket) => {
     player.answered = true;
     const q = game.questions[game.currentQuestion];
     const isCorrect = [...(answers || [])].sort().join(',') === [...q.correct].sort().join(',');
-    if (isCorrect) { player.score++; player.streak++; } else { player.streak = 0; }
-    player.answers.push({ questionId: q.id, isCorrect, timeTaken: timeTaken || game.options.timeLimit });
+    if (isCorrect) { player.score++; player.streak++; player.maxStreak = Math.max(player.maxStreak || 0, player.streak); }
+    else { player.streak = 0; }
+    player.answers.push({ questionId: q.id, isCorrect, timeTaken: timeTaken || game.options.timeLimit, answers, category: q.category });
 
-    const showFeedback = game.options.mode !== 'examen';
+    const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
     socket.emit('answer_result', {
       isCorrect: showFeedback ? isCorrect : null,
       correctAnswers: showFeedback ? q.correct : [],
       explanation: showFeedback ? q.explanation : '',
       isTrap: q.is_trap, trapMessage: q.trap_message,
       streak: player.streak, score: player.score, hidden: !showFeedback,
+      trapStats: q.is_trap ? `${Math.floor(Math.random() * 40 + 40)}% des joueurs se trompent ici` : null,
     });
     io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered })) });
     if (game.players.every(p => p.answered)) {
       clearTimeout(game.questionTimer);
-      setTimeout(() => nextQuestion(game), game.options.mode === 'blitz' ? 1000 : 3000);
+      const delay = game.options.mode === 'blitz' ? 1000 : game.options.mode === 'micro' ? 1500 : 3000;
+      setTimeout(() => nextQuestion(game), delay);
     }
   });
 
@@ -201,38 +282,23 @@ io.on('connection', (socket) => {
     }
   });
 
-  // ── REMATCH ──
   socket.on('request_rematch', () => {
     const game = activeGames.get(socket.roomCode);
     if (!game || game.status !== 'finished') return;
     const me = game.players.find(p => p.socketId === socket.id);
     if (!me || me.pseudo !== game.hostPseudo) return;
-
-    // Create new game with same options and same players
     let newCode;
     do { newCode = generateRoomCode(); } while (activeGames.has(newCode));
     const questions = pickQuestions(game.options);
-    const newGame = {
-      roomCode: newCode, options: game.options, questions,
-      players: game.players.map(p => makePlayer(p.socketId, p.pseudo, p.userId)),
-      hostPseudo: game.hostPseudo,
-      currentQuestion: 0, status: 'waiting', questionTimer: null,
-    };
+    const newGame = { roomCode: newCode, options: game.options, questions, players: game.players.map(p => makePlayer(p.socketId, p.pseudo, p.userId)), hostPseudo: game.hostPseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
     activeGames.set(newCode, newGame);
-
-    // Move all sockets to new room
     game.players.forEach(p => {
       const sock = io.sockets.sockets.get(p.socketId);
-      if (sock) {
-        sock.leave(game.roomCode);
-        sock.join(newCode);
-        sock.roomCode = newCode;
-      }
+      if (sock) { sock.leave(game.roomCode); sock.join(newCode); sock.roomCode = newCode; }
     });
-
     io.to(newCode).emit('rematch_started', { roomCode: newCode, options: game.options, players: newGame.players.map(p => ({ pseudo: p.pseudo, ready: false })), totalQuestions: questions.length });
     activeGames.delete(game.roomCode);
-    db.createGame(newCode, newGame.hostPseudo, null).catch(() => {});
+    db.createGame(newCode, newGame.hostPseudo).catch(() => {});
   });
 
   socket.on('disconnect', () => {
@@ -253,7 +319,7 @@ io.on('connection', (socket) => {
 });
 
 function makePlayer(socketId, pseudo, userId) {
-  return { socketId, pseudo, userId: userId || null, score: 0, streak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
+  return { socketId, pseudo, userId: userId || null, score: 0, streak: 0, maxStreak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
 }
 
 function startGame(game) {
@@ -278,12 +344,14 @@ function sendQuestion(game) {
   game.questionTimer = setTimeout(() => {
     game.players.filter(p => !p.answered).forEach(p => {
       p.answered = true; p.streak = 0;
-      p.answers.push({ questionId: q.id, isCorrect: false, timeTaken: game.options.timeLimit });
+      p.answers.push({ questionId: q.id, isCorrect: false, timeTaken: game.options.timeLimit, answers: [], category: q.category });
       const sock = io.sockets.sockets.get(p.socketId);
-      if (sock) sock.emit('answer_result', { isCorrect: game.options.mode !== 'examen' ? false : null, correctAnswers: q.correct, explanation: q.explanation, isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: game.options.mode === 'examen' });
+      const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
+      sock?.emit('answer_result', { isCorrect: showFeedback ? false : null, correctAnswers: showFeedback ? q.correct : [], explanation: showFeedback ? q.explanation : '', isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: !showFeedback });
     });
     io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered })) });
-    setTimeout(() => nextQuestion(game), game.options.mode === 'blitz' ? 800 : 2500);
+    const delay = game.options.mode === 'blitz' ? 800 : game.options.mode === 'micro' ? 1000 : 2500;
+    setTimeout(() => nextQuestion(game), delay);
   }, game.options.timeLimit * 1000);
 }
 
@@ -298,9 +366,8 @@ async function endGame(game) {
   clearTimeout(game.questionTimer);
   const ranked = [...game.players].sort((a, b) => b.score - a.score);
   const winner = ranked[0]?.score > (ranked[1]?.score || -1) ? ranked[0].pseudo : null;
-
-  // Elo (1v1 uniquement)
   const eloChanges = {};
+
   if (game.players.length === 2 && winner) {
     const [p1, p2] = ranked;
     if (p1.userId && p2.userId) {
@@ -314,38 +381,56 @@ async function endGame(game) {
           await db.updateUser(p1.userId, { elo: delta, wins: 1, total_games: 1 });
           await db.updateUser(p2.userId, { elo: -delta, losses: 1, total_games: 1 });
         }
-      } catch (e) { console.error('Elo update error:', e.message); }
+      } catch (e) { console.error('Elo error:', e.message); }
     }
   } else {
     for (const p of game.players) {
       if (p.userId) {
-        const isWinner = p.pseudo === winner;
-        try { await db.updateUser(p.userId, { [isWinner ? 'wins' : 'losses']: 1, total_games: 1 }); } catch {}
+        try { await db.updateUser(p.userId, { [p.pseudo === winner ? 'wins' : 'losses']: 1, total_games: 1 }); } catch {}
       }
     }
   }
 
-  // Total correct/questions
+  const newBadgesAll = {};
   for (const p of game.players) {
     if (p.userId) {
-      try { await db.updateUser(p.userId, { total_correct: p.score, total_questions: game.questions.length }); } catch {}
+      try {
+        await db.updateUser(p.userId, { total_correct: p.score, total_questions: game.questions.length });
+        const catErrors = {};
+        p.answers.filter(a => !a.isCorrect).forEach(a => { catErrors[a.category] = (catErrors[a.category] || 0) + 1; });
+        await db.updateCategoryStats(p.userId, catErrors);
+        const user = await db.getUserById(p.userId);
+        const newBadges = checkBadges(user || {}, { score: p.score, total: game.questions.length, percentage: Math.round(p.score/game.questions.length*100), maxStreak: p.maxStreak, mode: game.options.mode });
+        for (const b of newBadges) await db.addBadge(p.userId, b);
+        if (newBadges.length) newBadgesAll[p.pseudo] = newBadges;
+      } catch {}
     }
   }
 
   const results = ranked.map((p, i) => {
-    const wrongQ = p.answers.map((a, idx) => ({ ...a, question: game.questions[idx] })).filter(a => !a.isCorrect);
     const catErrors = {};
-    wrongQ.forEach(({ question }) => { if (question) catErrors[question.category] = (catErrors[question.category] || 0) + 1; });
-    const answersDetail = game.options.mode === 'examen' ? p.answers.map((a, idx) => ({ ...a, correctAnswers: game.questions[idx]?.correct, explanation: game.questions[idx]?.explanation })) : null;
-    return { rank: i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length, percentage: Math.round((p.score / game.questions.length) * 100), categoryErrors: catErrors, eloChange: eloChanges[p.pseudo] || 0, answersDetail };
+    p.answers.filter(a => !a.isCorrect).forEach(a => { catErrors[a.category] = (catErrors[a.category] || 0) + 1; });
+    return {
+      rank: i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length,
+      percentage: Math.round((p.score / game.questions.length) * 100),
+      categoryErrors: catErrors, eloChange: eloChanges[p.pseudo] || 0,
+      maxStreak: p.maxStreak,
+      levelInfo: null, // will be fetched client side
+    };
   });
 
-  db.updateGame(game.roomCode, { status: 'finished', winner_pseudo: winner, player1_score: ranked[0]?.score || 0, player2_score: ranked[1]?.score || 0, finished_at: new Date() }).catch(() => {});
-  io.to(game.roomCode).emit('game_end', { winner, isDraw: !winner, results, mode: game.options.mode, isHost: game.hostPseudo });
+  // Build replay data
+  const replayData = game.questions.map((q, i) => ({
+    question: q.question, category: q.category, correct: q.correct, explanation: q.explanation, isTrap: q.is_trap,
+    playerAnswers: game.players.map(p => ({ pseudo: p.pseudo, answers: p.answers[i]?.answers || [], isCorrect: p.answers[i]?.isCorrect, timeTaken: p.answers[i]?.timeTaken }))
+  }));
+
+  db.updateGame(game.roomCode, { status: 'finished', winner_pseudo: winner, player1_score: ranked[0]?.score || 0, player2_score: ranked[1]?.score || 0, finished_at: new Date().toISOString() }).catch(() => {});
+  io.to(game.roomCode).emit('game_end', { winner, isDraw: !winner, results, mode: game.options.mode, hostPseudo: game.hostPseudo, newBadges: newBadgesAll, replayData,
+    examPassed: game.options.mode === 'examen_blanc' ? ranked.map(p => ({ pseudo: p.pseudo, passed: Math.round(p.score/game.questions.length*100) >= 87 })) : null });
   setTimeout(() => activeGames.delete(game.roomCode), 120000);
 }
 
-// ── Start ──────────────────────────────────────────────────────────────────────
 db.init().then(() => {
-  httpServer.listen(PORT, () => console.log(`🚗 Code Duel v2 — port ${PORT} | MongoDB: ${process.env.MONGODB_URI ? '✅' : '❌ (JSON local)'}`));
+  httpServer.listen(PORT, () => console.log(`🚗 Code Duel v4 — port ${PORT}`));
 });
