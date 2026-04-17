@@ -899,20 +899,36 @@ async function endSolo() {
 // ── Leaderboard ────────────────────────────────────────────
 async function loadLeaderboard() {
   const el = document.getElementById('leaderboard-list');
+  if (!el) return;
   el.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
   try {
-    const data = await (await fetch('/api/leaderboard')).json();
-    if (!data.length) { el.innerHTML = '<p style="text-align:center;color:var(--text2)">Aucun joueur 🤷</p>'; return; }
-    el.innerHTML = data.map((p,i) => {
+    // Timeout de 5 secondes
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch('/api/leaderboard', { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error('Erreur serveur ' + res.status);
+    const data = await res.json();
+    if (!data || !data.length) {
+      el.innerHTML = '<p style="text-align:center;color:var(--text2);padding:1.5rem">Aucun joueur inscrit pour le moment 🤷<br><small>Crée un compte pour apparaître ici !</small></p>';
+      return;
+    }
+    el.innerHTML = data.map((p, i) => {
       const re = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       return `<div class="lb-item">
         <div class="lb-rank">${re}</div>
-        <div><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level">${p.levelInfo?.name||''}</div></div>
-        <div class="lb-elo">${p.elo} Elo</div>
-        <div class="lb-record">${p.wins||0}V ${p.losses||0}D</div>
+        <div style="flex:1"><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level" style="font-size:.75rem;color:var(--text3)">${p.levelInfo?.name||''}</div></div>
+        <div class="lb-elo" style="font-weight:700;color:var(--accent2)">${p.elo} Elo</div>
+        <div class="lb-record" style="font-size:.78rem;color:var(--text3);margin-left:.5rem">${p.wins||0}V ${p.losses||0}D</div>
       </div>`;
     }).join('');
-  } catch { el.innerHTML = '<p style="color:var(--red)">Erreur de chargement</p>'; }
+  } catch(e) {
+    const msg = e.name === 'AbortError' ? 'Délai dépassé — réessaie !' : 'Erreur : ' + e.message;
+    el.innerHTML = `<div style="text-align:center;padding:1.5rem">
+      <p style="color:var(--red);margin-bottom:1rem">${msg}</p>
+      <button class="btn btn-ghost" onclick="loadLeaderboard()">🔄 Réessayer</button>
+    </div>`;
+  }
 }
 
 // ── Session time tracking ──────────────────────────────────
