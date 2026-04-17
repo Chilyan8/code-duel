@@ -1,255 +1,174 @@
-/* CODE DUEL v4 — Solo + Duel + Progression + Replay + Coach IA */
-const state = {
-  token: localStorage.getItem('token'), pseudo: localStorage.getItem('pseudo'), elo: parseInt(localStorage.getItem('elo')||'1000'),
+/* ============================================================
+   CODE DUEL — App complète (réécriture propre)
+   ============================================================ */
+
+// ── État global ────────────────────────────────────────────
+const S = {
+  token:  localStorage.getItem('token')  || null,
+  pseudo: localStorage.getItem('pseudo') || null,
+  elo:    parseInt(localStorage.getItem('elo') || '1000'),
+  avatar: localStorage.getItem('avatar') || '🧑‍🎓',
+
+  // Duel
   roomCode: null, isHost: false, gameOptions: {},
   selectedOptions: { players:2, questions:40, time:30, category:'all', mode:'normal' },
-  currentQuestion: null, selectedAnswers: [], answered: false,
-  timerInterval: null, timerSeconds: 30,
+  currentQ: null, selectedAnswers: [], answered: false,
+  timerInterval: null, timerSecs: 30,
   powerups: { fifty50:1, timeBonus:1, stress:1 },
   allPlayers: [], gameMode: 'normal', hostPseudo: null,
+  replayData: null,
+
   // Solo
   soloMode: 'training', soloCategory: 'all',
-  soloQuestions: [], soloAnswers: [], soloIndex: 0, soloCorrect: 0, soloWrong: 0, soloStreak: 0, soloMaxStreak: 0,
-  soloTimerInterval: null, soloTimerSeconds: 30,
-  replayData: null,
+  soloQs: [], soloAnswers: [], soloIdx: 0,
+  soloCorrect: 0, soloWrong: 0, soloStreak: 0, soloMaxStreak: 0,
+  soloTimer: null, soloSecs: 30,
+
+  // Questions cache
+  questions: [],
 };
 
-const socket = io({ auth: { token: state.token } });
-state.avatar = localStorage.getItem('avatar') || '🧑‍🎓';
+const socket = io({ auth: { token: S.token } });
 
-
-
-/* ═══════════════════════════════════════════════
-   AVATAR SYSTEM
-   ═══════════════════════════════════════════════ */
-const EMOJI_AVATARS = ['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗','🚕','🚙','🏍️','🚓','🚑','🧑‍✈️','👮','🧑‍🔧','🦸','🧙','🎮','🔥','⚡','🌟','👑','🎯','🏆','💎','🚀','🦊','🐺','🐯','🦁','🐸','🤖'];
-
-function openAvatarModal() {
-  const grid = document.getElementById('emoji-avatars');
-  grid.innerHTML = EMOJI_AVATARS.map(e =>
-    `<div class="avatar-option" onclick="selectEmojiAvatar(&quot;${e}&quot;)">${e}</div>`
-  ).join('');
-  document.getElementById('avatar-modal').classList.remove('hidden');
-}
-
-function closeAvatarModal(e) {
-  if (!e || e.target === document.getElementById('avatar-modal'))
-    document.getElementById('avatar-modal').classList.add('hidden');
-}
-
-async function selectEmojiAvatar(emoji) {
-  state.avatar = emoji;
-  localStorage.setItem('avatar', emoji);
-  document.getElementById('avatar-modal').classList.add('hidden');
-  renderAvatarInProfile(emoji);
-  await saveAvatarToServer(emoji);
-  showToast(`Avatar mis à jour : ${emoji}`);
-}
-
-async function uploadAvatar(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (file.size > 500000) { showToast('Image trop grande ! Max 500kb 📸'); return; }
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    const dataUrl = e.target.result;
-    // Resize to 150x150 max
-    const resized = await resizeImage(dataUrl, 150);
-    state.avatar = resized;
-    localStorage.setItem('avatar', resized);
-    document.getElementById('avatar-modal').classList.add('hidden');
-    renderAvatarInProfile(resized);
-    await saveAvatarToServer(resized);
-    showToast('Photo de profil mise à jour ! 📸');
-  };
-  reader.readAsDataURL(file);
-}
-
-function resizeImage(dataUrl, maxSize) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ratio = Math.min(maxSize / img.width, maxSize / img.height);
-      canvas.width = img.width * ratio;
-      canvas.height = img.height * ratio;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
-    };
-    img.src = dataUrl;
-  });
-}
-
-async function saveAvatarToServer(avatar) {
-  if (!state.token) return;
+// ── Audio ──────────────────────────────────────────────────
+let _audio = null;
+function tone(f, t='sine', d=.15, v=.3) {
   try {
-    await fetch('/api/profile/photo', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ photo: avatar })
-    });
+    if (!_audio) _audio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = _audio.createOscillator(), g = _audio.createGain();
+    o.connect(g); g.connect(_audio.destination);
+    o.frequency.value = f; o.type = t;
+    g.gain.setValueAtTime(v, _audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, _audio.currentTime + d);
+    o.start(); o.stop(_audio.currentTime + d);
   } catch {}
 }
+const sfx = {
+  correct: () => { tone(523,.1); setTimeout(() => tone(659,'sine',.15), 100); },
+  wrong:   () => tone(220, 'sawtooth', .2, .2),
+  start:   () => [261,329,392,523].forEach((f,i) => setTimeout(() => tone(f,'sine',.15), i*100)),
+  win:     () => [523,659,784,1047].forEach((f,i) => setTimeout(() => tone(f,'sine',.2), i*150)),
+};
 
-function renderAvatarInProfile(avatar) {
-  const wrap = document.getElementById('profile-avatar-display');
-  if (!wrap) return;
-  if (avatar && avatar.startsWith('data:')) {
-    wrap.innerHTML = `<img src="${avatar}" alt="avatar"/>`;
+// ── Navigation ─────────────────────────────────────────────
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  if (id === 'screen-leaderboard') loadLeaderboard();
+  if (id === 'screen-home') updateHomeUI();
+  if (id === 'screen-profile') loadProfile();
+}
+
+function updateHomeUI() {
+  const el = document.getElementById('home-user');
+  if (S.pseudo) {
+    const av = S.avatar.startsWith('data:') ? `<img src="${S.avatar}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle">` : S.avatar;
+    el.innerHTML = `${av} <strong>${S.pseudo}</strong> · ${S.elo} Elo`;
+    el.style.display = 'flex';
   } else {
-    wrap.textContent = avatar || '🧑‍🎓';
+    el.style.display = 'none';
   }
 }
 
-function getAvatarEl(avatar, size = 22) {
-  if (!avatar) return `<span style="font-size:${size*.7}px">🧑‍🎓</span>`;
-  if (avatar.startsWith('data:')) return `<img src="${avatar}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover"/>`;
-  return `<span style="font-size:${size*.7}px">${avatar}</span>`;
+// ── Toast ──────────────────────────────────────────────────
+function toast(msg, d=2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.add('hidden'), d);
 }
 
-/* ═══════════════════════════════════════════════
-   SESSION TIME TRACKING
-   ═══════════════════════════════════════════════ */
-let sessionStart = Date.now();
-let sessionSaveInterval = null;
-
-function startSessionTracking() {
-  sessionStart = Date.now();
-  // Save every 2 minutes
-  clearInterval(sessionSaveInterval);
-  sessionSaveInterval = setInterval(saveSessionTime, 120000);
-  // Save on page hide
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) saveSessionTime();
-  });
+function err(id, msg) {
+  const e = document.getElementById(id);
+  if (e) { e.textContent = msg; e.classList.remove('hidden'); }
 }
+function clearErr(id) { document.getElementById(id)?.classList.add('hidden'); }
 
-async function saveSessionTime() {
-  if (!state.token) return;
-  const seconds = Math.round((Date.now() - sessionStart) / 1000);
-  sessionStart = Date.now(); // reset so we don't double count
-  if (seconds < 5) return;
+// ── Auth ───────────────────────────────────────────────────
+async function doLogin() {
+  clearErr('login-err');
+  const pseudo = document.getElementById('login-pseudo').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!pseudo || !password) return err('login-err', 'Remplis tous les champs');
   try {
-    await fetch('/api/profile/session-time', {
+    const r = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ seconds })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pseudo, password })
     });
-  } catch {}
+    const d = await r.json();
+    if (!r.ok) return err('login-err', d.error || 'Erreur');
+    saveAuth(d);
+    toast(`Bienvenue ${pseudo} ! 🎉`);
+    go('screen-home');
+  } catch { err('login-err', 'Erreur réseau'); }
 }
 
-function formatTime(seconds) {
-  if (!seconds) return '0 min';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h}h ${m}min`;
-  return `${m} min`;
+async function doRegister() {
+  clearErr('reg-err');
+  const pseudo = document.getElementById('reg-pseudo').value.trim();
+  const password = document.getElementById('reg-password').value;
+  if (!pseudo || !password) return err('reg-err', 'Remplis tous les champs');
+  if (pseudo.length < 3) return err('reg-err', 'Pseudo trop court (min 3)');
+  if (password.length < 4) return err('reg-err', 'Mot de passe trop court (min 4)');
+  try {
+    const r = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pseudo, password })
+    });
+    const d = await r.json();
+    if (!r.ok) return err('reg-err', d.error || 'Erreur');
+    saveAuth(d);
+    toast(`Compte créé ! Bienvenue ${pseudo} 🚗`);
+    go('screen-home');
+  } catch (e) { err('reg-err', 'Erreur serveur : ' + e.message); }
 }
 
-/* ═══════════════════════════════════════════════
-   SHOW PROFILE (full rewrite)
-   ═══════════════════════════════════════════════ */
-
-// ── Audio ──────────────────────────────────────────────
-let audioCtx = null;
-function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
-function playTone(f,t='sine',d=.15,v=.3){try{const c=getAudio(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;o.type=t;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.start();o.stop(c.currentTime+d);}catch{}}
-function playCorrect(){playTone(523,'sine',.1);setTimeout(()=>playTone(659,'sine',.15),100);}
-function playWrong(){playTone(220,'sawtooth',.2,.2);}
-function playStart(){[261,329,392,523].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.15),i*100));}
-function playVictory(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,'sine',.2),i*150));}
-function playMicro(){playTone(880,'sine',.08,.2);}
-
-// ── Helpers ──────────────────────────────────────────────
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id)?.classList.add('active');
-  if(id==='screen-leaderboard')loadLeaderboard();
-  if(id==='screen-play'||id==='screen-solo')updateChips();
-  if(id==='screen-solo')updateSoloChip();
-}
-function showToast(msg,d=2500){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.add('hidden'),d);}
-function showError(id,msg){const e=document.getElementById(id);if(e){e.textContent=msg;e.classList.remove('hidden');}}
-function hideError(id){document.getElementById(id)?.classList.add('hidden');}
-function setText(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation',international:'🌍 International'};
-function catName(c){return catNames[c]||c;}
-function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',international:'🌍 International',training:'🧠 Entraînement',libre:'📚 Libre'}[m]||m;}
-function rankEmoji(r){return['🥇','🥈','🥉'][r-1]||`${r}.`;}
-const coachTips = {
-  priorites: ["Mémorise : priorité à droite SAUF panneau contraire 🚦","Le STOP = arrêt TOTAL obligatoire, même si vide 🛑","Le cédez-le-passage ≠ arrêt obligatoire ! 🔺"],
-  panneaux: ["Rouge = interdit, Bleu = obligation, Triangle = danger 🪧","Le carré jaune = route prioritaire 💛","Rond bleu + chiffre = vitesse MINIMALE, pas maximale ! 🔵"],
-  vitesse: ["Autoroute : 130 sec, 110 pluie, 50 brouillard < 50m ⚡","En ville = 50 km/h par défaut 🏙️","Permis probatoire : -10 km/h partout sur autoroute 🔰"],
-  alcool: ["0,5 g/L pour les conducteurs standards 🍺","0,2 g/L pour les jeunes conducteurs","Seul le TEMPS élimine l'alcool, pas le café ☕"],
-  securite: ["Gilet AVANT de sortir du véhicule 🦺","Triangle à 100m hors agglo, 30m en ville","PAS = Protéger, Alerter, Secourir 🚨"],
-  regles: ["Ligne continue = jamais la franchir ⚡","Ceinture obligatoire à l'avant ET à l'arrière 🔒","Téléphone en main interdit même au feu rouge 📵"],
-  international: ["En UK on roule à gauche ! 🇬🇧","L'Autobahn est souvent sans limite en Allemagne 🇩🇪","Phares de jour obligatoires dans plusieurs pays nordiques 💡"],
-};
-function getCoachTip(category) {
-  const tips = coachTips[category] || ["Lis bien la question et toutes les réponses ! 📖","Ne te laisse pas piéger ! 🧐","Prends le temps de réfléchir ⏱️"];
-  return tips[Math.floor(Math.random()*tips.length)];
+function saveAuth(d) {
+  S.token = d.token; S.pseudo = d.pseudo; S.elo = d.elo || 1000;
+  if (d.avatar) S.avatar = d.avatar;
+  localStorage.setItem('token',  S.token);
+  localStorage.setItem('pseudo', S.pseudo);
+  localStorage.setItem('elo',    S.elo);
+  localStorage.setItem('avatar', S.avatar);
+  socket.auth = { token: S.token };
 }
 
-// ── Auth ──────────────────────────────────────────────
-async function doLogin(){
-  hideError('login-error');
-  const pseudo=document.getElementById('login-pseudo').value.trim();
-  const password=document.getElementById('login-password').value;
-  if(!pseudo||!password)return showError('login-error','Remplis tous les champs');
-  try{
-    const res=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
-    const data=await res.json();
-    if(!res.ok)return showError('login-error',data.error);
-    saveAuth(data);showToast(`Bienvenue, ${pseudo} ! 🎉`);showScreen('screen-home');
-  }catch{showError('login-error','Erreur réseau');}
-}
-async function doRegister(){
-  hideError('reg-error');
-  const pseudo=document.getElementById('reg-pseudo').value.trim();
-  const password=document.getElementById('reg-password').value;
-  if(!pseudo||!password)return showError('reg-error','Remplis tous les champs');
-  try{
-    const res=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
-    const data=await res.json();
-    if(!res.ok)return showError('reg-error',data.error);
-    saveAuth(data);showToast(`Compte créé ! Bienvenue ${pseudo} 🚗`);showScreen('screen-home');
-  }catch(e){showError('reg-error','Erreur serveur: '+e.message);}
-}
-function saveAuth(data){
-  state.token=data.token;state.pseudo=data.pseudo;state.elo=data.elo||1000;
-  localStorage.setItem('token',data.token);localStorage.setItem('pseudo',data.pseudo);localStorage.setItem('elo',data.elo||1000);
-  socket.auth={token:data.token};
-}
-function switchTab(tab){
-  document.getElementById('auth-login').classList.toggle('hidden',tab!=='login');
-  document.getElementById('auth-register').classList.toggle('hidden',tab!=='register');
-  document.getElementById('tab-login').classList.toggle('active',tab==='login');
-  document.getElementById('tab-register').classList.toggle('active',tab==='register');
-}
-function promptGuest(){const p=prompt('Choisis un pseudo invité :');if(p&&p.trim().length>=2){state.pseudo=p.trim().slice(0,20);showScreen('screen-home');}}
-function updateChips(){
-  const avatar = state.avatar || localStorage.getItem('avatar') || '🧑‍🎓';
-  const avatarHtml = avatar.startsWith('data:') ? `<img src="${avatar}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle"/>` : avatar;
-  ['play-user-info'].forEach(id=>{const c=document.getElementById(id);if(!c)return;if(state.pseudo){c.innerHTML=`${avatarHtml} ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');});
-}
-function updateSoloChip(){
-  const c=document.getElementById('solo-user-info');if(!c)return;
-  if(state.pseudo){c.textContent=`👤 ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');
+function doLogout() {
+  ['token','pseudo','elo','avatar'].forEach(k => localStorage.removeItem(k));
+  S.token = null; S.pseudo = null; S.elo = 0; S.avatar = '🧑‍🎓';
+  toast('Déconnecté 👋');
+  go('screen-home');
 }
 
-// ── Profile ───────────────────────────────────────────
-async function showProfile() {
-  showScreen('screen-profile');
+function switchAuthTab(tab) {
+  document.getElementById('auth-login').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('auth-register').classList.toggle('hidden', tab !== 'register');
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+function promptGuest() {
+  const p = prompt('Choisis un pseudo invité :');
+  if (p && p.trim().length >= 2) {
+    S.pseudo = p.trim().slice(0, 20);
+    localStorage.setItem('pseudo', S.pseudo);
+    go('screen-home');
+  }
+}
+
+// ── Profile ────────────────────────────────────────────────
+async function loadProfile() {
   const pc = document.getElementById('profile-content');
 
-  if (!state.token) {
+  if (!S.token) {
     pc.innerHTML = `
-      <div style="text-align:center;padding:2rem 1rem">
+      <div style="text-align:center;padding:2rem">
         <div style="font-size:3rem;margin-bottom:1rem">👤</div>
-        <div style="font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Connecte-toi pour voir ton profil</div>
-        <div style="color:var(--text2);font-size:.9rem;margin-bottom:1.5rem">Tes stats, badges et progression sont sauvegardés avec ton compte.</div>
-        <button class="btn btn-primary" onclick="showScreen(&quot;screen-auth&quot;)">Se connecter</button>
-        <div style="margin-top:1rem"><button class="btn btn-ghost" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Retour accueil</button></div>
+        <p style="font-weight:700;margin-bottom:.5rem">Connecte-toi pour voir ton profil</p>
+        <p style="color:var(--text2);font-size:.9rem;margin-bottom:1.5rem">Tes stats et badges sont sauvegardés avec ton compte.</p>
+        <button class="btn btn-primary" onclick="go('screen-auth')">Se connecter</button>
       </div>`;
     return;
   }
@@ -257,576 +176,813 @@ async function showProfile() {
   pc.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
 
   try {
-    const res = await fetch('/api/profile', { headers: { Authorization: 'Bearer ' + state.token } });
-    if (res.status === 401) { localStorage.removeItem('token'); state.token = null; showProfile(); return; }
-    const data = await res.json();
+    const r = await fetch('/api/profile', { headers: { Authorization: 'Bearer ' + S.token } });
+    if (r.status === 401) { doLogout(); return; }
+    const d = await r.json();
 
-    const level = data.level || { name: '&#128290; Apprenti', next: 1020, level: 1 };
-    const wins = data.wins || 0, losses = data.losses || 0, totalGames = data.total_games || 0;
-    const totalCorrect = data.total_correct || 0, totalQ = data.total_questions || 0;
-    const acc = totalQ > 0 ? Math.round(totalCorrect / totalQ * 100) : 0;
-    const winRate = totalGames > 0 ? Math.round(wins / totalGames * 100) : 0;
-    const avgScore = totalGames > 0 ? (totalCorrect / totalGames).toFixed(1) : '0';
-    const totalTime = data.total_seconds || 0;
-    const badges = data.badges || [];
-    const catStats = data.category_stats || {};
-    const eloToNext = level.next ? level.next - data.elo : null;
-    const eloBase = {1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[level.level] || 0;
-    const eloRange = level.next ? level.next - eloBase : 1;
-    const eloProgress = level.next ? Math.min(100, Math.round((data.elo - eloBase) / eloRange * 100)) : 100;
-    const avatar = data.avatar || localStorage.getItem('avatar') || '&#129489;&#8205;&#127979;';
-    state.avatar = avatar;
-    const avatarHtml = avatar.startsWith('data:')
-      ? '<img src="' + avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/>'
-      : '<span style="font-size:2.5rem">' + avatar + '</span>';
+    const wins = d.wins || 0, losses = d.losses || 0, games = d.total_games || 0;
+    const correct = d.total_correct || 0, questions = d.total_questions || 0;
+    const acc = questions > 0 ? Math.round(correct / questions * 100) : 0;
+    const winRate = games > 0 ? Math.round(wins / games * 100) : 0;
+    const avgPerGame = games > 0 ? (correct / games).toFixed(1) : '0';
+    const secs = d.total_seconds || 0;
+    const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60);
+    const timeStr = h > 0 ? `${h}h ${m}min` : `${m} min`;
 
+    const lv = d.level || { name:'🔰 Apprenti', next:1020, level:1 };
+    const eloBase = {1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[lv.level] || 0;
+    const eloRange = lv.next ? lv.next - eloBase : 1;
+    const eloProgress = lv.next ? Math.min(100, Math.round((d.elo - eloBase) / eloRange * 100)) : 100;
+
+    const avatar = d.avatar || S.avatar || '🧑‍🎓';
+    S.avatar = avatar; localStorage.setItem('avatar', avatar);
+    const avHtml = avatar.startsWith('data:')
+      ? `<img src="${avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`
+      : `<span style="font-size:2.5rem">${avatar}</span>`;
+
+    const badges = d.badges || [];
+    const catStats = d.category_stats || {};
     const weakCats = Object.entries(catStats)
       .filter(([,s]) => s.sessions > 0)
       .sort((a,b) => (b[1].errors/b[1].sessions) - (a[1].errors/a[1].sessions))
       .slice(0, 4);
 
-    const statsHtml = [
-      [wins, '&#9989; Victoires'],
-      [losses, '&#10060; Défaites'],
-      [winRate + '%', '&#127942; Taux victoire'],
-      [acc + '%', '&#127919; Précision'],
-      [avgScore, '&#128202; Moy/partie'],
-      [totalCorrect, '&#10004;&#65039; Bonnes rép.']
-    ].map(([v,l]) => '<div class="profile-stat"><div class="ps-num">' + v + '</div><div class="ps-label">' + l + '</div></div>').join('');
+    pc.innerHTML = `
+      <div style="text-align:center;padding:.5rem 0 1.5rem">
+        <div class="profile-avatar-wrap" onclick="openAvatarModal()">
+          <div class="profile-avatar-img" id="prof-av">${avHtml}</div>
+          <div class="avatar-edit-btn">✏️</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">${d.pseudo}</div>
+        <div style="color:var(--accent2);font-weight:700">${lv.name}</div>
+        <div style="color:var(--text2);font-size:.85rem">${d.elo} Elo${lv.next ? ` · encore ${lv.next - d.elo} pts` : ' · Niveau max 🏆'}</div>
+        <div style="width:180px;margin:.6rem auto 0">
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${eloProgress}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 1s"></div>
+          </div>
+          <div style="font-size:.72rem;color:var(--text3);text-align:center;margin-top:.2rem">${eloProgress}% vers le prochain niveau</div>
+        </div>
+      </div>
 
-    const weakHtml = weakCats.length
-      ? weakCats.map(([cat,s]) => {
-          const pct = Math.round(s.errors/s.sessions*100);
-          const col = pct>=60?'#f87171':pct>=30?'#fbbf24':'#4ade80';
-          return '<div class="weakness-row"><div class="weakness-cat">' + catName(cat) + '</div><div class="weakness-bar-bg"><div class="weakness-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div><div class="weakness-pct" style="color:' + col + '">' + pct + '%</div></div>';
-        }).join('') + '<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo(\x27training\x27)">&#129504; Entraînement ciblé</button>'
-      : '<div class="no-badge">Joue des parties pour voir ton analyse !</div>';
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.85rem 1rem;display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+        <span style="font-size:1.5rem">⏱️</span>
+        <div><div style="font-weight:700">${timeStr}</div><div style="color:var(--text2);font-size:.78rem">passées sur le site</div></div>
+        <div style="margin-left:auto;text-align:right"><div style="font-weight:700">${games}</div><div style="color:var(--text2);font-size:.78rem">parties jouées</div></div>
+      </div>
 
-    const badgesHtml = badges.length
-      ? '<div class="profile-badges-wrap">' + badges.map(b => '<span class="badge-chip">' + b + '</span>').join('') + '</div>'
-      : '<div class="no-badge">Aucun badge encore — joue pour en débloquer ! &#128170;</div>';
+      <div class="profile-stats-grid">
+        <div class="profile-stat"><div class="ps-num">${wins}</div><div class="ps-label">✅ Victoires</div></div>
+        <div class="profile-stat"><div class="ps-num">${losses}</div><div class="ps-label">❌ Défaites</div></div>
+        <div class="profile-stat"><div class="ps-num">${winRate}%</div><div class="ps-label">🏆 Taux victoire</div></div>
+        <div class="profile-stat"><div class="ps-num">${acc}%</div><div class="ps-label">🎯 Précision</div></div>
+        <div class="profile-stat"><div class="ps-num">${avgPerGame}</div><div class="ps-label">📊 Moy/partie</div></div>
+        <div class="profile-stat"><div class="ps-num">${correct}</div><div class="ps-label">✔️ Bonnes rép.</div></div>
+      </div>
 
-    pc.innerHTML =
-      '<div class="profile-header">' +
-        '<div class="profile-avatar-wrap" onclick="openAvatarModal()" title="Changer la photo">' +
-          '<div class="profile-avatar-img" id="profile-avatar-display">' + avatarHtml + '</div>' +
-          '<div class="avatar-edit-btn">&#9999;&#65039;</div>' +
-        '</div>' +
-        '<div style="font-size:1.3rem;font-weight:800;margin-bottom:.2rem">' + data.pseudo + '</div>' +
-        '<div class="profile-level">' + level.name + '</div>' +
-        '<div class="profile-elo">' + data.elo + ' Elo' + (eloToNext ? ' · encore ' + eloToNext + ' pts' : ' · Niveau max &#127942;') + '</div>' +
-        '<div class="level-bar-wrap" style="margin-top:.5rem">' +
-          '<div class="level-bar-bg"><div class="level-bar-fill" style="width:' + eloProgress + '%"></div></div>' +
-          '<div class="level-bar-label">' + (level.next ? eloProgress + '% vers le prochain niveau' : 'Niveau maximum !') + '</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="time-stat">' +
-        '<div class="time-stat-icon">&#9201;&#65039;</div>' +
-        '<div><div class="time-stat-val">' + formatTime(totalTime) + '</div><div class="time-stat-label">passées sur le site</div></div>' +
-        '<div style="margin-left:auto;text-align:right"><div class="time-stat-val">' + totalGames + '</div><div class="time-stat-label">parties jouées</div></div>' +
-      '</div>' +
-      '<div class="profile-stats-grid">' + statsHtml + '</div>' +
-      '<div class="profile-section-title">&#127958;&#65039; Badges (' + badges.length + ')</div>' +
-      badgesHtml +
-      '<div class="profile-section-title">&#128202; Analyse par thème</div>' +
-      weakHtml +
-      '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.65rem;flex-wrap:wrap">' +
-        '<button class="btn btn-primary" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Accueil</button>' +
-        '<button class="btn btn-accent" onclick="startSolo(&quot;examen_blanc&quot;)">&#128203; Examen blanc</button>' +
-        '<button class="btn btn-ghost" onclick="showScreen(&quot;screen-play&quot;)">&#9876;&#65039; Duel</button>' +
-        '<button class="btn btn-ghost-sm" onclick="doLogout()" style="margin-left:auto;color:var(--red)">Déconnexion</button>' +
-      '</div>';
+      <div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">🎖️ Badges (${badges.length})</div>
+      ${badges.length
+        ? `<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">${badges.map(b => `<span style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--yellow);padding:.3rem .75rem;border-radius:16px;font-size:.82rem">${b}</span>`).join('')}</div>`
+        : `<div style="color:var(--text3);font-size:.85rem;margin-bottom:.5rem">Aucun badge encore — joue pour en débloquer ! 💪</div>`}
+
+      <div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">📊 Analyse par thème</div>
+      ${weakCats.length
+        ? weakCats.map(([cat, s]) => {
+            const pct = Math.round(s.errors / s.sessions * 100);
+            const col = pct >= 60 ? '#f87171' : pct >= 30 ? '#fbbf24' : '#4ade80';
+            return `<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem">
+              <span style="font-size:.82rem;width:110px;flex-shrink:0">${catName(cat)}</span>
+              <div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .8s"></div>
+              </div>
+              <span style="font-size:.78rem;color:${col};width:36px;text-align:right">${pct}%</span>
+            </div>`;
+          }).join('') + `<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo('training')">🧠 Entraînement ciblé</button>`
+        : `<div style="color:var(--text3);font-size:.85rem">Joue des parties pour voir ton analyse !</div>`}
+
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="go('screen-home')">🏠 Accueil</button>
+        <button class="btn btn-ghost" onclick="go('screen-play')">⚔️ Duel</button>
+        <button class="btn btn-ghost" onclick="startSolo('examen_blanc')">📋 Examen</button>
+        <button class="btn btn-ghost-sm" onclick="doLogout()" style="margin-left:auto;color:var(--red)">Déconnexion</button>
+      </div>`;
   } catch(e) {
-    pc.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement</p><button class="btn btn-primary" onclick="showScreen(&quot;screen-auth&quot;)">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Accueil</button></div></div>';
+    pc.innerHTML = `<div style="text-align:center;padding:2rem">
+      <p style="color:var(--red);margin-bottom:1rem">Erreur : ${e.message}</p>
+      <button class="btn btn-primary" onclick="go('screen-auth')">Se connecter</button>
+      <div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="go('screen-home')">🏠 Accueil</button></div>
+    </div>`;
   }
 }
 
-function doLogout() {
-  localStorage.removeItem('token'); localStorage.removeItem('pseudo'); localStorage.removeItem('elo');
-  state.token = null; state.pseudo = null; state.elo = 0;
-  showToast('Déconnecté 👋'); showScreen('screen-home');
+// ── Avatar ─────────────────────────────────────────────────
+const AVATARS = ['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗','🚕','🚙','🏍️','🚓','🚑','👮','🦸','🧙','🎮','🔥','⚡','🌟','👑','🎯','🏆','💎','🦊','🐺','🐯','🦁','🤖','🦅','🐸','🧑‍✈️','🎭'];
+
+function openAvatarModal() {
+  document.getElementById('emoji-avatars').innerHTML = AVATARS.map(e =>
+    `<div class="avatar-option" onclick="pickAvatar('${e}')">${e}</div>`
+  ).join('');
+  document.getElementById('avatar-modal').classList.remove('hidden');
 }
 
-// ── SOLO MODE ─────────────────────────────────────────
-async function startSolo(mode){
-  if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
-  state.soloMode=mode;
-  state.soloAnswers=[];state.soloIndex=0;state.soloCorrect=0;state.soloWrong=0;state.soloStreak=0;state.soloMaxStreak=0;
+function closeAvatarModal(e) {
+  if (!e || e.target.id === 'avatar-modal') document.getElementById('avatar-modal').classList.add('hidden');
+}
+
+async function pickAvatar(emoji) {
+  S.avatar = emoji;
+  localStorage.setItem('avatar', emoji);
+  document.getElementById('avatar-modal').classList.add('hidden');
+  const el = document.getElementById('prof-av');
+  if (el) el.innerHTML = `<span style="font-size:2.5rem">${emoji}</span>`;
+  await saveAvatar(emoji);
+  updateHomeUI();
+  toast(`Avatar mis à jour : ${emoji}`);
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 500000) { toast('Image trop grande ! Max 500kb'); return; }
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas');
+      const size = 150;
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const ratio = Math.min(size/img.width, size/img.height);
+      const w = img.width * ratio, h = img.height * ratio;
+      ctx.drawImage(img, (size-w)/2, (size-h)/2, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      S.avatar = dataUrl; localStorage.setItem('avatar', dataUrl);
+      document.getElementById('avatar-modal').classList.add('hidden');
+      const el = document.getElementById('prof-av');
+      if (el) el.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      await saveAvatar(dataUrl);
+      updateHomeUI();
+      toast('Photo mise à jour ! 📸');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveAvatar(av) {
+  if (!S.token) return;
+  try {
+    await fetch('/api/profile/photo', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + S.token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo: av })
+    });
+  } catch {}
+}
+
+// ── Helpers ────────────────────────────────────────────────
+const catNames = {
+  priorites:'🚦 Priorités', panneaux:'🪧 Panneaux', vitesse:'⚡ Vitesses',
+  alcool:'🍺 Alcool', regles:'📋 Règles', securite:'🛡️ Sécurité',
+  vehicule:'🔧 Véhicule', permis:'📄 Permis', situation:'🚗 Situation', international:'🌍 International'
+};
+function catName(c) { return catNames[c] || c; }
+function modeName(m) {
+  return {normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',international:'🌍 International',training:'🧠 Entraînement',libre:'📚 Libre'}[m] || m;
+}
+
+const COACH_TIPS = {
+  priorites: ["Priorité à droite SAUF panneau contraire 🚦", "STOP = arrêt TOTAL obligatoire 🛑", "Cédez ≠ arrêt obligatoire 🔺"],
+  panneaux:  ["Rouge = interdit, Bleu = obligation, Triangle = danger 🪧", "Carré jaune = route prioritaire 💛", "Rond bleu + chiffre = vitesse MINIMALE 🔵"],
+  vitesse:   ["Autoroute : 130 sec, 110 pluie ⚡", "Ville = 50 km/h par défaut 🏙️", "Permis probatoire : 110 max autoroute 🔰"],
+  alcool:    ["0,5 g/L standard · 0,2 g/L jeune conducteur 🍺", "Seul le TEMPS élimine l'alcool ☕"],
+  securite:  ["Gilet AVANT de sortir du véhicule 🦺", "PAS = Protéger, Alerter, Secourir 🚨"],
+  regles:    ["Ligne continue = jamais franchir ⚡", "Ceinture avant ET arrière 🔒"],
+  international: ["UK roule à gauche ! 🇬🇧", "Autobahn souvent sans limite 🇩🇪"],
+};
+function coachTip(cat) {
+  const tips = COACH_TIPS[cat] || ["Lis bien la question ! 📖", "Prends le temps de réfléchir ⏱️"];
+  return tips[Math.floor(Math.random() * tips.length)];
+}
+
+// ── Play screen ────────────────────────────────────────────
+function showCreateForm() {
+  if (!S.pseudo) { promptGuest(); return; }
+  const f = document.getElementById('create-form');
+  f.classList.toggle('hidden');
+  document.getElementById('join-form').classList.add('hidden');
+}
+function showJoinForm() {
+  if (!S.pseudo) { promptGuest(); return; }
+  const f = document.getElementById('join-form');
+  f.classList.toggle('hidden');
+  document.getElementById('create-form').classList.add('hidden');
+}
+function selectOpt(type, val, el) {
+  el.closest('.option-pills').querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  S.selectedOptions[type] = val;
+}
+function selectMode(mode, el) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  S.selectedOptions.mode = mode;
+}
+function openCreateGame() {
+  if (!S.pseudo) { promptGuest(); return; }
+  clearErr('play-err');
+  socket.emit('create_game', {
+    pseudo: S.pseudo, avatar: S.avatar,
+    options: {
+      maxPlayers:    S.selectedOptions.players,
+      questionCount: S.selectedOptions.questions,
+      timeLimit:     S.selectedOptions.time,
+      category:      S.selectedOptions.category,
+      mode:          S.selectedOptions.mode,
+    }
+  });
+}
+function doJoinGame() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 4) return err('join-err', 'Code invalide');
+  clearErr('join-err');
+  socket.emit('join_game', { roomCode: code, pseudo: S.pseudo, avatar: S.avatar });
+}
+function copyRoomCode() {
+  navigator.clipboard.writeText(document.getElementById('display-room-code').textContent)
+    .then(() => toast('Code copié ! 📋'));
+}
+function sendReady() {
+  const btn = document.getElementById('btn-ready');
+  btn.disabled = true; btn.textContent = '⏳ En attente...';
+  socket.emit('player_ready');
+}
+function forceStart() { socket.emit('force_start'); }
+function requestRematch() {
+  document.getElementById('btn-rematch').disabled = true;
+  socket.emit('request_rematch');
+}
+
+// ── Waiting room ───────────────────────────────────────────
+function renderWaiting(players, maxPlayers) {
+  const c = document.getElementById('players-waiting'); c.innerHTML = '';
+  for (let i = 0; i < maxPlayers; i++) {
+    const p = players[i];
+    const div = document.createElement('div');
+    div.className = 'waiting-player ' + (p ? 'connected' : 'empty');
+    if (p) {
+      const av = p.avatar
+        ? (p.avatar.startsWith('data:') ? `<img src="${p.avatar}" class="wp-avatar-img">` : `<span style="font-size:1.2rem">${p.avatar}</span>`)
+        : p.pseudo[0].toUpperCase();
+      div.innerHTML = `<div class="wp-avatar connected">${av}</div>
+        <div><div class="wp-name">${p.pseudo}${p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':''}</div>
+        <div class="wp-tag">${i===0?'👑 Hôte':'Joueur '+(i+1)}</div></div>
+        <div class="wp-status">${p.ready?'✅':'⏳'}</div>`;
+    } else {
+      div.innerHTML = `<div class="wp-avatar">?</div>
+        <div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur ${i+1}</div></div>
+        <div class="wp-status">⏳</div>`;
+    }
+    c.appendChild(div);
+  }
+  const me = players.find(p => p.pseudo === S.pseudo);
+  const btnR = document.getElementById('btn-ready');
+  const btnF = document.getElementById('btn-force-start');
+  if (me && !me.ready) { btnR.classList.remove('hidden'); btnR.disabled = false; btnR.textContent = '✅ Je suis prêt !'; }
+  else if (me?.ready) { btnR.classList.remove('hidden'); btnR.disabled = true; btnR.textContent = '✅ Prêt !'; }
+  if (S.isHost && players.length >= 2) btnF.classList.remove('hidden'); else btnF.classList.add('hidden');
+  const msg = document.getElementById('waiting-msg');
+  if (players.length < maxPlayers) { msg.innerHTML = `<div class="spinner"></div> En attente... (${players.length}/${maxPlayers})`; msg.style.display = 'flex'; }
+  else msg.style.display = 'none';
+}
+
+function renderOptsDisplay(opts) {
+  document.getElementById('options-display').innerHTML =
+    [opts.maxPlayers+' joueurs', opts.questionCount+' questions', opts.timeLimit+'s', catName(opts.category), modeName(opts.mode)]
+    .map(t => `<span class="options-tag">${t}</span>`).join('');
+}
+
+// ── Duel HUD ───────────────────────────────────────────────
+function renderHUD() {
+  const c = document.getElementById('hud-scores'); c.innerHTML = '';
+  const max = Math.max(...S.allPlayers.map(p => p.score), 0);
+  S.allPlayers.forEach(p => {
+    const isMe = p.pseudo === S.pseudo;
+    const av = p.avatar
+      ? (p.avatar.startsWith('data:') ? `<img src="${p.avatar}" style="width:20px;height:20px;border-radius:50%;object-fit:cover">` : `<span style="font-size:.85rem">${p.avatar}</span>`)
+      : `<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">${p.pseudo[0]}</span>`;
+    const d = document.createElement('div');
+    d.className = 'hud-player-score' + (isMe ? ' me' : '') + (p.score === max && max > 0 && !isMe ? ' leading' : '');
+    d.innerHTML = `<div style="display:flex;align-items:center;gap:.2rem;width:24px">${av}</div>
+      <div><div class="hps-name">${p.pseudo}</div>${p.answered ? '<div style="font-size:.6rem;color:var(--green)">✓</div>' : ''}</div>
+      <div class="hps-score">${p.score}</div>
+      ${p.streak >= 3 ? `<div style="font-size:.72rem">🔥${p.streak}</div>` : ''}`;
+    c.appendChild(d);
+  });
+}
+
+// ── Duel question ──────────────────────────────────────────
+function renderDuelQuestion(data) {
+  S.currentQ = data; S.selectedAnswers = []; S.answered = false;
+  document.getElementById('q-counter').textContent = `${data.index+1}/${data.total}`;
+  document.getElementById('q-category').textContent = catName(data.category);
+  document.getElementById('q-text').textContent = data.question;
+  document.getElementById('mode-badge').textContent = modeName(data.mode || S.gameMode);
+  document.getElementById('game-progress').style.width = `${data.index/data.total*100}%`;
+  document.getElementById('trap-indicator').classList.toggle('hidden', !data.isTrap);
+  const sb = document.getElementById('situation-box');
+  if (data.situation) { sb.textContent = '📍 ' + data.situation; sb.classList.remove('hidden'); } else sb.classList.add('hidden');
+  const iw = document.getElementById('q-image-wrap');
+  if (data.image_url) { document.getElementById('q-image').src = data.image_url; iw.classList.remove('hidden'); } else iw.classList.add('hidden');
+
+  const cont = document.getElementById('answers-container'); cont.innerHTML = '';
+  data.answers.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn'; btn.dataset.id = a.id;
+    btn.textContent = a.id.toUpperCase() + ') ' + a.text;
+    btn.addEventListener('click', () => {
+      if (S.answered) return;
+      if (data.isMultiple) {
+        btn.classList.toggle('selected');
+        const idx = S.selectedAnswers.indexOf(a.id);
+        idx >= 0 ? S.selectedAnswers.splice(idx,1) : S.selectedAnswers.push(a.id);
+        const cb = document.getElementById('confirm-btn'); if (cb) cb.disabled = S.selectedAnswers.length === 0;
+      } else {
+        submitDuelAnswer([a.id]);
+      }
+    });
+    cont.appendChild(btn);
+  });
+
+  let cb = document.getElementById('confirm-btn');
+  if (data.isMultiple) {
+    if (!cb) { cb = document.createElement('button'); cb.id = 'confirm-btn'; cb.className = 'btn btn-primary confirm-btn'; cb.textContent = 'Valider ✅'; cb.addEventListener('click', () => { if (S.selectedAnswers.length) submitDuelAnswer(S.selectedAnswers); }); }
+    cb.disabled = true; cont.after(cb);
+  } else { cb?.remove(); }
+
+  const fb = document.getElementById('answer-feedback'); fb.classList.add('hidden'); fb.className = 'answer-feedback hidden';
+  ['fifty50','timeBonus','stress'].forEach(pu => { const b = document.getElementById('pu-'+pu); if (b) b.disabled = !S.powerups[pu]; });
+  startTimer(data.timeLimit || 30);
+  if (Math.random() < .25) showCoach(coachTip(data.category));
+}
+
+function submitDuelAnswer(answers) {
+  if (S.answered) return; S.answered = true;
+  const timeTaken = (S.currentQ?.timeLimit || 30) - S.timerSecs;
+  document.querySelectorAll('.answer-btn').forEach(b => b.disabled = true);
+  document.getElementById('confirm-btn')?.setAttribute('disabled', 'true');
+  socket.emit('submit_answer', { answers, timeTaken });
+  const fb = document.getElementById('answer-feedback');
+  fb.className = 'answer-feedback neutral-fb';
+  fb.innerHTML = '<div style="display:flex;align-items:center;gap:.5rem;color:var(--text2)"><div class="spinner"></div> En attente...</div>';
+  fb.classList.remove('hidden');
+}
+
+function showDuelResult(data) {
+  stopTimer();
+  if (data.hidden) return;
+  document.querySelectorAll('.answer-btn').forEach(btn => {
+    if (data.correctAnswers?.includes(btn.dataset.id)) btn.classList.add('correct');
+    else if (S.selectedAnswers.includes(btn.dataset.id)) btn.classList.add('wrong');
+  });
+  document.getElementById('screen-game').classList.add(data.isCorrect ? 'flash-correct' : 'flash-wrong');
+  setTimeout(() => document.getElementById('screen-game').classList.remove('flash-correct','flash-wrong'), 600);
+  if (data.isCorrect !== null) { data.isCorrect ? sfx.correct() : sfx.wrong(); }
+  const fb = document.getElementById('answer-feedback');
+  let html = '';
+  if (data.timeout) html = '<strong>⏰ Temps écoulé !</strong><br>';
+  else if (data.isCorrect) html = `<strong>✅ Bonne réponse !</strong>${data.streak>=3?` <span class="streak-fire">🔥 ${data.streak}</span>`:''}<br>`;
+  else html = `<strong>❌ Mauvaise réponse</strong>${data.isTrap&&data.trapMessage?`<br><em>😏 ${data.trapMessage}</em>`:''}<br>`;
+  if (data.explanation) html += `<span style="color:var(--text2);font-size:.85rem">💡 ${data.explanation}</span>`;
+  if (data.trapStats) html += `<br><span style="color:var(--yellow);font-size:.78rem">📊 ${data.trapStats}</span>`;
+  fb.className = `answer-feedback ${data.isCorrect ? 'correct-fb' : data.isCorrect === null ? 'neutral-fb' : 'wrong-fb'}`;
+  fb.innerHTML = html; fb.classList.remove('hidden');
+  if (data.isCorrect && data.streak >= 3) showCoach(`🔥 ${data.streak} en série !`);
+  else if (data.isCorrect === false) showCoach(coachTip(S.currentQ?.category));
+}
+
+// ── Timer ──────────────────────────────────────────────────
+function startTimer(secs) {
+  stopTimer(); S.timerSecs = secs;
+  const arc = document.getElementById('timer-arc'), maxD = 163.36;
+  const tick = () => {
+    document.getElementById('timer-text').textContent = S.timerSecs;
+    arc.style.strokeDashoffset = maxD * (1 - S.timerSecs / secs);
+    arc.style.stroke = S.timerSecs <= 5 ? '#f87171' : S.timerSecs <= 10 ? '#fbbf24' : '#4ade80';
+    if (S.timerSecs > 0) S.timerSecs--; else stopTimer();
+  };
+  tick(); S.timerInterval = setInterval(tick, 1000);
+}
+function stopTimer() { clearInterval(S.timerInterval); S.timerInterval = null; }
+
+function showCoach(text) {
+  const b = document.getElementById('coach-bubble');
+  document.getElementById('coach-text').textContent = text;
+  b.classList.remove('hidden'); clearTimeout(b._t); b._t = setTimeout(() => b.classList.add('hidden'), 4500);
+}
+
+function usePowerup(type) {
+  if (!S.powerups[type] || S.answered) return;
+  S.powerups[type]--;
+  document.getElementById('pu-'+type).disabled = true;
+  socket.emit('use_powerup', { type });
+}
+
+// ── Duel results ───────────────────────────────────────────
+function showDuelResults(data) {
+  stopTimer(); go('screen-results');
+  const banner = document.getElementById('victory-banner');
+  if (data.isDraw) banner.textContent = '🤝 Match nul !';
+  else if (data.winner === S.pseudo) { banner.textContent = '🏆 VICTOIRE !'; sfx.win(); }
+  else banner.textContent = `🎖️ Victoire de ${data.winner} !`;
+
+  document.getElementById('podium').innerHTML = data.results.map(r => {
+    const isMe = r.pseudo === S.pseudo;
+    const elo = r.eloChange ? `<div style="font-size:.82rem;font-weight:700;color:${r.eloChange>0?'var(--green)':'var(--red)'}">${r.eloChange>0?'+':''}${r.eloChange} Elo</div>` : '';
+    return `<div class="podium-item rank-${r.rank} ${isMe?'me':''}">
+      <div class="podium-rank">${['🥇','🥈','🥉'][r.rank-1]||r.rank+'.'}</div>
+      <div class="podium-pseudo">${r.pseudo}${isMe?'<span class="podium-you">toi</span>':''}</div>
+      <div><div class="podium-score">${r.score}<span style="font-size:.75rem;color:var(--text3)">/${r.total}</span></div><div class="podium-pct">${r.percentage}%</div></div>
+      ${elo}
+    </div>`;
+  }).join('');
+
+  const myR = data.results.find(r => r.pseudo === S.pseudo);
+  if (myR?.eloChange) { S.elo += myR.eloChange; localStorage.setItem('elo', S.elo); }
+
+  const an = document.getElementById('results-analysis'); an.innerHTML = '';
+  if (myR && Object.keys(myR.categoryErrors||{}).length) {
+    an.innerHTML = '<div class="analysis-title">📊 Tes erreurs</div>' +
+      Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n]) =>
+        `<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`
+      ).join('');
+  }
+
+  if (data.replayData?.length) {
+    S.replayData = data.replayData;
+    document.getElementById('replay-toggle').classList.remove('hidden');
+  }
+
+  const examEl = document.getElementById('exam-results-duel');
+  if (data.examPassed?.length) {
+    examEl.innerHTML = data.examPassed.map(p =>
+      `<div class="exam-verdict ${p.passed?'admis':'recale'}">${p.pseudo} : ${p.passed?'✅ ADMIS':'❌ RECALÉ'}</div>`
+    ).join('');
+    examEl.classList.remove('hidden');
+  }
+
+  const btnR = document.getElementById('btn-rematch');
+  if (S.pseudo === data.hostPseudo) btnR.classList.remove('hidden'); else btnR.classList.add('hidden');
+}
+
+function toggleReplay() {
+  const rc = document.getElementById('replay-content');
+  rc.classList.toggle('hidden');
+  if (!rc.classList.contains('hidden') && S.replayData) {
+    rc.innerHTML = S.replayData.slice(0, 10).map((q,i) =>
+      `<div class="replay-item ${q.playerAnswers.every(p=>p.isCorrect)?'correct-q':'wrong-q'}">
+        <div class="replay-q">${i+1}. ${q.question}</div>
+        ${q.playerAnswers.map(p=>`<div class="replay-player"><span>${p.pseudo}</span><span>${p.isCorrect?'✅':'❌'} ${p.timeTaken?.toFixed(0)||'?'}s</span></div>`).join('')}
+      </div>`
+    ).join('');
+  }
+}
+
+// ── SOLO MODE ──────────────────────────────────────────────
+function showSoloScreen() { go('screen-solo'); document.getElementById('solo-category-picker').classList.add('hidden'); }
+function selectSoloCat(cat, el) {
+  document.querySelectorAll('#solo-category-picker .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active'); S.soloCategory = cat;
+}
+
+async function startSolo(mode) {
+  if (!S.pseudo) { promptGuest(); if (!S.pseudo) return; }
+  S.soloMode = mode;
+  S.soloAnswers = []; S.soloIdx = 0;
+  S.soloCorrect = 0; S.soloWrong = 0; S.soloStreak = 0; S.soloMaxStreak = 0;
   document.getElementById('solo-category-picker').classList.add('hidden');
 
-  let questions=[];
-  const timeLimit=mode==='micro'?15:mode==='examen_blanc'?30:30;
-  const count=mode==='micro'?5:mode==='examen_blanc'?40:10;
+  let questions = [];
+  const count = mode === 'micro' ? 5 : mode === 'examen_blanc' ? 40 : 10;
 
-  if(mode==='training'&&state.token){
-    try{
-      const res=await fetch(`/api/training/session?mode=training&count=10`,{headers:{Authorization:`Bearer ${state.token}`}});
-      const data=await res.json();
-      questions=data.fullQuestions||[];
-      if(data.weakCategories?.length) showToast(`🧠 Session ciblée : ${data.weakCategories.map(c=>catName(c)).join(', ')}`,3000);
-      else showToast('🧠 Session générale — joue plus pour cibler tes failles !',3000);
-    }catch{questions=getLocalQuestions({count,mode});}
-  } else {
-    questions=getLocalQuestions({count,mode,category:state.soloCategory});
-  }
+  // Always try server first
+  try {
+    const headers = S.token ? { Authorization: 'Bearer ' + S.token } : {};
+    const url = `/api/training/session?count=${count}&mode=${mode}&category=${S.soloCategory}`;
+    const res = await fetch(url, { headers });
+    const d = await res.json();
+    questions = d.fullQuestions || [];
+    if (d.weakCategories?.length && mode === 'training') {
+      toast('Session ciblée : ' + d.weakCategories.map(c => catName(c)).join(', '), 3000);
+    }
+  } catch (e) { console.error('Session load error:', e); }
 
-  if(!questions.length){showToast('Pas assez de questions pour ce mode','3000');return;}
-  state.soloQuestions=questions;
-  setText('solo-mode-badge',modeName(mode));
-  showScreen('screen-solo-game');
-  renderSoloQuestion();
+  if (!questions.length) { toast('Impossible de charger les questions, réessaie !'); return; }
+
+  S.soloQs = questions;
+  document.getElementById('solo-mode-badge').textContent = modeName(mode);
+  go('screen-solo-game');
+  renderSoloQ();
 }
 
-function startSoloCategory(){
-  document.getElementById('solo-category-picker').classList.toggle('hidden');
-}
-function selectSoloCat(cat,el){
-  document.querySelectorAll('#solo-category-picker .pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');state.soloCategory=cat;
-}
+function renderSoloQ() {
+  const q = S.soloQs[S.soloIdx];
+  if (!q) { endSolo(); return; }
+  const total = S.soloQs.length;
+  const timeLimit = S.soloMode === 'micro' ? 15 : 30;
 
-function getLocalQuestions({count=10,mode='normal',category='all'}){
-  let pool = [...(window._allQuestions||[])];
-  if(!pool.length){ console.warn('No questions in pool!'); return []; }
-  if(mode==='piege') pool=pool.filter(q=>q.is_trap);
-  else if(mode==='international') pool=pool.filter(q=>q.category==='international');
-  else if(mode==='examen_blanc') pool=pool; // all categories
-  else if(category && category!=='all') pool=pool.filter(q=>q.category===category);
-  // fallback if filter returns too few
-  if(pool.length < 3) pool = [...(window._allQuestions||[])];
-  return pool.sort(()=>Math.random()-.5).slice(0, Math.min(count, pool.length));
-}
+  document.getElementById('sq-counter').textContent = `${S.soloIdx+1}/${total}`;
+  document.getElementById('sq-category').textContent = catName(q.category);
+  document.getElementById('sq-text').textContent = q.question;
+  document.getElementById('solo-progress').style.width = `${S.soloIdx/total*100}%`;
+  document.getElementById('sq-correct').textContent = '✅ ' + S.soloCorrect;
+  document.getElementById('sq-wrong').textContent   = '❌ ' + S.soloWrong;
+  document.getElementById('sq-streak').textContent  = S.soloStreak >= 3 ? '🔥' + S.soloStreak : '';
+  document.getElementById('sq-trap-indicator').classList.toggle('hidden', !q.is_trap);
 
-function renderSoloQuestion(){
-  const q=state.soloQuestions[state.soloIndex];
-  if(!q)return endSoloGame();
-  const total=state.soloQuestions.length;
-  const timeLimit=state.soloMode==='micro'?15:30;
+  const sb = document.getElementById('sq-situation-box');
+  if (q.situation) { sb.textContent = '📍 ' + q.situation; sb.classList.remove('hidden'); } else sb.classList.add('hidden');
+  const iw = document.getElementById('sq-image-wrap');
+  if (q.image_url) { document.getElementById('sq-image').src = q.image_url; iw.classList.remove('hidden'); } else iw.classList.add('hidden');
 
-  setText('sq-counter',`${state.soloIndex+1}/${total}`);
-  setText('sq-category',catName(q.category));
-  setText('sq-text',q.question);
-  document.getElementById('solo-progress').style.width=`${(state.soloIndex/total)*100}%`;
-  document.getElementById('sq-correct').textContent=`✅ ${state.soloCorrect}`;
-  document.getElementById('sq-wrong').textContent=`❌ ${state.soloWrong}`;
-  document.getElementById('sq-streak').textContent=state.soloStreak>=3?`🔥${state.soloStreak}`:'';
-  document.getElementById('sq-trap-indicator').classList.toggle('hidden',!q.is_trap);
-
-  const sitBox=document.getElementById('sq-situation-box');
-  if(q.situation){sitBox.textContent=`📍 ${q.situation}`;sitBox.classList.remove('hidden');}else sitBox.classList.add('hidden');
-  const imgWrap=document.getElementById('sq-image-wrap');
-  if(q.image_url){document.getElementById('sq-image').src=q.image_url;imgWrap.classList.remove('hidden');}else imgWrap.classList.add('hidden');
-
-  const cont=document.getElementById('sq-answers');cont.innerHTML='';
-  q.answers.forEach(a=>{
-    const btn=document.createElement('button');
-    btn.className='answer-btn';btn.dataset.id=a.id;
-    btn.textContent=`${a.id.toUpperCase()}) ${a.text}`;
-    if(q.correct.length>1){
-      btn.addEventListener('click',()=>{btn.classList.toggle('selected');});
-    }else{
-      btn.addEventListener('click',()=>submitSoloAnswer([a.id]));
+  const cont = document.getElementById('sq-answers'); cont.innerHTML = '';
+  q.answers.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'answer-btn'; btn.dataset.id = a.id;
+    btn.textContent = a.id.toUpperCase() + ') ' + a.text;
+    if (q.correct.length > 1) {
+      btn.addEventListener('click', () => btn.classList.toggle('selected'));
+    } else {
+      btn.addEventListener('click', () => submitSoloAnswer([a.id]));
     }
     cont.appendChild(btn);
   });
 
-  // Multiple confirm
-  let cb=document.getElementById('solo-confirm-btn');
-  if(q.correct.length>1){
-    if(!cb){cb=document.createElement('button');cb.id='solo-confirm-btn';cb.className='btn btn-primary confirm-btn';cb.textContent='Valider ✅';cb.addEventListener('click',()=>{const sel=[...cont.querySelectorAll('.answer-btn.selected')].map(b=>b.dataset.id);if(sel.length)submitSoloAnswer(sel);});}
+  let cb = document.getElementById('solo-confirm-btn');
+  if (q.correct.length > 1) {
+    if (!cb) {
+      cb = document.createElement('button'); cb.id = 'solo-confirm-btn';
+      cb.className = 'btn btn-primary confirm-btn'; cb.textContent = 'Valider ✅';
+      cb.addEventListener('click', () => {
+        const sel = [...cont.querySelectorAll('.answer-btn.selected')].map(b => b.dataset.id);
+        if (sel.length) submitSoloAnswer(sel);
+      });
+    }
     cont.after(cb);
-  }else{if(cb)cb.remove();}
+  } else { cb?.remove(); }
 
-  const fb=document.getElementById('sq-feedback');fb.classList.add('hidden');fb.className='answer-feedback hidden';
+  document.getElementById('sq-feedback').classList.add('hidden');
   document.getElementById('sq-coach').classList.add('hidden');
   startSoloTimer(timeLimit);
 }
 
-function submitSoloAnswer(answers){
-  clearInterval(state.soloTimerInterval);
-  const q=state.soloQuestions[state.soloIndex];
-  const isCorrect=[...answers].sort().join(',')===[...q.correct].sort().join(',');
-  state.soloAnswers.push({questionIndex:state.soloIndex,answers,isCorrect,timeTaken:q.timeLimit-(state.soloTimerSeconds||0)});
+function submitSoloAnswer(answers) {
+  clearInterval(S.soloTimer);
+  const q = S.soloQs[S.soloIdx];
+  const ok = [...answers].sort().join(',') === [...q.correct].sort().join(',');
+  S.soloAnswers.push({ questionIndex: S.soloIdx, answers, isCorrect: ok, timeTaken: 30 - S.soloSecs });
 
-  document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{
-    b.disabled=true;
-    if(q.correct.includes(b.dataset.id))b.classList.add('correct');
-    else if(answers.includes(b.dataset.id))b.classList.add('wrong');
+  document.querySelectorAll('#sq-answers .answer-btn').forEach(b => {
+    b.disabled = true;
+    if (q.correct.includes(b.dataset.id)) b.classList.add('correct');
+    else if (answers.includes(b.dataset.id)) b.classList.add('wrong');
   });
   document.getElementById('solo-confirm-btn')?.setAttribute('disabled','true');
 
-  if(isCorrect){state.soloCorrect++;state.soloStreak++;state.soloMaxStreak=Math.max(state.soloMaxStreak,state.soloStreak);playCorrect();}
-  else{state.soloWrong++;state.soloStreak=0;playWrong();}
+  if (ok) { S.soloCorrect++; S.soloStreak++; S.soloMaxStreak = Math.max(S.soloMaxStreak, S.soloStreak); sfx.correct(); }
+  else { S.soloWrong++; S.soloStreak = 0; sfx.wrong(); }
 
-  // Feedback
-  const fb=document.getElementById('sq-feedback');
-  let html='';
-  if(isCorrect)html=`<strong>✅ Bonne réponse !</strong>${state.soloStreak>=3?` <span class="streak-fire">🔥 ${state.soloStreak} en série !</span>`:''}<br>`;
-  else html=`<strong>❌ Mauvaise réponse</strong>${q.is_trap&&q.trap_message?`<br><em>😏 ${q.trap_message}</em>`:''}<br>`;
-  if(q.explanation&&state.soloMode!=='blitz')html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>`;
-  // Trap stat
-  if(q.is_trap)html+=`<br><span style="color:var(--yellow);font-size:.78rem">📊 ${Math.floor(Math.random()*40+40)}% des joueurs se trompent ici</span>`;
-  fb.className=`answer-feedback ${isCorrect?'correct-fb':'wrong-fb'}`;
-  fb.innerHTML=html;fb.classList.remove('hidden');
+  const fb = document.getElementById('sq-feedback');
+  let html = '';
+  if (ok) html = `<strong>✅ Bonne réponse !</strong>${S.soloStreak>=3?` <span class="streak-fire">🔥 ${S.soloStreak}</span>`:''}<br>`;
+  else html = `<strong>❌ Mauvaise réponse</strong>${q.is_trap&&q.trap_message?`<br><em>😏 ${q.trap_message}</em>`:''}<br>`;
+  if (q.explanation && S.soloMode !== 'blitz') html += `<span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>`;
+  if (q.is_trap) html += `<br><span style="color:var(--yellow);font-size:.78rem">📊 ${Math.floor(Math.random()*40+40)}% se trompent ici</span>`;
+  fb.className = `answer-feedback ${ok ? 'correct-fb' : 'wrong-fb'}`;
+  fb.innerHTML = html; fb.classList.remove('hidden');
 
-  // Coach IA
-  const coach=document.getElementById('sq-coach');
-  if(!isCorrect){
-    coach.textContent=getCoachTip(q.category);
-    coach.classList.remove('hidden');
+  if (!ok) {
+    const c = document.getElementById('sq-coach');
+    c.textContent = coachTip(q.category); c.classList.remove('hidden');
   }
 
-  setText('sq-correct',`✅ ${state.soloCorrect}`);
-  setText('sq-wrong',`❌ ${state.soloWrong}`);
-  setText('sq-streak',state.soloStreak>=3?`🔥${state.soloStreak}`:'');
+  document.getElementById('sq-correct').textContent = '✅ ' + S.soloCorrect;
+  document.getElementById('sq-wrong').textContent   = '❌ ' + S.soloWrong;
+  document.getElementById('sq-streak').textContent  = S.soloStreak >= 3 ? '🔥' + S.soloStreak : '';
 
-  document.getElementById('screen-solo-game').classList.add(isCorrect?'flash-correct':'flash-wrong');
-  setTimeout(()=>document.getElementById('screen-solo-game').classList.remove('flash-correct','flash-wrong'),600);
+  document.getElementById('screen-solo-game').classList.add(ok ? 'flash-correct' : 'flash-wrong');
+  setTimeout(() => document.getElementById('screen-solo-game').classList.remove('flash-correct','flash-wrong'), 600);
 
-  const delay=state.soloMode==='micro'?1200:state.soloMode==='blitz'?1000:3000;
-  setTimeout(()=>{state.soloIndex++;renderSoloQuestion();},delay);
+  const delay = S.soloMode === 'micro' ? 1200 : S.soloMode === 'blitz' ? 1000 : 3000;
+  setTimeout(() => { S.soloIdx++; renderSoloQ(); }, delay);
 }
 
-function startSoloTimer(s){
-  clearInterval(state.soloTimerInterval);
-  state.soloTimerSeconds=s;
-  const arc=document.getElementById('solo-timer-arc'),maxD=163.36;
-  function tick(){
-    setText('solo-timer-text',state.soloTimerSeconds);
-    arc.style.strokeDashoffset=maxD*(1-state.soloTimerSeconds/s);
-    arc.style.stroke=state.soloTimerSeconds<=5?'#f87171':state.soloTimerSeconds<=10?'#fbbf24':'#4ade80';
-    if(state.soloTimerSeconds>0)state.soloTimerSeconds--;
-    else{clearInterval(state.soloTimerInterval);onSoloTimeout();}
-  }
-  tick();state.soloTimerInterval=setInterval(tick,1000);
-}
-function onSoloTimeout(){
-  const q=state.soloQuestions[state.soloIndex];
-  state.soloAnswers.push({questionIndex:state.soloIndex,answers:[],isCorrect:false,timeTaken:q.timeLimit||30,timeout:true});
-  state.soloWrong++;state.soloStreak=0;playWrong();
-  const fb=document.getElementById('sq-feedback');
-  fb.className='answer-feedback wrong-fb';
-  let html=`<strong>⏰ Temps écoulé !</strong><br>`;
-  if(q.explanation)html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>`;
-  fb.innerHTML=html;fb.classList.remove('hidden');
-  document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{b.disabled=true;if(q.correct.includes(b.dataset.id))b.classList.add('correct');});
-  setText('sq-correct',`✅ ${state.soloCorrect}`);
-  setText('sq-wrong',`❌ ${state.soloWrong}`);
-  setTimeout(()=>{state.soloIndex++;renderSoloQuestion();},2000);
+function startSoloTimer(secs) {
+  clearInterval(S.soloTimer); S.soloSecs = secs;
+  const arc = document.getElementById('solo-timer-arc'), maxD = 163.36;
+  const tick = () => {
+    document.getElementById('solo-timer-text').textContent = S.soloSecs;
+    arc.style.strokeDashoffset = maxD * (1 - S.soloSecs / secs);
+    arc.style.stroke = S.soloSecs <= 5 ? '#f87171' : S.soloSecs <= 10 ? '#fbbf24' : '#4ade80';
+    if (S.soloSecs > 0) S.soloSecs--;
+    else { clearInterval(S.soloTimer); soloTimeout(); }
+  };
+  tick(); S.soloTimer = setInterval(tick, 1000);
 }
 
-async function endSoloGame(){
-  clearInterval(state.soloTimerInterval);
-  const total=state.soloQuestions.length;
-  const pct=Math.round(state.soloCorrect/total*100);
-  showScreen('screen-solo-results');
-
-  // Banner
-  const banner=document.getElementById('solo-result-banner');
-  if(pct>=90)banner.textContent='🌟 Excellent !';
-  else if(pct>=70)banner.textContent='👍 Bien joué !';
-  else if(pct>=50)banner.textContent='📚 À retravailler...';
-  else banner.textContent='💪 Ne lâche pas !';
-  if(pct===100)playVictory();
-
-  // Score
-  document.getElementById('solo-score-display').innerHTML=`<div class="big-num">${state.soloCorrect}/${total}</div><div class="big-label">${pct}% de réussite · streak max : 🔥${state.soloMaxStreak}</div>`;
-
-  // Exam verdict
-  if(state.soloMode==='examen_blanc'){
-    const vd=document.getElementById('exam-verdict');
-    vd.className=`exam-verdict ${pct>=87?'admis':'recale'}`;
-    vd.textContent=pct>=87?`✅ ADMIS — ${pct}% (seuil : 87%)`:`❌ RECALÉ — ${pct}% (seuil : 87%)`;
-    vd.classList.remove('hidden');
-  }
-
-  // Category breakdown
-  const catErrors={};
-  state.soloAnswers.filter(a=>!a.isCorrect).forEach(a=>{
-    const cat=state.soloQuestions[a.questionIndex]?.category;
-    if(cat)catErrors[cat]=(catErrors[cat]||0)+1;
-  });
-  const catEl=document.getElementById('solo-category-breakdown');
-  if(Object.keys(catErrors).length){
-    catEl.innerHTML=`<div class="analysis-title">📊 Erreurs par thème</div>`+Object.entries(catErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`).join('');
-  }else{catEl.innerHTML=`<div style="text-align:center;color:var(--green);padding:1rem">🌟 Aucune erreur !</div>`;}
-
-  // Replay (first 5 wrong)
-  const replayEl=document.getElementById('solo-replay');
-  const wrongs=state.soloAnswers.filter(a=>!a.isCorrect).slice(0,5);
-  if(wrongs.length){
-    replayEl.innerHTML=`<div class="analysis-title">📹 Questions manquées</div>`+wrongs.map(a=>{
-      const q=state.soloQuestions[a.questionIndex];
-      return `<div class="replay-item wrong-q"><div class="replay-q">${q.question}</div><div style="color:var(--green);font-size:.8rem">✅ ${q.correct.join(', ')} — ${q.explanation?.slice(0,80)}...</div></div>`;
-    }).join('');
-  }
-
-  // Coach advice
-  const adviceEl=document.getElementById('solo-coach-advice');
-  const weakCat=Object.keys(catErrors)[0];
-  if(weakCat){
-    const tips=coachTips[weakCat]||[];
-    adviceEl.innerHTML=`<div class="coach-advice-title">🧑‍🏫 Conseils du coach sur ${catName(weakCat)}</div>`+tips.map(t=>`<div class="coach-advice-tip">${t}</div>`).join('');
-  }else adviceEl.style.display='none';
-
-  // Send to server if logged in
-  if(state.token){
-    try{
-      const res=await fetch('/api/training/complete',{method:'POST',headers:{Authorization:`Bearer ${state.token}`,'Content-Type':'application/json'},body:JSON.stringify({answers:state.soloAnswers.map(a=>a.answers),questions:state.soloQuestions,mode:state.soloMode})});
-      const data=await res.json();
-      if(data.newBadges?.length){
-        const bd=document.getElementById('solo-badges-new');
-        bd.innerHTML=`<div class="new-badges-title">🎖️ Nouveau${data.newBadges.length>1?'x':''} badge${data.newBadges.length>1?'s':''}  !</div>`+data.newBadges.map(b=>`<span class="badge-item">${b}</span>`).join('');
-        bd.classList.remove('hidden');
-        showToast(`🎖️ Badge débloqué : ${data.newBadges[0]} !`,4000);
-      }
-    }catch{}
-  }
-}
-
-// ── Game options (duel) ────────────────────────────────
-function showCreateForm(){
-  if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
-  document.getElementById('create-form').classList.toggle('hidden');
-  document.getElementById('join-form').classList.add('hidden');
-}
-function showJoinForm(){
-  if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
-  document.getElementById('join-form').classList.toggle('hidden');
-  document.getElementById('create-form').classList.add('hidden');
-}
-function selectOption(type,val,el){el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');state.selectedOptions[type]=val;}
-function selectMode(mode,el){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');state.selectedOptions.mode=mode;}
-function openCreateGame(){
-  if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
-  hideError('play-error');
-  socket.emit('create_game',{pseudo:state.pseudo,avatar:state.avatar,options:{maxPlayers:state.selectedOptions.players,questionCount:state.selectedOptions.questions,timeLimit:state.selectedOptions.time,category:state.selectedOptions.category,mode:state.selectedOptions.mode}});
-}
-function doJoinGame(){
-  const code=document.getElementById('join-code').value.trim().toUpperCase();
-  if(code.length<4)return showError('join-error','Entrez un code valide');
-  hideError('join-error');socket.emit('join_game',{roomCode:code,pseudo:state.pseudo});
-}
-function copyRoomCode(){navigator.clipboard.writeText(document.getElementById('display-room-code').textContent).then(()=>showToast('Code copié ! 📋'));}
-function sendReady(){document.getElementById('btn-ready').disabled=true;document.getElementById('btn-ready').textContent='⏳ En attente...';socket.emit('player_ready');}
-function forceStart(){socket.emit('force_start');}
-
-// ── Waiting room ──────────────────────────────────────
-function renderWaitingPlayers(players,maxPlayers){
-  const c=document.getElementById('players-waiting');c.innerHTML='';
-  for(let i=0;i<maxPlayers;i++){
-    const p=players[i];const div=document.createElement('div');
-    div.className=`waiting-player ${p?'connected':'empty'}`;
-    const av = p?.avatar ? (p.avatar.startsWith('data:') ? `<img class="wp-avatar-img" src="${p.avatar}"/>` : p.avatar) : (p ? p.pseudo[0].toUpperCase() : '?');
-    div.innerHTML=p
-      ?`<div class="wp-avatar connected" style="${!p.avatar||p.avatar.startsWith('data:')?'':'font-size:1.3rem'}">${av}</div><div><div class="wp-name">${p.pseudo}${p.pseudo===state.pseudo?' <small style="color:var(--accent2)">(toi)</small>':''}</div><div class="wp-tag">${i===0?'👑 Hôte':'Joueur '+(i+1)}</div></div><div class="wp-status">${p.ready?'✅':'⏳'}</div>`
-      :`<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur ${i+1}</div></div><div class="wp-status">⏳</div>`;
-    c.appendChild(div);
-  }
-  const myP=players.find(p=>p.pseudo===state.pseudo);
-  const btnR=document.getElementById('btn-ready');
-  const btnF=document.getElementById('btn-force-start');
-  if(myP&&!myP.ready){btnR.classList.remove('hidden');btnR.disabled=false;btnR.textContent='✅ Je suis prêt !';}
-  else if(myP?.ready){btnR.classList.remove('hidden');btnR.disabled=true;btnR.textContent='✅ Prêt !';}
-  if(state.isHost&&players.length>=2)btnF.classList.remove('hidden');else btnF.classList.add('hidden');
-  const msg=document.getElementById('waiting-msg');
-  if(players.length<maxPlayers){msg.innerHTML=`<div class="spinner"></div> En attente... (${players.length}/${maxPlayers})`;msg.style.display='flex';}
-  else msg.style.display='none';
-}
-function renderOptionsDisplay(options){
-  document.getElementById('options-display').innerHTML=[`👥 ${options.maxPlayers} joueurs`,`❓ ${options.questionCount} questions`,`⏱️ ${options.timeLimit}s`,catName(options.category),modeName(options.mode)].map(t=>`<span class="options-tag">${t}</span>`).join('');
-}
-
-// ── Duel HUD ──────────────────────────────────────────
-function renderHUD(){
-  const c=document.getElementById('hud-scores');c.innerHTML='';
-  const max=Math.max(...state.allPlayers.map(p=>p.score),0);
-  state.allPlayers.forEach(p=>{
-    const isMe=p.pseudo===state.pseudo;
-    const div=document.createElement('div');
-    div.className=`hud-player-score ${isMe?'me':''} ${p.score===max&&max>0&&!isMe?'leading':''}`;
-    const av2 = p.avatar ? (p.avatar.startsWith('data:') ? `<img src="${p.avatar}" style="width:20px;height:20px;border-radius:50%;object-fit:cover"/>` : `<span style="font-size:.85rem">${p.avatar}</span>`) : `<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">${p.pseudo[0].toUpperCase()}</span>`;
-    div.innerHTML=`<div style="display:flex;align-items:center;gap:.25rem;width:26px">${av2}</div><div><div class="hps-name">${p.pseudo}</div>${p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':''}</div><div class="hps-score">${p.score}</div>${p.streak>=3?`<div style="font-size:.72rem">🔥${p.streak}</div>`:''}`;
-    c.appendChild(div);
-  });
-}
-
-// ── Duel question rendering ────────────────────────────
-function renderQuestion(data){
-  state.currentQuestion=data;state.selectedAnswers=[];state.answered=false;
-  setText('q-counter',`${data.index+1}/${data.total}`);
-  setText('q-category',catName(data.category));
-  setText('q-text',data.question);
-  setText('mode-badge',modeName(data.mode||state.gameMode));
-  document.getElementById('game-progress').style.width=`${(data.index/data.total)*100}%`;
-  document.getElementById('trap-indicator').classList.toggle('hidden',!data.isTrap);
-  const sb=document.getElementById('situation-box');
-  if(data.situation){sb.textContent=`📍 ${data.situation}`;sb.classList.remove('hidden');}else sb.classList.add('hidden');
-  const iw=document.getElementById('q-image-wrap');
-  if(data.image_url){document.getElementById('q-image').src=data.image_url;iw.classList.remove('hidden');document.getElementById('q-image').onerror=()=>iw.classList.add('hidden');}else iw.classList.add('hidden');
-  let hint=document.getElementById('multi-hint');
-  if(data.isMultiple){if(!hint){hint=document.createElement('div');hint.id='multi-hint';hint.className='multiple-hint';}hint.textContent='⚠️ Plusieurs bonnes réponses !';document.getElementById('q-text').after(hint);}else hint?.remove();
-  const cont=document.getElementById('answers-container');cont.innerHTML='';
-  data.answers.forEach(a=>{
-    const btn=document.createElement('button');btn.className='answer-btn';btn.dataset.id=a.id;btn.textContent=`${a.id.toUpperCase()}) ${a.text}`;
-    if(data.isMultiple){btn.addEventListener('click',()=>{if(state.answered)return;btn.classList.toggle('selected');const idx=state.selectedAnswers.indexOf(a.id);if(idx>=0)state.selectedAnswers.splice(idx,1);else state.selectedAnswers.push(a.id);updateConfirmBtn();});}
-    else{btn.addEventListener('click',()=>{if(!state.answered)submitDuelAnswer([a.id]);});}
-    cont.appendChild(btn);
-  });
-  let cb=document.getElementById('confirm-btn');
-  if(data.isMultiple){if(!cb){cb=document.createElement('button');cb.id='confirm-btn';cb.className='btn btn-primary confirm-btn';cb.textContent='Valider ✅';cb.addEventListener('click',()=>{if(state.selectedAnswers.length>0)submitDuelAnswer(state.selectedAnswers);});}cb.disabled=true;cont.after(cb);}else cb?.remove();
-  const fb=document.getElementById('answer-feedback');fb.classList.add('hidden');fb.className='answer-feedback hidden';
-  ['fifty50','timeBonus','stress'].forEach(pu=>{const b=document.getElementById(`pu-${pu}`);if(b)b.disabled=!state.powerups[pu];});
-  startTimer(data.timeLimit||30);
-  if(Math.random()<.25)showCoach(getCoachTip(data.category));
-}
-function updateConfirmBtn(){const b=document.getElementById('confirm-btn');if(b)b.disabled=state.selectedAnswers.length===0;}
-function submitDuelAnswer(answers){
-  if(state.answered)return;state.answered=true;
-  const timeTaken=(state.currentQuestion?.timeLimit||30)-state.timerSeconds;
-  document.querySelectorAll('.answer-btn').forEach(b=>b.disabled=true);
-  document.getElementById('confirm-btn')?.setAttribute('disabled','true');
-  socket.emit('submit_answer',{answers,timeTaken});
-  const fb=document.getElementById('answer-feedback');fb.className='answer-feedback neutral-fb';
-  fb.innerHTML='<div style="display:flex;align-items:center;gap:.5rem;color:var(--text2)"><div class="spinner"></div> En attente...</div>';
+function soloTimeout() {
+  const q = S.soloQs[S.soloIdx];
+  S.soloAnswers.push({ questionIndex: S.soloIdx, answers: [], isCorrect: false, timeTaken: 30, timeout: true });
+  S.soloWrong++; S.soloStreak = 0; sfx.wrong();
+  document.querySelectorAll('#sq-answers .answer-btn').forEach(b => { b.disabled = true; if (q.correct.includes(b.dataset.id)) b.classList.add('correct'); });
+  const fb = document.getElementById('sq-feedback');
+  fb.className = 'answer-feedback wrong-fb';
+  fb.innerHTML = '<strong>⏰ Temps écoulé !</strong>' + (q.explanation ? `<br><span style="color:var(--text2);font-size:.85rem">💡 ${q.explanation}</span>` : '');
   fb.classList.remove('hidden');
-}
-function showAnswerResult(data){
-  stopTimer();if(data.hidden)return;
-  document.querySelectorAll('.answer-btn').forEach(btn=>{const id=btn.dataset.id;if(data.correctAnswers?.includes(id))btn.classList.add('correct');else if(state.selectedAnswers.includes(id))btn.classList.add('wrong');});
-  document.getElementById('screen-game').classList.add(data.isCorrect?'flash-correct':'flash-wrong');
-  setTimeout(()=>document.getElementById('screen-game').classList.remove('flash-correct','flash-wrong'),600);
-  if(data.isCorrect!==null){if(data.isCorrect)playCorrect();else playWrong();}
-  const fb=document.getElementById('answer-feedback');
-  let html='';
-  if(data.timeout)html='<strong>⏰ Temps écoulé !</strong><br>';
-  else if(data.isCorrect)html=`<strong>✅ Bonne réponse !</strong>${data.streak>=3?` <span class="streak-fire">🔥 ${data.streak}</span>`:''}<br>`;
-  else html=`<strong>❌ Mauvaise réponse</strong>${data.isTrap&&data.trapMessage?`<br><em>😏 ${data.trapMessage}</em>`:''}<br>`;
-  if(data.explanation)html+=`<span style="color:var(--text2);font-size:.85rem">💡 ${data.explanation}</span>`;
-  if(data.trapStats)html+=`<br><span style="color:var(--yellow);font-size:.78rem">📊 ${data.trapStats}</span>`;
-  fb.className=`answer-feedback ${data.isCorrect?'correct-fb':data.isCorrect===null?'neutral-fb':'wrong-fb'}`;
-  fb.innerHTML=html;fb.classList.remove('hidden');
-  if(data.isCorrect&&data.streak>=3)showCoach(`🔥 ${data.streak} en série !`);
-  else if(data.isCorrect===false)showCoach(getCoachTip(state.currentQuestion?.category));
-}
-function startTimer(s){stopTimer();state.timerSeconds=s;const arc=document.getElementById('timer-arc'),maxD=163.36;function tick(){setText('timer-text',state.timerSeconds);arc.style.strokeDashoffset=maxD*(1-state.timerSeconds/s);arc.style.stroke=state.timerSeconds<=5?'#f87171':state.timerSeconds<=10?'#fbbf24':'#4ade80';if(state.timerSeconds>0)state.timerSeconds--;else stopTimer();}tick();state.timerInterval=setInterval(tick,1000);}
-function stopTimer(){clearInterval(state.timerInterval);state.timerInterval=null;}
-function showCoach(text){const b=document.getElementById('coach-bubble');setText('coach-text',text);b.classList.remove('hidden');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.add('hidden'),4500);}
-function usePowerup(type){if(!state.powerups[type]||state.answered)return;state.powerups[type]--;document.getElementById(`pu-${type}`).disabled=true;socket.emit('use_powerup',{type});}
-
-// ── Duel Results ──────────────────────────────────────
-function showResults(data){
-  stopTimer();showScreen('screen-results');
-  const banner=document.getElementById('victory-banner');
-  if(data.isDraw)banner.textContent='🤝 Match nul !';
-  else if(data.winner===state.pseudo){banner.textContent='🏆 VICTOIRE !';playVictory();}
-  else banner.textContent=`🎖️ Victoire de ${data.winner} !`;
-
-  // Podium
-  document.getElementById('podium').innerHTML=data.results.map(r=>{
-    const isMe=r.pseudo===state.pseudo;
-    const elo=r.eloChange?`<div class="podium-elo ${r.eloChange>0?'pos':'neg'}">${r.eloChange>0?'+':''}${r.eloChange}</div>`:'';
-    return `<div class="podium-item rank-${r.rank} ${isMe?'me':''}"><div class="podium-rank">${rankEmoji(r.rank)}</div><div class="podium-pseudo">${r.pseudo}${isMe?'<span class="podium-you">toi</span>':''}</div><div><div class="podium-score">${r.score}<span style="font-size:.75rem;color:var(--text3)">/${r.total}</span></div><div class="podium-pct">${r.percentage}%</div></div>${elo}</div>`;
-  }).join('');
-
-  // Exam results
-  if(data.examPassed){
-    const ex=document.getElementById('exam-results-duel');
-    ex.innerHTML=data.examPassed.map(p=>`<div class="exam-verdict ${p.passed?'admis':'recale'}">${p.pseudo} : ${p.passed?'✅ ADMIS':'❌ RECALÉ'}</div>`).join('');
-    ex.classList.remove('hidden');
-  }
-
-  // New badges
-  const myBadges=data.newBadges?.[state.pseudo];
-  if(myBadges?.length){
-    const nb=document.getElementById('new-badges-duel');
-    nb.innerHTML=`<div class="new-badges-title">🎖️ Badge débloqué !</div>`+myBadges.map(b=>`<span class="badge-item">${b}</span>`).join('');
-    nb.classList.remove('hidden');showToast(`🎖️ ${myBadges[0]} !`,4000);
-  }
-
-  // Analysis
-  const myR=data.results.find(r=>r.pseudo===state.pseudo);
-  if(myR?.eloChange)state.elo+=myR.eloChange,localStorage.setItem('elo',state.elo);
-  const an=document.getElementById('results-analysis');
-  if(myR&&Object.keys(myR.categoryErrors||{}).length){
-    an.innerHTML=`<div class="analysis-title">📊 Tes erreurs</div>`+Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>`<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`).join('');
-  }else an.innerHTML='';
-
-  // Replay
-  if(data.replayData?.length){
-    document.getElementById('replay-toggle').classList.remove('hidden');
-    state.replayData=data.replayData;
-  }
-
-  // Rematch
-  state.hostPseudo=data.hostPseudo;
-  const btnR=document.getElementById('btn-rematch');
-  if(state.pseudo===data.hostPseudo)btnR.classList.remove('hidden');else btnR.classList.add('hidden');
+  document.getElementById('sq-correct').textContent = '✅ ' + S.soloCorrect;
+  document.getElementById('sq-wrong').textContent   = '❌ ' + S.soloWrong;
+  document.getElementById('sq-streak').textContent  = '';
+  setTimeout(() => { S.soloIdx++; renderSoloQ(); }, 2000);
 }
 
-function toggleReplay(){
-  const rc=document.getElementById('replay-content');
-  if(!rc.classList.contains('hidden')){rc.classList.add('hidden');return;}
-  rc.classList.remove('hidden');
-  if(!state.replayData)return;
-  rc.innerHTML=state.replayData.slice(0,10).map((q,i)=>{
-    const allCorrect=q.playerAnswers.every(p=>p.isCorrect);
-    return `<div class="replay-item ${allCorrect?'correct-q':'wrong-q'}">
-      <div class="replay-q">${i+1}. ${q.question}</div>
-      ${q.playerAnswers.map(p=>`<div class="replay-player"><span>${p.pseudo}</span><span>${p.isCorrect?'✅':'❌'} ${p.timeTaken?.toFixed(0)||'?'}s</span></div>`).join('')}
-    </div>`;
-  }).join('');
-}
+async function endSolo() {
+  clearInterval(S.soloTimer);
+  const total = S.soloQs.length;
+  const pct = Math.round(S.soloCorrect / total * 100);
+  go('screen-solo-results');
 
-function requestRematch(){document.getElementById('btn-rematch').disabled=true;socket.emit('request_rematch');}
+  document.getElementById('solo-result-banner').textContent =
+    pct >= 90 ? '🌟 Excellent !' : pct >= 70 ? '👍 Bien joué !' : pct >= 50 ? '📚 À retravailler...' : '💪 Continue !';
+  if (pct === 100) sfx.win();
 
-// ── Leaderboard ────────────────────────────────────────
-async function loadLeaderboard(){
-  const el=document.getElementById('leaderboard-list');
-  el.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
-  try{
-    const data=await(await fetch('/api/leaderboard')).json();
-    if(!data.length){el.innerHTML='<p style="text-align:center;color:var(--text2)">Aucun joueur pour l\'instant 🤷</p>';return;}
-    el.innerHTML=data.map((p,i)=>{const rc=i===0?'gold':i===1?'silver':i===2?'bronze':'';const re=i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;return `<div class="lb-item"><div class="lb-rank ${rc}">${re}</div><div><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level">${p.levelInfo?.name||''}</div></div><div class="lb-elo">${p.elo} Elo</div><div class="lb-record">${p.wins||0}V ${p.losses||0}D</div></div>`;}).join('');
-  }catch{el.innerHTML='<p style="color:var(--red)">Erreur</p>';}
-}
+  document.getElementById('solo-score-display').innerHTML =
+    `<div class="big-num">${S.soloCorrect}/${total}</div><div class="big-label">${pct}% · streak max 🔥${S.soloMaxStreak}</div>`;
 
-// ── Preload questions for solo mode ───────────────────
-async function preloadQuestions(){
-  try{const res=await fetch('/api/training/session?count=100&mode=libre',{headers:state.token?{Authorization:`Bearer ${state.token}`}:{}});const data=await res.json();window._allQuestions=data.fullQuestions||[];}catch{}
-}
+  const vd = document.getElementById('exam-verdict');
+  if (S.soloMode === 'examen_blanc') {
+    vd.className = 'exam-verdict ' + (pct >= 87 ? 'admis' : 'recale');
+    vd.textContent = pct >= 87 ? `✅ ADMIS — ${pct}% (seuil 87%)` : `❌ RECALÉ — ${pct}% (seuil 87%)`;
+    vd.classList.remove('hidden');
+  } else { vd.classList.add('hidden'); }
 
-// ── Socket Events ─────────────────────────────────────
-socket.on('game_created',({roomCode,options,isHost})=>{state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers([{pseudo:state.pseudo,ready:false}],options.maxPlayers);});
-socket.on('game_joined',({roomCode,players,options,isHost})=>{state.roomCode=roomCode;state.isHost=isHost;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers(players,options.maxPlayers);});
-socket.on('player_list_update',({players,maxPlayers})=>renderWaitingPlayers(players,maxPlayers));
-socket.on('game_start',({players,options})=>{playStart();state.gameMode=options.mode;state.gameOptions=options;state.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));state.powerups={fifty50:1,timeBonus:1,stress:1};showScreen('screen-game');renderHUD();});
-socket.on('new_question',data=>{state.allPlayers.forEach(p=>p.answered=false);renderQuestion(data);});
-socket.on('scores_update',({players})=>{state.allPlayers=players;renderHUD();});
-socket.on('answer_result',data=>{const me=state.allPlayers.find(p=>p.pseudo===state.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showAnswerResult(data);renderHUD();});
-socket.on('powerup_result',({type,removed,bonusSeconds})=>{if(type==='fifty50'&&removed){removed.forEach(id=>document.querySelector(`.answer-btn[data-id="${id}"]`)?.classList.add('removed'));showToast('⚡ 50/50 utilisé !');}else if(type==='timeBonus'&&bonusSeconds){state.timerSeconds+=bonusSeconds;showToast(`⏱️ +${bonusSeconds}s !`);}else if(type==='stress')showToast('😱 Stress envoyé !');});
-socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){state.timerSeconds=Math.max(3,state.timerSeconds-penaltySeconds);showToast(`😱 ${from} t'a stressé ! -${penaltySeconds}s`,3000);}});
-socket.on('game_end',data=>showResults(data));
-socket.on('player_disconnected',({pseudo})=>showToast(`💔 ${pseudo} a quitté...`,3000));
-socket.on('rematch_started',({roomCode,options,players})=>{state.roomCode=roomCode;state.isHost=players[0]?.pseudo===state.pseudo;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers(players,options.maxPlayers);showToast('🔄 Revanche ! Cliquez sur Prêt !');});
-socket.on('error',msg=>{showError('play-error',msg);showError('join-error',msg);showToast(`❌ ${msg}`,3000);});
+  const catErrors = {};
+  S.soloAnswers.filter(a => !a.isCorrect).forEach(a => {
+    const cat = S.soloQs[a.questionIndex]?.category;
+    if (cat) catErrors[cat] = (catErrors[cat] || 0) + 1;
+  });
+  const catEl = document.getElementById('solo-category-breakdown');
+  catEl.innerHTML = Object.keys(catErrors).length
+    ? '<div class="analysis-title">📊 Erreurs par thème</div>' +
+      Object.entries(catErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n]) =>
+        `<div class="category-error"><span>${catName(cat)}</span><span style="color:var(--red)">${n} erreur${n>1?'s':''}</span></div>`
+      ).join('')
+    : '<div style="text-align:center;color:var(--green);padding:.75rem">🌟 Aucune erreur !</div>';
 
+  const weakCat = Object.keys(catErrors)[0];
+  const advEl = document.getElementById('solo-coach-advice');
+  if (weakCat && COACH_TIPS[weakCat]) {
+    advEl.innerHTML = `<div class="coach-advice-title">🧑‍🏫 Conseils sur ${catName(weakCat)}</div>` +
+      COACH_TIPS[weakCat].map(t => `<div class="coach-advice-tip">${t}</div>`).join('');
+  } else { advEl.style.display = 'none'; }
 
-function confirmLeaveGame() {
-  if (confirm('Quitter la partie en cours ?')) {
-    stopTimer();
-    showScreen('screen-home');
+  // Wrong questions review
+  const wrongs = S.soloAnswers.filter(a => !a.isCorrect).slice(0, 5);
+  const replayEl = document.getElementById('solo-replay');
+  if (wrongs.length) {
+    replayEl.innerHTML = '<div class="analysis-title">📹 Questions manquées</div>' +
+      wrongs.map(a => {
+        const q = S.soloQs[a.questionIndex];
+        return `<div class="replay-item wrong-q">
+          <div class="replay-q">${q.question}</div>
+          <div style="color:var(--green);font-size:.8rem">✅ ${q.correct.join(', ')} — ${(q.explanation||'').slice(0,80)}...</div>
+        </div>`;
+      }).join('');
+  } else { replayEl.innerHTML = ''; }
+
+  // Send stats to server
+  if (S.token) {
+    try {
+      await fetch('/api/training/complete', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + S.token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers: S.soloAnswers.map(a => a.answers), questions: S.soloQs, mode: S.soloMode })
+      });
+    } catch {}
   }
 }
-// ── Init ──────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
-  if(state.pseudo){updateChips();updateSoloChip();startSessionTracking();}
-  if(state.token){socket.auth={token:state.token};}
-  preloadQuestions();
-  // Load avatar from server if logged in
-  if(state.token){fetch('/api/profile',{headers:{Authorization:`Bearer ${state.token}`}}).then(r=>r.json()).then(data=>{if(data.avatar){state.avatar=data.avatar;localStorage.setItem('avatar',data.avatar);updateChips();}}).catch(()=>{});}
-  document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
-  document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});
-  document.getElementById('join-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
+
+// ── Leaderboard ────────────────────────────────────────────
+async function loadLeaderboard() {
+  const el = document.getElementById('leaderboard-list');
+  el.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+  try {
+    const data = await (await fetch('/api/leaderboard')).json();
+    if (!data.length) { el.innerHTML = '<p style="text-align:center;color:var(--text2)">Aucun joueur 🤷</p>'; return; }
+    el.innerHTML = data.map((p,i) => {
+      const re = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      return `<div class="lb-item">
+        <div class="lb-rank">${re}</div>
+        <div><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level">${p.levelInfo?.name||''}</div></div>
+        <div class="lb-elo">${p.elo} Elo</div>
+        <div class="lb-record">${p.wins||0}V ${p.losses||0}D</div>
+      </div>`;
+    }).join('');
+  } catch { el.innerHTML = '<p style="color:var(--red)">Erreur de chargement</p>'; }
+}
+
+// ── Session time tracking ──────────────────────────────────
+let _sessionStart = Date.now();
+setInterval(async () => {
+  if (!S.token) return;
+  const secs = Math.round((Date.now() - _sessionStart) / 1000);
+  _sessionStart = Date.now();
+  if (secs < 5) return;
+  try { await fetch('/api/profile/session-time', { method:'POST', headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'}, body: JSON.stringify({seconds:secs}) }); } catch {}
+}, 60000);
+document.addEventListener('visibilitychange', async () => {
+  if (document.hidden && S.token) {
+    const secs = Math.round((Date.now() - _sessionStart) / 1000);
+    _sessionStart = Date.now();
+    if (secs < 5) return;
+    try { await fetch('/api/profile/session-time', { method:'POST', headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'}, body: JSON.stringify({seconds:secs}) }); } catch {}
+  }
+});
+
+// ── Socket events ──────────────────────────────────────────
+socket.on('game_created', ({roomCode,options,isHost}) => {
+  S.roomCode = roomCode; S.isHost = isHost; S.gameOptions = options;
+  go('screen-waiting');
+  document.getElementById('display-room-code').textContent = roomCode;
+  renderOptsDisplay(options);
+  renderWaiting([{pseudo:S.pseudo,ready:false,avatar:S.avatar}], options.maxPlayers);
+});
+
+socket.on('game_joined', ({roomCode,players,options,isHost}) => {
+  S.roomCode = roomCode; S.isHost = isHost; S.gameOptions = options;
+  go('screen-waiting');
+  document.getElementById('display-room-code').textContent = roomCode;
+  renderOptsDisplay(options);
+  renderWaiting(players, options.maxPlayers);
+});
+
+socket.on('player_list_update', ({players,maxPlayers}) => renderWaiting(players, maxPlayers));
+
+socket.on('game_start', ({players,options}) => {
+  sfx.start();
+  S.gameMode = options.mode; S.gameOptions = options;
+  S.allPlayers = players.map(p => ({...p, score:0, streak:0, answered:false}));
+  S.powerups = { fifty50:1, timeBonus:1, stress:1 };
+  go('screen-game');
+  renderHUD();
+});
+
+socket.on('new_question', data => {
+  S.allPlayers.forEach(p => p.answered = false);
+  renderDuelQuestion(data);
+});
+
+socket.on('scores_update', ({players}) => { S.allPlayers = players; renderHUD(); });
+
+socket.on('answer_result', data => {
+  const me = S.allPlayers.find(p => p.pseudo === S.pseudo);
+  if (me) { me.score = data.score; me.streak = data.streak; me.answered = true; }
+  showDuelResult(data);
+  renderHUD();
+});
+
+socket.on('powerup_result', ({type,removed,bonusSeconds}) => {
+  if (type === 'fifty50' && removed) { removed.forEach(id => document.querySelector(`.answer-btn[data-id="${id}"]`)?.classList.add('removed')); toast('⚡ 50/50 utilisé !'); }
+  else if (type === 'timeBonus' && bonusSeconds) { S.timerSecs += bonusSeconds; toast(`⏱️ +${bonusSeconds}s !`); }
+  else if (type === 'stress') toast('😱 Stress envoyé !');
+});
+
+socket.on('powerup_applied', ({type,penaltySeconds,from}) => {
+  if (type === 'stress') { S.timerSecs = Math.max(3, S.timerSecs - penaltySeconds); toast(`😱 ${from} t'a stressé ! -${penaltySeconds}s`, 3000); }
+});
+
+socket.on('game_end', data => showDuelResults(data));
+socket.on('player_disconnected', ({pseudo}) => toast(`💔 ${pseudo} a quitté...`, 3000));
+
+socket.on('rematch_started', ({roomCode,options,players}) => {
+  S.roomCode = roomCode; S.isHost = players[0]?.pseudo === S.pseudo; S.gameOptions = options;
+  go('screen-waiting');
+  document.getElementById('display-room-code').textContent = roomCode;
+  renderOptsDisplay(options);
+  renderWaiting(players, options.maxPlayers);
+  toast('🔄 Revanche ! Cliquez sur Prêt !');
+});
+
+socket.on('error', msg => { err('play-err', msg); err('join-err', msg); toast('❌ ' + msg, 3000); });
+
+// ── Init ───────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore socket auth
+  if (S.token) socket.auth = { token: S.token };
+
+  // Keyboard shortcuts
+  document.getElementById('login-password').addEventListener('keydown',  e => { if (e.key==='Enter') doLogin(); });
+  document.getElementById('reg-password').addEventListener('keydown',    e => { if (e.key==='Enter') doRegister(); });
+  document.getElementById('join-code').addEventListener('keydown',       e => { if (e.key==='Enter') doJoinGame(); });
+  document.getElementById('join-code').addEventListener('input',         e => { e.target.value = e.target.value.toUpperCase(); });
+
+  updateHomeUI();
 });

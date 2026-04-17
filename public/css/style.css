@@ -305,3 +305,23 @@ input:focus{outline:none;border-color:var(--accent)}
   .profile-stats-grid { grid-template-columns:repeat(2,1fr); }
   .avatar-grid { grid-template-columns:repeat(5,1fr); }
 }
+
+/* ── Back to menu button ── */
+.back-to-menu {
+  position: fixed; top: .65rem; left: .65rem; z-index: 200;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: .4rem .85rem; color: var(--text2);
+  font-size: .82rem; cursor: pointer; transition: all .2s;
+}
+.back-to-menu:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ── Home user chip ── */
+.home-user-chip {
+  display: flex; align-items: center; gap: .5rem;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: .4rem 1rem; font-size: .85rem;
+  color: var(--accent2); margin: 0 auto .75rem; width: fit-content;
+}
+
+/* ── Solo score bar ── */
+.solo-score-bar { display: flex; gap: 1.5rem; font-size: .88rem; font-weight: 600; }
