@@ -52,12 +52,29 @@ const sfx = {
 
 // ── Navigation ─────────────────────────────────────────────
 function go(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = '';
+  });
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
   if (id === 'screen-leaderboard') loadLeaderboard();
   if (id === 'screen-home') updateHomeUI();
   if (id === 'screen-profile') loadProfile();
+}
+
+// Dedicated profile opener — never shows wrong screen
+function openProfile() {
+  // Force hide ALL screens
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  // Force show ONLY profile
+  const el = document.getElementById('screen-profile');
+  el.style.display = 'flex';
+  el.classList.add('active');
+  loadProfile();
 }
 
 function updateHomeUI() {
