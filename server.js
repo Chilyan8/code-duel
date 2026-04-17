@@ -121,8 +121,13 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
 });
 
 // ── Training session (solo) ───────────────────────────────────────────────────
-app.get('/api/training/session', authMiddleware, async (req, res) => {
-  const user = await db.getUserById(req.user.id);
+app.get('/api/training/session', async (req, res) => {
+  // Works with or without auth
+  let user = null;
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token) {
+    try { const decoded = jwt.verify(token, JWT_SECRET); user = await db.getUserById(decoded.id); } catch {}
+  }
   const catStats = user?.category_stats || {};
   // Find weakest categories
   const weakCategories = Object.entries(catStats)

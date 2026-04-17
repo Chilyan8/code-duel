@@ -386,13 +386,15 @@ function selectSoloCat(cat,el){
 }
 
 function getLocalQuestions({count=10,mode='normal',category='all'}){
-  // Fetch questions from a global cache (set after first load)
-  let pool=window._allQuestions||[];
-  if(!pool.length)return[];
-  if(mode==='piege')pool=pool.filter(q=>q.is_trap);
-  else if(mode==='international')pool=pool.filter(q=>q.category==='international');
-  else if(category&&category!=='all')pool=pool.filter(q=>q.category===category);
-  return pool.sort(()=>Math.random()-.5).slice(0,Math.min(count,pool.length));
+  let pool = [...(window._allQuestions||[])];
+  if(!pool.length){ console.warn('No questions in pool!'); return []; }
+  if(mode==='piege') pool=pool.filter(q=>q.is_trap);
+  else if(mode==='international') pool=pool.filter(q=>q.category==='international');
+  else if(mode==='examen_blanc') pool=pool; // all categories
+  else if(category && category!=='all') pool=pool.filter(q=>q.category===category);
+  // fallback if filter returns too few
+  if(pool.length < 3) pool = [...(window._allQuestions||[])];
+  return pool.sort(()=>Math.random()-.5).slice(0, Math.min(count, pool.length));
 }
 
 function renderSoloQuestion(){
