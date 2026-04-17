@@ -406,6 +406,8 @@ io.on('connection', (socket) => {
     if (!game || game.status !== 'playing') { socket.roomCode = null; return; }
     const player = game.players.find(p => p.socketId === socket.id);
     if (!player) return;
+    if (!game.forfeiters) game.forfeiters = [];
+    game.forfeiters.push(player);
     game.players = game.players.filter(p => p.socketId !== socket.id);
     io.to(game.roomCode).emit('player_disconnected', { pseudo: player.pseudo });
     socket.roomCode = null;
@@ -440,6 +442,8 @@ io.on('connection', (socket) => {
     const player = game.players.find(p => p.socketId === socket.id);
     if (!player) return;
     if (game.status === 'playing') {
+      if (!game.forfeiters) game.forfeiters = [];
+      game.forfeiters.push(player);
       game.players = game.players.filter(p => p.socketId !== socket.id);
       io.to(game.roomCode).emit('player_disconnected', { pseudo: player.pseudo });
       if (game.players.length < 2) { clearTimeout(game.questionTimer); setTimeout(() => endGame(game), 1500); }
@@ -497,27 +501,43 @@ function nextQuestion(game) {
 async function endGame(game) {
   game.status = 'finished';
   clearTimeout(game.questionTimer);
+
+  // allPlayers inclut ceux qui ont FF ou se sont déconnectés
+  const forfeiters = game.forfeiters || [];
+  const allPlayers = [...game.players, ...forfeiters];
+
   const ranked = [...game.players].sort((a, b) => b.score - a.score);
-  const winner = ranked[0]?.score > (ranked[1]?.score ?? -1) ? ranked[0].pseudo : null;
+
+  // Si quelqu'un a FF et qu'il reste 1 joueur → ce joueur gagne par forfait
+  let winner = null;
+  if (forfeiters.length > 0 && game.players.length === 1) {
+    winner = game.players[0].pseudo;
+  } else if (ranked.length >= 2) {
+    winner = ranked[0]?.score > (ranked[1]?.score ?? -1) ? ranked[0].pseudo : null;
+  } else if (ranked.length === 1) {
+    winner = ranked[0].pseudo;
+  }
+
   const eloChanges = {};
 
-  if (game.players.length === 2 && winner) {
-    const [p1, p2] = ranked;
-    if (p1.userId && p2.userId) {
+  if (allPlayers.length === 2 && winner) {
+    const winnerP = allPlayers.find(p => p.pseudo === winner);
+    const loserP  = allPlayers.find(p => p.pseudo !== winner);
+    if (winnerP?.userId && loserP?.userId) {
       try {
-        const u1 = await db.getUserById(p1.userId);
-        const u2 = await db.getUserById(p2.userId);
+        const u1 = await db.getUserById(winnerP.userId);
+        const u2 = await db.getUserById(loserP.userId);
         if (u1 && u2) {
           const delta = calcEloChange(u1.elo, u2.elo);
-          eloChanges[p1.pseudo] = +delta;
-          eloChanges[p2.pseudo] = -delta;
-          await db.updateUser(p1.userId, { elo: delta, wins: 1, total_games: 1 });
-          await db.updateUser(p2.userId, { elo: -delta, losses: 1, total_games: 1 });
+          eloChanges[winnerP.pseudo] = +delta;
+          eloChanges[loserP.pseudo]  = -delta;
+          await db.updateUser(winnerP.userId, { elo: delta,  wins: 1,   total_games: 1 });
+          await db.updateUser(loserP.userId,  { elo: -delta, losses: 1, total_games: 1 });
         }
       } catch (e) { console.error('Elo error:', e.message); }
     }
   } else {
-    for (const p of game.players) {
+    for (const p of allPlayers) {
       if (p.userId) {
         try { await db.updateUser(p.userId, { [p.pseudo === winner ? 'wins' : 'losses']: 1, total_games: 1 }); } catch {}
       }
