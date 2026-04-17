@@ -4,7 +4,7 @@ const S = {
   token:  localStorage.getItem('token')  || null,
   pseudo: localStorage.getItem('pseudo') || null,
   elo:    parseInt(localStorage.getItem('elo') || '1000'),
-  avatar: localStorage.getItem('avatar') || '🧑‍🎓',
+  avatar: localStorage.getItem('avatar') || null,
   roomCode: null, isHost: false, gameOptions: {},
   selectedOptions: { players:2, questions:40, time:30, category:'all', mode:'normal' },
   currentQ: null, selectedAnswers: [], answered: false,
@@ -43,7 +43,10 @@ function go(id) {
   if (!el) return;
   el.style.display = '';
   el.classList.add('active');
-  if (id === 'screen-home')        updateHomeUI();
+  if (id === 'screen-home') {
+    updateHomeUI();
+    if (S.token) fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}}).then(r=>r.ok?r.json():null).then(d=>{if(d?.elo!==undefined&&d.elo!==S.elo){S.elo=d.elo;localStorage.setItem('elo',d.elo);updateHomeUI();}}).catch(()=>{});
+  }
   if (id === 'screen-leaderboard') loadLeaderboard();
   if (id === 'screen-profile')     loadProfile();
 }
@@ -104,7 +107,7 @@ function saveAuth(d) {
 
 function doLogout() {
   ['token','pseudo','elo','avatar'].forEach(k=>localStorage.removeItem(k));
-  S.token=null; S.pseudo=null; S.elo=0; S.avatar='🧑‍🎓';
+  S.token=null; S.pseudo=null; S.elo=0; S.avatar=null;
   toast('Déconnecté 👋'); go('screen-home');
 }
 
@@ -123,11 +126,24 @@ function promptGuest() {
 // ── Home UI ──
 function updateHomeUI() {
   const el=document.getElementById('home-user');
-  if(S.pseudo) {
-    const av=S.avatar.startsWith('data:') ? '<img src="'+S.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle">' : S.avatar;
-    el.innerHTML=av+' <strong>'+esc(S.pseudo)+'</strong> · '+esc(S.elo)+' Elo';
+  const authBtn=document.getElementById('home-auth-btn');
+  const guestNote=document.getElementById('home-guest-note');
+  if(S.pseudo&&S.token) {
+    const av=S.avatar&&S.avatar.startsWith('data:')
+      ?'<img src="'+S.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle">'
+      :'<span style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:#fff;vertical-align:middle">'+esc((S.pseudo[0]||'?').toUpperCase())+'</span>';
+    el.innerHTML=av+' <strong>'+esc(S.pseudo)+'</strong> · <span style="color:var(--accent2)">'+esc(S.elo)+'</span> Elo';
     el.style.display='flex';
-  } else { el.style.display='none'; }
+    if(authBtn){authBtn.textContent='Déconnexion';authBtn.onclick=doLogout;}
+    if(guestNote)guestNote.style.display='none';
+  } else {
+    if(S.pseudo&&!S.token){
+      el.innerHTML='<strong>'+esc(S.pseudo)+'</strong> <span style="color:var(--text3);font-size:.8rem">(invité)</span>';
+      el.style.display='flex';
+    } else el.style.display='none';
+    if(authBtn){authBtn.textContent='Connexion';authBtn.onclick=()=>go('screen-auth');}
+    if(guestNote)guestNote.style.display='';
+  }
 }
 
 // ── Profile ──
@@ -155,9 +171,9 @@ async function loadProfile() {
     const eloBase={1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[lv.level]||0;
     const eloRange=lv.next?lv.next-eloBase:1;
     const eloProgress=lv.next?Math.min(100,Math.round((d.elo-eloBase)/eloRange*100)):100;
-    const avatar=d.avatar||S.avatar||'🧑‍🎓';
-    S.avatar=avatar; localStorage.setItem('avatar',avatar);
-    const avHtml=avatar.startsWith('data:')?'<img src="'+avatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem'>"+avatar+"</span>";
+    const avatar=d.avatar&&d.avatar.startsWith('data:')?d.avatar:null;
+    S.avatar=avatar; localStorage.setItem('avatar',avatar||'');
+    const avHtml=avatar?'<img src="'+avatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem;font-weight:900;color:var(--accent2)'>"+esc((d.pseudo[0]||'?').toUpperCase())+"</span>";
     const badges=d.badges||[];
     const catStats=d.category_stats||{};
     const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,4);
@@ -231,12 +247,39 @@ async function savePseudo(){
 }
 
 // ── Avatar ──
-const AVATARS=['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗','🚕','🚙','🏍️','🚓','🚑','👮','🦸','🧙','🎮','🔥','⚡','🌟','👑','🎯','🏆','💎','🦊','🐺','🐯','🦁','🤖','🦅','🐸','🧑‍✈️','🎭'];
-function openAvatarModal(){document.getElementById('emoji-avatars').innerHTML=AVATARS.map(e=>'<div class="avatar-option" onclick="pickAvatar(\''+e+'\')">'+e+'</div>').join('');document.getElementById('avatar-modal').classList.remove('hidden');}
-function closeAvatarModal(e){if(!e||e.target.id==='avatar-modal')document.getElementById('avatar-modal').classList.add('hidden');}
-async function pickAvatar(emoji){S.avatar=emoji;localStorage.setItem('avatar',emoji);document.getElementById('avatar-modal').classList.add('hidden');const el=document.getElementById('prof-av');if(el)el.innerHTML='<span style="font-size:2.5rem">'+emoji+'</span>';await saveAvatar(emoji);updateHomeUI();toast('Avatar mis à jour : '+emoji);}
-async function uploadAvatar(event){const file=event.target.files[0];if(!file)return;if(file.size>500000){toast('Image trop grande ! Max 500kb');return;}const reader=new FileReader();reader.onload=async e=>{const img=new Image();img.onload=async()=>{const canvas=document.createElement('canvas');canvas.width=canvas.height=150;const ctx=canvas.getContext('2d');const ratio=Math.min(150/img.width,150/img.height);const w=img.width*ratio,h=img.height*ratio;ctx.drawImage(img,(150-w)/2,(150-h)/2,w,h);const dataUrl=canvas.toDataURL('image/jpeg',.8);S.avatar=dataUrl;localStorage.setItem('avatar',dataUrl);document.getElementById('avatar-modal').classList.add('hidden');const el=document.getElementById('prof-av');if(el)el.innerHTML='<img src="'+dataUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';await saveAvatar(dataUrl);updateHomeUI();toast('Photo mise à jour ! 📸');};img.src=e.target.result;};reader.readAsDataURL(file);}
-async function saveAvatar(av){if(!S.token)return;try{await fetch('/api/profile/photo',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({photo:av})});}catch{}}
+function openAvatarModal() {
+  const prev = document.getElementById('avatar-preview');
+  if (prev) {
+    if (S.avatar && S.avatar.startsWith('data:')) prev.innerHTML = '<img src="'+S.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    else prev.textContent = ((S.pseudo||'?')[0]||'?').toUpperCase();
+  }
+  document.getElementById('avatar-modal').classList.remove('hidden');
+}
+function closeAvatarModal(e) { if (!e || e.target.id === 'avatar-modal') document.getElementById('avatar-modal').classList.add('hidden'); }
+async function uploadAvatar(event) {
+  const file = event.target.files[0]; if (!file) return;
+  if (file.size > 500000) { toast('Image trop grande (max 500kb)'); return; }
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const img = new Image();
+    img.onload = async () => {
+      const canvas = document.createElement('canvas'); canvas.width = canvas.height = 150;
+      const ctx = canvas.getContext('2d');
+      const ratio = Math.min(150/img.width, 150/img.height);
+      const w = img.width*ratio, h = img.height*ratio;
+      ctx.drawImage(img, (150-w)/2, (150-h)/2, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', .8);
+      S.avatar = dataUrl; localStorage.setItem('avatar', dataUrl);
+      document.getElementById('avatar-modal').classList.add('hidden');
+      const el = document.getElementById('prof-av');
+      if (el) el.innerHTML = '<img src="'+dataUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      await saveAvatar(dataUrl); updateHomeUI(); toast('Photo mise à jour !');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+async function saveAvatar(av) { if (!S.token) return; try { await fetch('/api/profile/photo', {method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({photo:av})}); } catch {} }
 
 // ── Helpers ──
 const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation',international:'🌍 International'};
@@ -245,12 +288,36 @@ function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:
 const COACH={priorites:['Priorité à droite SAUF panneau 🚦','STOP = arrêt TOTAL 🛑','Cédez ≠ arrêt obligatoire 🔺'],panneaux:['Rouge=interdit, Bleu=obligation, Triangle=danger 🪧','Losange jaune=route prioritaire 💛','Rond bleu+chiffre=vitesse MINIMALE 🔵'],vitesse:['Autoroute: 130 sec, 110 pluie ⚡','Ville=50 km/h par défaut 🏙️','Permis probatoire: 110 max autoroute 🔰'],alcool:['0,5 g/L standard · 0,2 g/L jeune 🍺','Seul le TEMPS élimine alcool ☕'],securite:['Gilet AVANT de sortir 🦺','PAS=Protéger,Alerter,Secourir 🚨'],regles:['Ligne continue=jamais franchir ⚡','Ceinture avant ET arrière 🔒']};
 function coachTip(cat){const t=COACH[cat]||['Lis bien la question ! 📖','Prends le temps ⏱️'];return t[Math.floor(Math.random()*t.length)];}
 
+// ── Waiting room ──
+function leaveWaiting() {
+  socket.emit('leave_waiting');
+  S.roomCode = null;
+  go('screen-play');
+}
+
+// ── Chat ──
+function toggleChat() {
+  const panel = document.getElementById('chat-panel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    document.getElementById('chat-badge').classList.add('hidden');
+    document.getElementById('chat-input')?.focus();
+  }
+}
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  socket.emit('chat_message', { message: msg });
+  input.value = '';
+}
+
 // ── Matchmaking queue ──
-function avatarHtml(av, size) {
+function avatarHtml(av, size, pseudo) {
   const sz = size || 72;
-  if (!av) return '<span style="font-size:'+(sz*.55)+'px">🧑‍🎓</span>';
-  if (av.startsWith('data:')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-  return '<span style="font-size:'+(sz*.5)+'px">'+esc(av)+'</span>';
+  const letter = esc(((pseudo||S.pseudo||'?')[0]||'?').toUpperCase());
+  if (av && av.startsWith('data:')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  return '<span style="font-size:'+(sz*.38)+'px;font-weight:900;color:var(--accent2);line-height:1">'+letter+'</span>';
 }
 
 function joinQueue() {
@@ -304,7 +371,7 @@ function renderWaiting(players,maxPlayers){
   for(let i=0;i<maxPlayers;i++){
     const p=players[i];const div=document.createElement('div');
     div.className='waiting-player '+(p?'connected':'empty');
-    if(p){const av=p.avatar?(p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-size:1.2rem">'+esc(p.avatar)+'</span>'):esc(p.pseudo[0].toUpperCase());div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
+    if(p){const av=p.avatar&&p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-weight:900;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
     else{div.innerHTML='<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur '+(i+1)+'</div></div><div class="wp-status">⏳</div>';}
     c.appendChild(div);
   }
@@ -326,7 +393,7 @@ function renderHUD(){
   const max=Math.max(...S.allPlayers.map(p=>p.score),0);
   S.allPlayers.forEach(p=>{
     const isMe=p.pseudo===S.pseudo;
-    const av=p.avatar?(p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.85rem">'+p.avatar+'</span>'):'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+p.pseudo[0]+'</span>';
+    const av=p.avatar&&p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
     const d=document.createElement('div');
     d.className='hud-player-score'+(isMe?' me':'')+(p.score===max&&max>0&&!isMe?' leading':'');
     d.innerHTML='<div style="display:flex;align-items:center;gap:.2rem;width:24px">'+av+'</div><div><div class="hps-name">'+esc(p.pseudo)+'</div>'+(p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':'')+'</div><div class="hps-score">'+esc(p.score)+'</div>'+(p.streak>=3?'<div style="font-size:.72rem">🔥'+esc(p.streak)+'</div>':'');
@@ -536,7 +603,15 @@ socket.on('scores_update',({players})=>{S.allPlayers=players;renderHUD();});
 socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showDuelResult(data);renderHUD();});
 socket.on('powerup_result',({type,removed,bonusSeconds})=>{if(type==='fifty50'&&removed){removed.forEach(id=>document.querySelector('.answer-btn[data-id="'+id+'"]')?.classList.add('removed'));toast('⚡ 50/50 !');}else if(type==='timeBonus'&&bonusSeconds){S.timerSecs+=bonusSeconds;toast('⏱️ +'+bonusSeconds+'s !');}else if(type==='stress')toast('😱 Stress envoyé !');});
 socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){S.timerSecs=Math.max(3,S.timerSecs-penaltySeconds);toast('😱 '+from+' t\'a stressé ! -'+penaltySeconds+'s',3000);}});
-socket.on('game_end',data=>showDuelResults(data));
+socket.on('game_end',data=>{
+  const myR=data.results?.find(r=>r.pseudo===S.pseudo);
+  if(myR?.forfeited){
+    if(myR.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',S.elo);}
+    S.gamePlaying=false; S.roomCode=null;
+    return;
+  }
+  showDuelResults(data);
+});
 socket.on('player_disconnected',({pseudo})=>toast('💔 '+pseudo+' a quitté...',3000));
 socket.on('rematch_started',({roomCode,options,players})=>{S.roomCode=roomCode;S.isHost=players[0]?.pseudo===S.pseudo;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);toast('🔄 Revanche ! Cliquez sur Prêt !');});
 socket.on('queue_joined',({position,total,eloRange})=>{
@@ -581,6 +656,21 @@ socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
   },1000);
 });
 socket.on('queue_left',()=>{clearInterval(S.queueTimer);clearInterval(S.queueCountdownInterval);document.getElementById('queue-elo-range').classList.remove('hidden');});
+socket.on('chat_message',({pseudo,message})=>{
+  const messages=document.getElementById('chat-messages');
+  if(!messages)return;
+  const panel=document.getElementById('chat-panel');
+  const isMe=pseudo===S.pseudo;
+  const div=document.createElement('div');
+  div.className='chat-msg '+(isMe?'me':'other');
+  div.innerHTML=(!isMe?'<span class="chat-sender">'+esc(pseudo)+'</span>':'')+'<span class="chat-text">'+esc(message)+'</span>';
+  messages.appendChild(div);
+  messages.scrollTop=messages.scrollHeight;
+  if(panel?.classList.contains('hidden')&&!isMe){
+    const badge=document.getElementById('chat-badge');
+    if(badge){badge.classList.remove('hidden');badge.textContent=parseInt(badge.textContent||'0')+1;}
+  }
+});
 socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg,3000);});
 
 // ── Init ──
@@ -591,5 +681,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});
   document.getElementById('join-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
   document.getElementById('new-pseudo-input').addEventListener('keydown',e=>{if(e.key==='Enter')savePseudo();});
+  document.getElementById('chat-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
   if(S.token){fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}}).then(r=>r.json()).then(d=>{if(d.avatar){S.avatar=d.avatar;localStorage.setItem('avatar',d.avatar);updateHomeUI();}}).catch(()=>{});}
 });
