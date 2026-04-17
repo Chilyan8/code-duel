@@ -16,6 +16,7 @@ const S = {
   soloCorrect: 0, soloWrong: 0, soloStreak: 0, soloMaxStreak: 0,
   soloTimer: null, soloSecs: 30,
   queueTimer: null, queueSecs: 0, queueCountdownInterval: null,
+  gamePlaying: false,
 };
 
 const socket = io({ auth: { token: S.token } });
@@ -27,6 +28,13 @@ const sfx={correct:()=>{tone(523,'sine',.1);setTimeout(()=>tone(659,'sine',.15),
 
 // ── Navigation ──
 function go(id) {
+  const prev = document.querySelector('.screen.active');
+  if (prev?.id === 'screen-game' && id !== 'screen-game' && id !== 'screen-results' && S.gamePlaying) {
+    socket.emit('forfeit_game');
+    S.gamePlaying = false;
+    S.roomCode = null;
+    stopTimer();
+  }
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
@@ -142,7 +150,7 @@ async function loadProfile() {
     const avgPerGame=games>0?(correct/games).toFixed(1):'0';
     const secs=d.total_seconds||0;
     const h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60);
-    const timeStr=h>0?h+'h '+m+'min':m+' min';
+    const timeStr=h>0?h+'h '+m+'min':m>0?m+' min':secs>0?secs+'s':'< 1 min';
     const lv=d.level||{name:'🔰 Apprenti',next:1020,level:1};
     const eloBase={1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[lv.level]||0;
     const eloRange=lv.next?lv.next-eloBase:1;
@@ -161,7 +169,7 @@ async function loadProfile() {
           '<div class="profile-avatar-img" id="prof-av">'+avHtml+'</div>'+
           '<div class="avatar-edit-btn">✏️</div>'+
         '</div>'+
-        '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+d.pseudo+'</div>'+
+        '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+esc(d.pseudo)+' <button onclick="openPseudoModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:.1rem .4rem;color:var(--text3);cursor:pointer;font-size:.65rem;vertical-align:middle">✏️</button></div>'+
         '<div style="color:var(--accent2);font-weight:700">'+lv.name+'</div>'+
         '<div style="color:var(--text2);font-size:.85rem">'+d.elo+' Elo'+(lv.next?' · encore '+(lv.next-d.elo)+' pts':' · Niveau max 🏆')+'</div>'+
         '<div style="width:180px;margin:.6rem auto 0">'+
@@ -199,6 +207,29 @@ async function loadProfile() {
   }
 }
 
+// ── Pseudo change ──
+function openPseudoModal(){
+  document.getElementById('new-pseudo-input').value=S.pseudo||'';
+  document.getElementById('pseudo-modal-err').classList.add('hidden');
+  document.getElementById('pseudo-modal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('new-pseudo-input').focus(),100);
+}
+function closePseudoModal(){document.getElementById('pseudo-modal').classList.add('hidden');}
+async function savePseudo(){
+  const pseudo=document.getElementById('new-pseudo-input').value.trim();
+  if(!pseudo)return;
+  clearErr('pseudo-modal-err');
+  try{
+    const r=await fetch('/api/profile/pseudo',{method:'PUT',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({pseudo})});
+    const d=await r.json();
+    if(!r.ok)return err('pseudo-modal-err',d.error||'Erreur');
+    S.pseudo=d.pseudo; S.token=d.token;
+    localStorage.setItem('pseudo',d.pseudo); localStorage.setItem('token',d.token);
+    socket.auth={token:d.token};
+    closePseudoModal(); toast('Pseudo mis à jour ! 🎉'); loadProfile(); updateHomeUI();
+  }catch{err('pseudo-modal-err','Erreur réseau');}
+}
+
 // ── Avatar ──
 const AVATARS=['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗','🚕','🚙','🏍️','🚓','🚑','👮','🦸','🧙','🎮','🔥','⚡','🌟','👑','🎯','🏆','💎','🦊','🐺','🐯','🦁','🤖','🦅','🐸','🧑‍✈️','🎭'];
 function openAvatarModal(){document.getElementById('emoji-avatars').innerHTML=AVATARS.map(e=>'<div class="avatar-option" onclick="pickAvatar(\''+e+'\')">'+e+'</div>').join('');document.getElementById('avatar-modal').classList.remove('hidden');}
@@ -215,22 +246,36 @@ const COACH={priorites:['Priorité à droite SAUF panneau 🚦','STOP = arrêt T
 function coachTip(cat){const t=COACH[cat]||['Lis bien la question ! 📖','Prends le temps ⏱️'];return t[Math.floor(Math.random()*t.length)];}
 
 // ── Matchmaking queue ──
+function avatarHtml(av, size) {
+  const sz = size || 72;
+  if (!av) return '<span style="font-size:'+(sz*.55)+'px">🧑‍🎓</span>';
+  if (av.startsWith('data:')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  return '<span style="font-size:'+(sz*.5)+'px">'+esc(av)+'</span>';
+}
+
 function joinQueue() {
   if (!S.pseudo) { promptGuest(); if (!S.pseudo) return; }
   if (!S.token) { toast('Connecte-toi pour jouer en classé ! 🔒', 3000); go('screen-auth'); return; }
   clearInterval(S.queueTimer); clearInterval(S.queueCountdownInterval);
   S.queueSecs = 0;
   go('screen-queue');
-  document.getElementById('queue-icon').textContent = '🔍';
-  document.getElementById('queue-title').textContent = 'Recherche en cours...';
-  document.getElementById('queue-matched-box').classList.add('hidden');
-  document.getElementById('queue-searching-box').classList.remove('hidden');
+  // Mon avatar + infos
+  document.getElementById('queue-my-avatar').innerHTML = avatarHtml(S.avatar);
+  document.getElementById('queue-my-pseudo').textContent = S.pseudo;
+  document.getElementById('queue-my-elo').textContent = S.elo + ' Elo';
+  // Reset adversaire
+  const oppAv = document.getElementById('queue-opp-avatar');
+  oppAv.innerHTML = '?'; oppAv.className = 'queue-avatar queue-avatar-unknown';
+  document.getElementById('queue-opp-pseudo').textContent = 'Recherche...';
+  document.getElementById('queue-opp-elo').textContent = '??? Elo';
+  document.getElementById('queue-matched-extra').classList.add('hidden');
+  document.getElementById('queue-searching-row').classList.remove('hidden');
   document.getElementById('btn-leave-queue').classList.remove('hidden');
-  document.getElementById('queue-wait-time').textContent = '0s';
-  document.getElementById('queue-position').textContent = 'Connexion à la file...';
+  document.getElementById('queue-wait-time').textContent = '0';
+  document.getElementById('queue-position').textContent = 'Connexion...';
   S.queueTimer = setInterval(() => {
     S.queueSecs++;
-    document.getElementById('queue-wait-time').textContent = S.queueSecs + 's';
+    document.getElementById('queue-wait-time').textContent = S.queueSecs;
   }, 1000);
   socket.emit('join_queue', { pseudo: S.pseudo, elo: S.elo, avatar: S.avatar });
 }
@@ -340,7 +385,7 @@ function usePowerup(type){if(!S.powerups[type]||S.answered)return;S.powerups[typ
 
 // ── Duel results ──
 function showDuelResults(data){
-  stopTimer();go('screen-results');
+  stopTimer();S.gamePlaying=false;go('screen-results');
   const banner=document.getElementById('victory-banner');
   if(data.isDraw)banner.textContent='🤝 Match nul !';
   else if(data.winner===S.pseudo){banner.textContent='🏆 VICTOIRE !';sfx.win();}
@@ -479,13 +524,13 @@ async function loadLeaderboard() {
 
 // ── Session time ──
 let _ss = Date.now();
-setInterval(async()=>{if(!S.token)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await fetch('/api/profile/session-time',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},60000);
+setInterval(async()=>{if(!S.token)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await fetch('/api/profile/session-time',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},30000);
 
 // ── Socket events ──
 socket.on('game_created',({roomCode,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting([{pseudo:S.pseudo,ready:false,avatar:S.avatar}],options.maxPlayers);});
 socket.on('game_joined',({roomCode,players,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);});
 socket.on('player_list_update',({players,maxPlayers})=>renderWaiting(players,maxPlayers));
-socket.on('game_start',({players,options})=>{sfx.start();S.gameMode=options.mode;S.gameOptions=options;S.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));S.powerups={fifty50:1,timeBonus:1,stress:1};go('screen-game');renderHUD();});
+socket.on('game_start',({players,options})=>{sfx.start();S.gameMode=options.mode;S.gameOptions=options;S.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));S.powerups={fifty50:1,timeBonus:1,stress:1};S.gamePlaying=true;go('screen-game');renderHUD();});
 socket.on('new_question',data=>{S.allPlayers.forEach(p=>p.answered=false);renderDuelQuestion(data);});
 socket.on('scores_update',({players})=>{S.allPlayers=players;renderHUD();});
 socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showDuelResult(data);renderHUD();});
@@ -495,11 +540,11 @@ socket.on('game_end',data=>showDuelResults(data));
 socket.on('player_disconnected',({pseudo})=>toast('💔 '+pseudo+' a quitté...',3000));
 socket.on('rematch_started',({roomCode,options,players})=>{S.roomCode=roomCode;S.isHost=players[0]?.pseudo===S.pseudo;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);toast('🔄 Revanche ! Cliquez sur Prêt !');});
 socket.on('queue_joined',({position,total,eloRange})=>{
-  document.getElementById('queue-position').textContent='Position #'+position+(total>1?' sur '+total+' joueurs':' — seul dans la file');
+  document.getElementById('queue-position').textContent='#'+position+(total>1?' / '+total+' joueurs':' — seul dans la file');
   document.getElementById('queue-elo-range').textContent='Fourchette Elo : ±'+eloRange;
 });
 socket.on('queue_update',({position,total,eloRange})=>{
-  document.getElementById('queue-position').textContent='Position #'+position+' sur '+total+' joueur'+(total>1?'s':'');
+  document.getElementById('queue-position').textContent='#'+position+' / '+total+' joueur'+(total>1?'s':'');
   document.getElementById('queue-elo-range').textContent='Fourchette Elo : ±'+eloRange;
 });
 socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
@@ -507,30 +552,35 @@ socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
   S.roomCode=roomCode; S.isHost=isHost;
   S.gameOptions={maxPlayers:2,questionCount:totalQuestions,timeLimit:30,category:'all',mode:'normal'};
   S.gameMode='normal';
-  // UI match trouvé
-  document.getElementById('queue-icon').textContent='⚔️';
-  document.getElementById('queue-title').textContent='Adversaire trouvé !';
-  document.getElementById('queue-searching-box').classList.add('hidden');
+  // Mettre à jour l'avatar adversaire dans le VS
+  const oppAv=document.getElementById('queue-opp-avatar');
+  oppAv.innerHTML=avatarHtml(opponent.avatar);
+  oppAv.className='queue-avatar queue-avatar-found';
+  document.getElementById('queue-opp-pseudo').textContent=esc(opponent.pseudo);
+  document.getElementById('queue-opp-pseudo').style.color='';
+  document.getElementById('queue-opp-elo').textContent=esc(opponent.elo)+' Elo';
+  document.getElementById('queue-opp-elo').style.color='';
+  // Cacher spinner, montrer compte à rebours
+  document.getElementById('queue-searching-row').classList.add('hidden');
+  document.getElementById('queue-elo-range').classList.add('hidden');
   document.getElementById('btn-leave-queue').classList.add('hidden');
-  document.getElementById('queue-matched-box').classList.remove('hidden');
-  document.getElementById('queue-opponent-pseudo').textContent=esc(opponent.pseudo);
-  document.getElementById('queue-opponent-elo').textContent=esc(opponent.elo)+' Elo';
+  document.getElementById('queue-matched-extra').classList.remove('hidden');
+  // Diff Elo
   const diff=opponent.elo-S.elo;
   const diffEl=document.getElementById('queue-elo-diff');
-  if(diff>0)diffEl.innerHTML='<span style="color:var(--red)">Adversaire +'+diff+' Elo — tu es l\'outsider 💪</span>';
-  else if(diff<0)diffEl.innerHTML='<span style="color:var(--green)">Adversaire '+diff+' Elo — tu es le favori 🎯</span>';
-  else diffEl.innerHTML='<span style="color:var(--yellow)">Même niveau ! ⚖️</span>';
+  if(diff>50)diffEl.innerHTML='⚠️ Adversaire plus fort (+'+diff+' Elo) — bonne chance 💪';
+  else if(diff<-50)diffEl.innerHTML='🎯 Tu es le favori ('+diff+' Elo) — reste concentré !';
+  else diffEl.innerHTML='⚖️ Niveau équilibré — que le meilleur gagne !';
   sfx.start();
-  // Compte à rebours
   let count=3;
   document.getElementById('queue-countdown').textContent=count;
   S.queueCountdownInterval=setInterval(()=>{
     count--;
     if(count>0)document.getElementById('queue-countdown').textContent=count;
-    else{clearInterval(S.queueCountdownInterval);}
+    else clearInterval(S.queueCountdownInterval);
   },1000);
 });
-socket.on('queue_left',()=>{clearInterval(S.queueTimer);clearInterval(S.queueCountdownInterval);});
+socket.on('queue_left',()=>{clearInterval(S.queueTimer);clearInterval(S.queueCountdownInterval);document.getElementById('queue-elo-range').classList.remove('hidden');});
 socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg,3000);});
 
 // ── Init ──
@@ -540,5 +590,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
   document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});
   document.getElementById('join-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
+  document.getElementById('new-pseudo-input').addEventListener('keydown',e=>{if(e.key==='Enter')savePseudo();});
   if(S.token){fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}}).then(r=>r.json()).then(d=>{if(d.avatar){S.avatar=d.avatar;localStorage.setItem('avatar',d.avatar);updateHomeUI();}}).catch(()=>{});}
 });

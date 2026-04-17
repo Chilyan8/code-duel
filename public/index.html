@@ -332,31 +332,42 @@
 
 <!-- ════════════════════════════ QUEUE ══ -->
 <div id="screen-queue" class="screen">
-  <div class="card card-play" style="text-align:center">
-    <button class="back-btn" onclick="leaveQueue()">← Annuler</button>
-    <div style="padding:1.5rem 0">
-      <div id="queue-icon" style="font-size:3.5rem;margin-bottom:1rem;transition:all .5s">🔍</div>
-      <h2 id="queue-title" style="margin-bottom:.5rem">Recherche en cours...</h2>
-      <div id="queue-position" style="color:var(--text2);font-size:.95rem;margin-bottom:.3rem">En attente d'adversaire</div>
-      <div id="queue-elo-range" style="color:var(--text3);font-size:.82rem;margin-bottom:1.5rem">Fourchette Elo : ±200</div>
+  <div class="card card-play" style="text-align:center;max-width:460px">
+    <div style="font-size:.72rem;color:var(--accent2);font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem">⚡ 1v1 CLASSÉ</div>
 
-      <div id="queue-searching-box" style="display:inline-flex;align-items:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.75rem 1.5rem;margin-bottom:1.5rem">
-        <div class="spinner"></div>
-        <span id="queue-wait-time" style="font-size:1.1rem;font-weight:700">0s</span>
-        <span style="color:var(--text3);font-size:.85rem">d'attente</span>
+    <!-- VS -->
+    <div class="queue-vs-layout">
+      <div class="queue-player-card">
+        <div class="queue-avatar" id="queue-my-avatar"></div>
+        <div class="queue-pseudo" id="queue-my-pseudo"></div>
+        <div class="queue-elo-tag" id="queue-my-elo"></div>
       </div>
-
-      <div id="queue-matched-box" class="hidden" style="background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(167,139,250,.12));border:1px solid var(--accent);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem">
-        <div style="font-size:.85rem;color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem">Adversaire trouvé !</div>
-        <div id="queue-opponent-pseudo" style="font-size:1.4rem;font-weight:800;margin-bottom:.2rem"></div>
-        <div id="queue-opponent-elo" style="color:var(--text2);font-size:.9rem;margin-bottom:.75rem"></div>
-        <div id="queue-elo-diff" style="font-size:.85rem;margin-bottom:1rem"></div>
-        <div style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem">La partie commence dans</div>
-        <div id="queue-countdown" style="font-size:3rem;font-weight:900;color:var(--accent2);line-height:1">3</div>
+      <div class="queue-vs-circle">VS</div>
+      <div class="queue-player-card">
+        <div class="queue-avatar queue-avatar-unknown" id="queue-opp-avatar">?</div>
+        <div class="queue-pseudo" id="queue-opp-pseudo" style="color:var(--text3)">Recherche...</div>
+        <div class="queue-elo-tag" id="queue-opp-elo" style="color:var(--text3)">??? Elo</div>
       </div>
-
-      <button id="btn-leave-queue" class="btn btn-ghost w-full" style="margin-top:0" onclick="leaveQueue()">✖ Quitter la file</button>
     </div>
+
+    <!-- Statut recherche -->
+    <div id="queue-searching-row" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.65rem 1.25rem;margin-bottom:.65rem">
+      <div class="spinner"></div>
+      <div style="text-align:left">
+        <div style="font-size:.95rem;font-weight:700"><span id="queue-wait-time">0</span>s d'attente</div>
+        <div id="queue-position" style="font-size:.75rem;color:var(--text3)">Connexion...</div>
+      </div>
+    </div>
+    <div id="queue-elo-range" style="font-size:.78rem;color:var(--text3);margin-bottom:1rem">Fourchette Elo : ±200</div>
+
+    <!-- Infos quand adversaire trouvé -->
+    <div id="queue-matched-extra" class="hidden" style="margin-bottom:1rem">
+      <div id="queue-elo-diff" style="font-size:.88rem;margin-bottom:.75rem;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px"></div>
+      <div style="font-size:.85rem;color:var(--text2);margin-bottom:.3rem">La partie commence dans</div>
+      <div id="queue-countdown" style="font-size:3.5rem;font-weight:900;color:var(--accent2);line-height:1.1">3</div>
+    </div>
+
+    <button id="btn-leave-queue" class="btn btn-ghost w-full" style="margin-top:0" onclick="leaveQueue()">✖ Annuler</button>
   </div>
 </div>
 
@@ -371,6 +382,22 @@
       <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" style="display:none"/>
     </label>
     <button class="btn btn-ghost w-full" style="margin-top:.75rem" onclick="document.getElementById('avatar-modal').classList.add('hidden')">Annuler</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════ PSEUDO MODAL ══ -->
+<div id="pseudo-modal" class="modal-overlay hidden" onclick="if(event.target.id==='pseudo-modal')closePseudoModal()">
+  <div class="modal-box">
+    <h3 style="margin-bottom:1rem">✏️ Changer de pseudo</h3>
+    <div class="field">
+      <label>Nouveau pseudo (3-20 caractères)</label>
+      <input id="new-pseudo-input" type="text" placeholder="Ton nouveau pseudo" maxlength="20" autocomplete="off"/>
+    </div>
+    <div id="pseudo-modal-err" class="error-msg hidden"></div>
+    <div style="display:flex;gap:.65rem;margin-top:1rem">
+      <button class="btn btn-primary" onclick="savePseudo()">✅ Sauvegarder</button>
+      <button class="btn btn-ghost" onclick="closePseudoModal()">Annuler</button>
+    </div>
   </div>
 </div>
 

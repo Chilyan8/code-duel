@@ -183,6 +183,19 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
   res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo) });
 });
 
+app.put('/api/profile/pseudo', authMiddleware, async (req, res) => {
+  try {
+    const { pseudo } = req.body;
+    if (!pseudo || pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
+    if (!/^[\w\- .éèêëàâùûüîïôçæœ]+$/i.test(pseudo)) return res.status(400).json({ error: 'Caractères invalides' });
+    const exists = await db.getUser(pseudo);
+    if (exists && String(exists.id) !== String(req.user.id)) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
+    await db.updateUser(req.user.id, {}, { pseudo });
+    const token = jwt.sign({ id: req.user.id, pseudo }, JWT_SECRET, { expiresIn: '365d' });
+    res.json({ token, pseudo });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Training session (solo) ───────────────────────────────────────────────────
 app.get('/api/training/session', async (req, res) => {
   // Works with or without auth
@@ -344,7 +357,7 @@ io.on('connection', (socket) => {
       streak: player.streak, score: player.score, hidden: !showFeedback,
       trapStats: q.is_trap ? `${Math.floor(Math.random() * 40 + 40)}% des joueurs se trompent ici` : null,
     });
-    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered })) });
+    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar })) });
     if (game.players.every(p => p.answered)) {
       clearTimeout(game.questionTimer);
       const delay = game.options.mode === 'blitz' ? 1000 : game.options.mode === 'micro' ? 1500 : 3000;
@@ -386,6 +399,17 @@ io.on('connection', (socket) => {
     const qi = matchmakingQueue.findIndex(p => p.socketId === socket.id);
     if (qi >= 0) { matchmakingQueue.splice(qi, 1); broadcastQueueUpdate(); }
     socket.emit('queue_left');
+  });
+
+  socket.on('forfeit_game', () => {
+    const game = activeGames.get(socket.roomCode);
+    if (!game || game.status !== 'playing') { socket.roomCode = null; return; }
+    const player = game.players.find(p => p.socketId === socket.id);
+    if (!player) return;
+    game.players = game.players.filter(p => p.socketId !== socket.id);
+    io.to(game.roomCode).emit('player_disconnected', { pseudo: player.pseudo });
+    socket.roomCode = null;
+    if (game.players.length < 2) { clearTimeout(game.questionTimer); setTimeout(() => endGame(game), 1000); }
   });
 
   socket.on('request_rematch', () => {
@@ -435,7 +459,7 @@ function startGame(game) {
   game.status = 'playing';
   game.players.forEach(p => p.ready = true);
   db.updateGame(game.roomCode, { status: 'playing' }).catch(() => {});
-  io.to(game.roomCode).emit('game_start', { totalQuestions: game.questions.length, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0 })), options: game.options });
+  io.to(game.roomCode).emit('game_start', { totalQuestions: game.questions.length, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0, avatar: p.avatar })), options: game.options });
   sendQuestion(game);
 }
 
@@ -458,7 +482,7 @@ function sendQuestion(game) {
       const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
       sock?.emit('answer_result', { isCorrect: showFeedback ? false : null, correctAnswers: showFeedback ? q.correct : [], explanation: showFeedback ? q.explanation : '', isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: !showFeedback });
     });
-    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered })) });
+    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar })) });
     const delay = game.options.mode === 'blitz' ? 800 : game.options.mode === 'micro' ? 1000 : 2500;
     setTimeout(() => nextQuestion(game), delay);
   }, game.options.timeLimit * 1000);

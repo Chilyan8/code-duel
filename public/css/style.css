@@ -227,7 +227,7 @@ input:focus{outline:none;border-color:var(--accent)}
 }
 
 /* ═══ PROFILE FULL SCREEN ═══ */
-.screen-profile-full { display:flex !important; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1.5rem; overflow-y:auto; min-height:100vh; }
+.screen-profile-full { flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1.5rem; overflow-y:auto; min-height:100vh; }
 .card-profile { max-width:580px; padding-top:3rem; }
 
 .profile-header { text-align:center; padding:.5rem 0 1.5rem; }
@@ -328,3 +328,15 @@ input:focus{outline:none;border-color:var(--accent)}
 
 /* ── Solo score bar ── */
 .solo-score-bar { display: flex; gap: 1.5rem; font-size: .88rem; font-weight: 600; }
+
+/* ═══ QUEUE VS LAYOUT ═══ */
+.queue-vs-layout{display:flex;align-items:center;justify-content:center;gap:1.25rem;margin:1.5rem 0}
+.queue-player-card{display:flex;flex-direction:column;align-items:center;gap:.45rem;flex:1;min-width:0}
+.queue-avatar{width:72px;height:72px;border-radius:50%;border:3px solid var(--accent);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:2.3rem;overflow:hidden;transition:all .4s;flex-shrink:0}
+.queue-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.queue-avatar-unknown{border-style:dashed;border-color:var(--border);color:var(--text3);font-size:1.8rem;font-weight:900;animation:queuePulse 1.5s ease-in-out infinite}
+.queue-avatar-found{border-color:var(--green);box-shadow:0 0 18px rgba(74,222,128,.35)}
+@keyframes queuePulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+.queue-pseudo{font-weight:700;font-size:.92rem;text-align:center;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.queue-elo-tag{font-size:.78rem;color:var(--accent2);font-weight:600}
+.queue-vs-circle{font-size:.9rem;font-weight:900;color:var(--text3);background:var(--bg3);border:2px solid var(--border);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
