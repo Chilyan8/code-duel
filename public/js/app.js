@@ -786,7 +786,7 @@ socket.on('error',msg=>{showError('play-error',msg);showError('join-error',msg);
 
 
 function confirmLeaveGame() {
-  if (confirm('Quitter la partie en cours ? L'adversaire sera informé.')) {
+  if (confirm('Quitter la partie en cours ?')) {
     stopTimer();
     showScreen('screen-home');
   }
