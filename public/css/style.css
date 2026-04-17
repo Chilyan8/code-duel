@@ -224,7 +224,7 @@ input:focus{outline:none;border-color:var(--accent)}
 }
 
 /* ═══ PROFILE FULL SCREEN ═══ */
-.screen-profile-full { display:flex !important; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1.5rem; overflow-y:auto; min-height:100vh; }
+.screen-profile-full { flex-direction:column; align-items:center; justify-content:flex-start; padding-top:1.5rem; overflow-y:auto; min-height:100vh; }
 .card-profile { max-width:580px; padding-top:3rem; }
 
 .profile-header { text-align:center; padding:.5rem 0 1.5rem; }

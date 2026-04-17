@@ -53,19 +53,21 @@ const sfx = {
 // ── Navigation ─────────────────────────────────────────────
 // go() replaced above
 
-// ─── NAVIGATION — bulletproof screen switcher ───────────────
+// ─── NAVIGATION ──────────────────────────────────────────────
+let _currentScreen = 'screen-home';
+
 function go(screenId) {
-  // 1. Force-hide every screen (clear both class AND inline style)
+  _currentScreen = screenId;
+  // Hide ALL screens without exception
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
-    s.style.display = 'none';
+    s.removeAttribute('style'); // clear ALL inline styles
   });
-  // 2. Force-show only the target screen
+  // Show target
   const target = document.getElementById(screenId);
   if (!target) return;
-  target.style.display = 'flex';
   target.classList.add('active');
-  // 3. Side effects
+  // Side effects
   if (screenId === 'screen-home')        updateHomeUI();
   if (screenId === 'screen-leaderboard') loadLeaderboard();
   if (screenId === 'screen-profile')     loadProfile();
@@ -900,34 +902,34 @@ async function endSolo() {
 async function loadLeaderboard() {
   const el = document.getElementById('leaderboard-list');
   if (!el) return;
-  el.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+  // Show loading state immediately
+  el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text2)"><div class="spinner" style="margin:0 auto 1rem"></div>Chargement...</div>';
   try {
-    // Timeout de 5 secondes
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch('/api/leaderboard', { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) throw new Error('Erreur serveur ' + res.status);
+    const res = await Promise.race([
+      fetch('/api/leaderboard'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
+    ]);
+    if (!res.ok) throw new Error('Erreur ' + res.status);
     const data = await res.json();
     if (!data || !data.length) {
-      el.innerHTML = '<p style="text-align:center;color:var(--text2);padding:1.5rem">Aucun joueur inscrit pour le moment 🤷<br><small>Crée un compte pour apparaître ici !</small></p>';
+      el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text2)">Aucun joueur inscrit pour le moment 🤷<br><small style="color:var(--text3)">Cree un compte pour apparaitre ici !</small></div>';
       return;
     }
     el.innerHTML = data.map((p, i) => {
       const re = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      return `<div class="lb-item">
-        <div class="lb-rank">${re}</div>
-        <div style="flex:1"><div class="lb-pseudo">${p.pseudo}</div><div class="lb-level" style="font-size:.75rem;color:var(--text3)">${p.levelInfo?.name||''}</div></div>
-        <div class="lb-elo" style="font-weight:700;color:var(--accent2)">${p.elo} Elo</div>
-        <div class="lb-record" style="font-size:.78rem;color:var(--text3);margin-left:.5rem">${p.wins||0}V ${p.losses||0}D</div>
-      </div>`;
+      return '<div class="lb-item">'
+        + '<div class="lb-rank">' + re + '</div>'
+        + '<div style="flex:1"><div class="lb-pseudo">' + p.pseudo + '</div>'
+        + '<div style="font-size:.72rem;color:var(--text3)">' + (p.levelInfo && p.levelInfo.name ? p.levelInfo.name : '') + '</div></div>'
+        + '<div style="font-weight:700;color:var(--accent2)">' + p.elo + ' Elo</div>'
+        + '<div style="font-size:.78rem;color:var(--text3);margin-left:.5rem">' + (p.wins||0) + 'V ' + (p.losses||0) + 'D</div>'
+        + '</div>';
     }).join('');
   } catch(e) {
-    const msg = e.name === 'AbortError' ? 'Délai dépassé — réessaie !' : 'Erreur : ' + e.message;
-    el.innerHTML = `<div style="text-align:center;padding:1.5rem">
-      <p style="color:var(--red);margin-bottom:1rem">${msg}</p>
-      <button class="btn btn-ghost" onclick="loadLeaderboard()">🔄 Réessayer</button>
-    </div>`;
+    el.innerHTML = '<div style="text-align:center;padding:1.5rem">'
+      + '<p style="color:var(--red);margin-bottom:1rem">' + (e.message === 'timeout' ? 'Delai depasse' : 'Erreur de connexion') + '</p>'
+      + '<button class="btn btn-ghost" onclick="loadLeaderboard()">Reessayer</button>'
+      + '</div>';
   }
 }
 
