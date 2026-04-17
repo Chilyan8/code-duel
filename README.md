@@ -74,10 +74,9 @@ Ouvre [http://localhost:3000](http://localhost:3000)
 ```
 code-duel/
 ├── server.js          # Serveur Express + Socket.io + logique de jeu
-├── db.js              # Base de données SQLite
+├── db.js              # Couche base de données (Firebase ou mémoire)
 ├── data/
-│   ├── questions.json # 70+ questions du code de la route
-│   └── game.db        # Base de données (générée au démarrage)
+│   └── questions.json # 70+ questions du code de la route
 ├── public/
 │   ├── index.html     # Application SPA
 │   ├── css/style.css  # Design gaming
@@ -99,7 +98,7 @@ code-duel/
 ## 🏗️ Tech Stack
 
 - **Backend** : Node.js + Express + Socket.io
-- **Base de données** : SQLite (better-sqlite3)
+- **Base de données** : Firebase Firestore (+ fallback mémoire si non configuré)
 - **Auth** : JWT + bcrypt
 - **Frontend** : Vanilla HTML/CSS/JS (SPA)
 - **Déploiement** : Render.com (gratuit)
