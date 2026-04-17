@@ -54,6 +54,7 @@ function openProfile() {
 function toast(msg, d=2500) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.remove('hidden'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.add('hidden'),d); }
 function err(id,msg) { const e=document.getElementById(id); if(e){e.textContent=msg;e.classList.remove('hidden');} }
 function clearErr(id) { document.getElementById(id)?.classList.add('hidden'); }
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 
 // ── Auth ──
 async function doLogin() {
@@ -115,7 +116,7 @@ function updateHomeUI() {
   const el=document.getElementById('home-user');
   if(S.pseudo) {
     const av=S.avatar.startsWith('data:') ? '<img src="'+S.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle">' : S.avatar;
-    el.innerHTML=av+' <strong>'+S.pseudo+'</strong> · '+S.elo+' Elo';
+    el.innerHTML=av+' <strong>'+esc(S.pseudo)+'</strong> · '+esc(S.elo)+' Elo';
     el.style.display='flex';
   } else { el.style.display='none'; }
 }
@@ -230,7 +231,7 @@ function renderWaiting(players,maxPlayers){
   for(let i=0;i<maxPlayers;i++){
     const p=players[i];const div=document.createElement('div');
     div.className='waiting-player '+(p?'connected':'empty');
-    if(p){const av=p.avatar?(p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-size:1.2rem">'+p.avatar+'</span>'):p.pseudo[0].toUpperCase();div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+p.pseudo+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
+    if(p){const av=p.avatar?(p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-size:1.2rem">'+esc(p.avatar)+'</span>'):esc(p.pseudo[0].toUpperCase());div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
     else{div.innerHTML='<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur '+(i+1)+'</div></div><div class="wp-status">⏳</div>';}
     c.appendChild(div);
   }
@@ -255,7 +256,7 @@ function renderHUD(){
     const av=p.avatar?(p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.85rem">'+p.avatar+'</span>'):'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+p.pseudo[0]+'</span>';
     const d=document.createElement('div');
     d.className='hud-player-score'+(isMe?' me':'')+(p.score===max&&max>0&&!isMe?' leading':'');
-    d.innerHTML='<div style="display:flex;align-items:center;gap:.2rem;width:24px">'+av+'</div><div><div class="hps-name">'+p.pseudo+'</div>'+(p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':'')+'</div><div class="hps-score">'+p.score+'</div>'+(p.streak>=3?'<div style="font-size:.72rem">🔥'+p.streak+'</div>':'');
+    d.innerHTML='<div style="display:flex;align-items:center;gap:.2rem;width:24px">'+av+'</div><div><div class="hps-name">'+esc(p.pseudo)+'</div>'+(p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':'')+'</div><div class="hps-score">'+esc(p.score)+'</div>'+(p.streak>=3?'<div style="font-size:.72rem">🔥'+esc(p.streak)+'</div>':'');
     c.appendChild(d);
   });
 }
@@ -316,7 +317,7 @@ function showDuelResults(data){
   if(data.isDraw)banner.textContent='🤝 Match nul !';
   else if(data.winner===S.pseudo){banner.textContent='🏆 VICTOIRE !';sfx.win();}
   else banner.textContent='🎖️ Victoire de '+data.winner+' !';
-  document.getElementById('podium').innerHTML=data.results.map(r=>{const isMe=r.pseudo===S.pseudo;const elo=r.eloChange?'<div style="font-size:.82rem;font-weight:700;color:'+(r.eloChange>0?'var(--green)':'var(--red)')+';">'+(r.eloChange>0?'+':'')+r.eloChange+' Elo</div>':'';return '<div class="podium-item rank-'+r.rank+(isMe?' me':'')+'" ><div class="podium-rank">'+(['🥇','🥈','🥉'][r.rank-1]||r.rank+'.')+'</div><div class="podium-pseudo">'+r.pseudo+(isMe?'<span class="podium-you">toi</span>':'')+'</div><div><div class="podium-score">'+r.score+'<span style="font-size:.75rem;color:var(--text3)">\/'+r.total+'</span></div><div class="podium-pct">'+r.percentage+'%</div></div>'+elo+'</div>';}).join('');
+  document.getElementById('podium').innerHTML=data.results.map(r=>{const isMe=r.pseudo===S.pseudo;const elo=r.eloChange?'<div style="font-size:.82rem;font-weight:700;color:'+(r.eloChange>0?'var(--green)':'var(--red)')+';">'+(r.eloChange>0?'+':'')+esc(r.eloChange)+' Elo</div>':'';return '<div class="podium-item rank-'+r.rank+(isMe?' me':'')+'" ><div class="podium-rank">'+(['🥇','🥈','🥉'][r.rank-1]||r.rank+'.')+'</div><div class="podium-pseudo">'+esc(r.pseudo)+(isMe?'<span class="podium-you">toi</span>':'')+'</div><div><div class="podium-score">'+esc(r.score)+'<span style="font-size:.75rem;color:var(--text3)">\/'+esc(r.total)+'</span></div><div class="podium-pct">'+esc(r.percentage)+'%</div></div>'+elo+'</div>';}).join('');
   const myR=data.results.find(r=>r.pseudo===S.pseudo);
   if(myR?.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',S.elo);}
   const an=document.getElementById('results-analysis');an.innerHTML='';
@@ -378,7 +379,7 @@ function renderSoloQ(){
 function submitSoloAnswer(answers){
   clearInterval(S.soloTimer);const q=S.soloQs[S.soloIdx];
   const ok=[...answers].sort().join(',')===[ ...q.correct].sort().join(',');
-  S.soloAnswers.push({questionIndex:S.soloIdx,answers,isCorrect:ok,timeTaken:30-S.soloSecs});
+  S.soloAnswers.push({questionIndex:S.soloIdx,answers,isCorrect:ok,timeTaken:(S.soloMode==='micro'?15:30)-S.soloSecs});
   document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{b.disabled=true;if(q.correct.includes(b.dataset.id))b.classList.add('correct');else if(answers.includes(b.dataset.id))b.classList.add('wrong');});
   document.getElementById('solo-confirm-btn')?.setAttribute('disabled','true');
   if(ok){S.soloCorrect++;S.soloStreak++;S.soloMaxStreak=Math.max(S.soloMaxStreak,S.soloStreak);sfx.correct();}else{S.soloWrong++;S.soloStreak=0;sfx.wrong();}
@@ -441,7 +442,7 @@ async function loadLeaderboard() {
     }
     el.innerHTML = data.map((p, i) => {
       const re = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      return '<div class="lb-item"><div class="lb-rank">'+re+'</div><div style="flex:1"><div class="lb-pseudo">'+p.pseudo+'</div><div style="font-size:.72rem;color:var(--text3)">'+(p.levelInfo?.name||'')+'</div></div><div style="font-weight:700;color:var(--accent2)">'+p.elo+' Elo</div><div style="font-size:.78rem;color:var(--text3);margin-left:.5rem">'+(p.wins||0)+'V '+(p.losses||0)+'D</div></div>';
+      return '<div class="lb-item"><div class="lb-rank">'+re+'</div><div style="flex:1"><div class="lb-pseudo">'+esc(p.pseudo)+'</div><div style="font-size:.72rem;color:var(--text3)">'+esc(p.levelInfo?.name||'')+'</div></div><div style="font-weight:700;color:var(--accent2)">'+esc(p.elo)+' Elo</div><div style="font-size:.78rem;color:var(--text3);margin-left:.5rem">'+esc(p.wins||0)+'V '+esc(p.losses||0)+'D</div></div>';
     }).join('');
   } catch(e) {
     el.innerHTML = '<div style="text-align:center;padding:1.5rem"><p style="color:var(--red);margin-bottom:1rem">'+(e.message==='timeout'?'Delai depasse':'Erreur de connexion')+'</p><button class="btn btn-ghost" onclick="loadLeaderboard()">Reessayer</button></div>';

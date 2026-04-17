@@ -86,6 +86,7 @@ app.post('/api/auth/register', async (req, res) => {
     const { pseudo, password } = req.body;
     if (!pseudo || !password) return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     if (pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
+    if (!/^[\w\- .éèêëàâùûüîïôçæœ]+$/i.test(pseudo)) return res.status(400).json({ error: 'Pseudo : lettres, chiffres, tirets et espaces uniquement' });
     if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4)' });
     const exists = await db.getUser(pseudo);
     if (exists) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
@@ -392,7 +393,7 @@ async function endGame(game) {
   game.status = 'finished';
   clearTimeout(game.questionTimer);
   const ranked = [...game.players].sort((a, b) => b.score - a.score);
-  const winner = ranked[0]?.score > (ranked[1]?.score || -1) ? ranked[0].pseudo : null;
+  const winner = ranked[0]?.score > (ranked[1]?.score ?? -1) ? ranked[0].pseudo : null;
   const eloChanges = {};
 
   if (game.players.length === 2 && winner) {
@@ -461,5 +462,3 @@ async function endGame(game) {
 db.init().then(() => {
   httpServer.listen(PORT, () => console.log(`🚗 Code Duel v4 — port ${PORT}`));
 });
-
-// ── PROFILE PHOTO & STATS ROUTES (add before db.init()) ──────────────────────
