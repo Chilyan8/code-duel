@@ -91,7 +91,7 @@ app.post('/api/auth/register', async (req, res) => {
     if (exists) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
     const hash = await bcrypt.hash(password, 10);
     const result = await db.createUser(pseudo, hash);
-    const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '365d' });
     res.json({ token, pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
   } catch (e) { console.error('register error:', e); res.status(500).json({ error: 'Erreur serveur: ' + e.message }); }
 });
@@ -104,7 +104,7 @@ app.post('/api/auth/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
     const id = user._id?.toString() || user.id;
-    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '365d' });
     res.json({ token, pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
   } catch (e) { console.error('login error:', e); res.status(500).json({ error: 'Erreur serveur' }); }
 });

@@ -27,7 +27,7 @@ const EMOJI_AVATARS = ['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗
 function openAvatarModal() {
   const grid = document.getElementById('emoji-avatars');
   grid.innerHTML = EMOJI_AVATARS.map(e =>
-    `<div class="avatar-option" onclick="selectEmojiAvatar('${e}')">${e}</div>`
+    `<div class="avatar-option" onclick="selectEmojiAvatar(&quot;${e}&quot;)">${e}</div>`
   ).join('');
   document.getElementById('avatar-modal').classList.remove('hidden');
 }
@@ -238,88 +238,113 @@ function updateSoloChip(){
 }
 
 // ── Profile ───────────────────────────────────────────
-async function showProfile(){
-  if(!state.token){ showScreen('screen-auth'); return; }
+async function showProfile() {
   showScreen('screen-profile');
   const pc = document.getElementById('profile-content');
-  pc.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
-  try {
-    const data = await (await fetch('/api/profile', { headers: { Authorization: `Bearer ${state.token}` } })).json();
-    const level = data.level || { name:'🔰 Apprenti', next:1020, level:1 };
-    const acc = data.total_questions > 0 ? Math.round(data.total_correct / data.total_questions * 100) : 0;
-    const avgScore = data.total_games > 0 ? Math.round(data.total_correct / data.total_games * 10) / 10 : 0;
-    const winRate = data.total_games > 0 ? Math.round((data.wins || 0) / data.total_games * 100) : 0;
-    const catStats = data.category_stats || {};
-    const weakCats = Object.entries(catStats).filter(([,s]) => s.sessions > 0).sort((a,b) => (b[1].errors/b[1].sessions) - (a[1].errors/a[1].sessions)).slice(0, 4);
-    const badges = data.badges || [];
-    const eloToNext = level.next ? level.next - data.elo : null;
-    const eloProgress = level.next ? Math.min(100, Math.round((data.elo - (level.level === 1 ? 0 : 1000)) / (level.next - 1000) * 100)) : 100;
-    const totalTime = data.total_seconds || 0;
-    const avatar = data.avatar || localStorage.getItem('avatar') || '🧑‍🎓';
-    state.avatar = avatar;
 
+  if (!state.token) {
     pc.innerHTML = `
-      <div class="profile-header">
-        <div class="profile-avatar-wrap" onclick="openAvatarModal()">
-          <div class="profile-avatar-img" id="profile-avatar-display">
-            ${avatar.startsWith('data:') ? `<img src="${avatar}" alt="avatar"/>` : avatar}
-          </div>
-          <div class="avatar-edit-btn">✏️</div>
-        </div>
-        <div style="font-size:1.3rem;font-weight:800;margin-bottom:.2rem">${data.pseudo}</div>
-        <div class="profile-level">${level.name}</div>
-        <div class="profile-elo">${data.elo} Elo${eloToNext ? ` · encore ${eloToNext} pts` : ' · Niveau max 🏆'}</div>
-        <div class="level-bar-wrap" style="margin-top:.5rem">
-          <div class="level-bar-bg"><div class="level-bar-fill" style="width:${eloProgress}%"></div></div>
-          <div class="level-bar-label">${eloToNext ? `${eloProgress}% vers le niveau suivant` : 'Niveau maximum atteint !'}</div>
-        </div>
-      </div>
-
-      <div class="time-stat">
-        <div class="time-stat-icon">⏱️</div>
-        <div><div class="time-stat-val">${formatTime(totalTime)}</div><div class="time-stat-label">passées sur le site</div></div>
-        <div style="margin-left:auto;text-align:right">
-          <div class="time-stat-val">${data.total_games || 0}</div>
-          <div class="time-stat-label">parties jouées</div>
-        </div>
-      </div>
-
-      <div class="profile-stats-grid">
-        <div class="profile-stat"><div class="ps-num">${data.wins || 0}</div><div class="ps-label">Victoires</div></div>
-        <div class="profile-stat"><div class="ps-num">${data.losses || 0}</div><div class="ps-label">Défaites</div></div>
-        <div class="profile-stat"><div class="ps-num">${winRate}%</div><div class="ps-label">Taux victoire</div></div>
-        <div class="profile-stat"><div class="ps-num">${acc}%</div><div class="ps-label">Précision</div></div>
-        <div class="profile-stat"><div class="ps-num">${avgScore}</div><div class="ps-label">Moy. réponses</div></div>
-        <div class="profile-stat"><div class="ps-num">${data.total_correct || 0}</div><div class="ps-label">Bonnes rép.</div></div>
-      </div>
-
-      <div class="profile-section-title">🎖️ Badges (${badges.length})</div>
-      ${badges.length
-        ? `<div class="profile-badges-wrap">${badges.map(b=>`<span class="badge-chip">${b}</span>`).join('')}</div>`
-        : '<div class="no-badge">Aucun badge encore — joue pour en débloquer ! 💪</div>'}
-
-      <div class="profile-section-title">📊 Analyse par thème</div>
-      ${weakCats.length
-        ? weakCats.map(([cat, s]) => {
-            const pct = Math.round(s.errors / s.sessions * 100);
-            const color = pct >= 60 ? '#f87171' : pct >= 30 ? '#fbbf24' : '#4ade80';
-            return `<div class="weakness-row">
-              <div class="weakness-cat">${catName(cat)}</div>
-              <div class="weakness-bar-bg"><div class="weakness-bar-fill" style="width:${pct}%;background:${color}"></div></div>
-              <div class="weakness-pct">${pct}%</div>
-            </div>`;
-          }).join('') + `<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo('training')">🧠 Entraînement ciblé sur mes failles</button>`
-        : '<div class="no-badge">Joue des parties pour voir ton analyse ! 🚗</div>'}
-
-      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.65rem;flex-wrap:wrap">
-        <button class="btn btn-accent" onclick="startSolo('examen_blanc')">📋 Examen blanc</button>
-        <button class="btn btn-ghost" onclick="showScreen('screen-solo')">🎯 Entraînement</button>
-        <button class="btn btn-ghost" onclick="showScreen('screen-leaderboard')">🏆 Classement</button>
-      </div>
-    `;
-  } catch(e) {
-    pc.innerHTML = `<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement</p><button class="btn btn-primary" onclick="showScreen('screen-auth')">Se connecter</button></div>`;
+      <div style="text-align:center;padding:2rem 1rem">
+        <div style="font-size:3rem;margin-bottom:1rem">👤</div>
+        <div style="font-weight:700;font-size:1.1rem;margin-bottom:.5rem">Connecte-toi pour voir ton profil</div>
+        <div style="color:var(--text2);font-size:.9rem;margin-bottom:1.5rem">Tes stats, badges et progression sont sauvegardés avec ton compte.</div>
+        <button class="btn btn-primary" onclick="showScreen(&quot;screen-auth&quot;)">Se connecter</button>
+        <div style="margin-top:1rem"><button class="btn btn-ghost" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Retour accueil</button></div>
+      </div>`;
+    return;
   }
+
+  pc.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+
+  try {
+    const res = await fetch('/api/profile', { headers: { Authorization: 'Bearer ' + state.token } });
+    if (res.status === 401) { localStorage.removeItem('token'); state.token = null; showProfile(); return; }
+    const data = await res.json();
+
+    const level = data.level || { name: '&#128290; Apprenti', next: 1020, level: 1 };
+    const wins = data.wins || 0, losses = data.losses || 0, totalGames = data.total_games || 0;
+    const totalCorrect = data.total_correct || 0, totalQ = data.total_questions || 0;
+    const acc = totalQ > 0 ? Math.round(totalCorrect / totalQ * 100) : 0;
+    const winRate = totalGames > 0 ? Math.round(wins / totalGames * 100) : 0;
+    const avgScore = totalGames > 0 ? (totalCorrect / totalGames).toFixed(1) : '0';
+    const totalTime = data.total_seconds || 0;
+    const badges = data.badges || [];
+    const catStats = data.category_stats || {};
+    const eloToNext = level.next ? level.next - data.elo : null;
+    const eloBase = {1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[level.level] || 0;
+    const eloRange = level.next ? level.next - eloBase : 1;
+    const eloProgress = level.next ? Math.min(100, Math.round((data.elo - eloBase) / eloRange * 100)) : 100;
+    const avatar = data.avatar || localStorage.getItem('avatar') || '&#129489;&#8205;&#127979;';
+    state.avatar = avatar;
+    const avatarHtml = avatar.startsWith('data:')
+      ? '<img src="' + avatar + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/>'
+      : '<span style="font-size:2.5rem">' + avatar + '</span>';
+
+    const weakCats = Object.entries(catStats)
+      .filter(([,s]) => s.sessions > 0)
+      .sort((a,b) => (b[1].errors/b[1].sessions) - (a[1].errors/a[1].sessions))
+      .slice(0, 4);
+
+    const statsHtml = [
+      [wins, '&#9989; Victoires'],
+      [losses, '&#10060; Défaites'],
+      [winRate + '%', '&#127942; Taux victoire'],
+      [acc + '%', '&#127919; Précision'],
+      [avgScore, '&#128202; Moy/partie'],
+      [totalCorrect, '&#10004;&#65039; Bonnes rép.']
+    ].map(([v,l]) => '<div class="profile-stat"><div class="ps-num">' + v + '</div><div class="ps-label">' + l + '</div></div>').join('');
+
+    const weakHtml = weakCats.length
+      ? weakCats.map(([cat,s]) => {
+          const pct = Math.round(s.errors/s.sessions*100);
+          const col = pct>=60?'#f87171':pct>=30?'#fbbf24':'#4ade80';
+          return '<div class="weakness-row"><div class="weakness-cat">' + catName(cat) + '</div><div class="weakness-bar-bg"><div class="weakness-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div><div class="weakness-pct" style="color:' + col + '">' + pct + '%</div></div>';
+        }).join('') + '<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo(\x27training\x27)">&#129504; Entraînement ciblé</button>'
+      : '<div class="no-badge">Joue des parties pour voir ton analyse !</div>';
+
+    const badgesHtml = badges.length
+      ? '<div class="profile-badges-wrap">' + badges.map(b => '<span class="badge-chip">' + b + '</span>').join('') + '</div>'
+      : '<div class="no-badge">Aucun badge encore — joue pour en débloquer ! &#128170;</div>';
+
+    pc.innerHTML =
+      '<div class="profile-header">' +
+        '<div class="profile-avatar-wrap" onclick="openAvatarModal()" title="Changer la photo">' +
+          '<div class="profile-avatar-img" id="profile-avatar-display">' + avatarHtml + '</div>' +
+          '<div class="avatar-edit-btn">&#9999;&#65039;</div>' +
+        '</div>' +
+        '<div style="font-size:1.3rem;font-weight:800;margin-bottom:.2rem">' + data.pseudo + '</div>' +
+        '<div class="profile-level">' + level.name + '</div>' +
+        '<div class="profile-elo">' + data.elo + ' Elo' + (eloToNext ? ' · encore ' + eloToNext + ' pts' : ' · Niveau max &#127942;') + '</div>' +
+        '<div class="level-bar-wrap" style="margin-top:.5rem">' +
+          '<div class="level-bar-bg"><div class="level-bar-fill" style="width:' + eloProgress + '%"></div></div>' +
+          '<div class="level-bar-label">' + (level.next ? eloProgress + '% vers le prochain niveau' : 'Niveau maximum !') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="time-stat">' +
+        '<div class="time-stat-icon">&#9201;&#65039;</div>' +
+        '<div><div class="time-stat-val">' + formatTime(totalTime) + '</div><div class="time-stat-label">passées sur le site</div></div>' +
+        '<div style="margin-left:auto;text-align:right"><div class="time-stat-val">' + totalGames + '</div><div class="time-stat-label">parties jouées</div></div>' +
+      '</div>' +
+      '<div class="profile-stats-grid">' + statsHtml + '</div>' +
+      '<div class="profile-section-title">&#127958;&#65039; Badges (' + badges.length + ')</div>' +
+      badgesHtml +
+      '<div class="profile-section-title">&#128202; Analyse par thème</div>' +
+      weakHtml +
+      '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.65rem;flex-wrap:wrap">' +
+        '<button class="btn btn-primary" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Accueil</button>' +
+        '<button class="btn btn-accent" onclick="startSolo(&quot;examen_blanc&quot;)">&#128203; Examen blanc</button>' +
+        '<button class="btn btn-ghost" onclick="showScreen(&quot;screen-play&quot;)">&#9876;&#65039; Duel</button>' +
+        '<button class="btn btn-ghost-sm" onclick="doLogout()" style="margin-left:auto;color:var(--red)">Déconnexion</button>' +
+      '</div>';
+  } catch(e) {
+    pc.innerHTML = '<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement</p><button class="btn btn-primary" onclick="showScreen(&quot;screen-auth&quot;)">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="showScreen(&quot;screen-home&quot;)">&#127968; Accueil</button></div></div>';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('token'); localStorage.removeItem('pseudo'); localStorage.removeItem('elo');
+  state.token = null; state.pseudo = null; state.elo = 0;
+  showToast('Déconnecté 👋'); showScreen('screen-home');
 }
 
 // ── SOLO MODE ─────────────────────────────────────────
@@ -794,6 +819,7 @@ function confirmLeaveGame() {
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
   if(state.pseudo){updateChips();updateSoloChip();startSessionTracking();}
+  if(state.token){socket.auth={token:state.token};}
   preloadQuestions();
   // Load avatar from server if logged in
   if(state.token){fetch('/api/profile',{headers:{Authorization:`Bearer ${state.token}`}}).then(r=>r.json()).then(data=>{if(data.avatar){state.avatar=data.avatar;localStorage.setItem('avatar',data.avatar);updateChips();}}).catch(()=>{});}
