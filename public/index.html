@@ -211,6 +211,7 @@
     </div>
     <div class="game-options-display" id="options-display"></div>
     <div class="players-waiting" id="players-waiting"></div>
+    <div id="waiting-invite-msg" style="text-align:center;font-size:.82rem;color:var(--text3);margin-top:.25rem">Partage le code à tes amis !</div>
     <div id="waiting-msg" class="waiting-msg"><div class="spinner"></div> En attente...</div>
     <div class="waiting-actions">
       <button id="btn-ready" class="btn btn-primary btn-xl hidden" onclick="sendReady()">✅ Je suis prêt !</button>
@@ -221,6 +222,7 @@
 
 <!-- SOLO GAME -->
 <div id="screen-solo-game" class="screen">
+  <button onclick="if(confirm('Quitter la session ?')) showScreen('screen-solo')" style="position:fixed;top:.75rem;left:.75rem;z-index:200;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.4rem .85rem;color:var(--text2);font-size:.82rem;cursor:pointer">🏠 Menu</button>
   <div class="game-hud">
     <div class="hud-center">
       <div class="question-counter" id="sq-counter">1/10</div>
@@ -257,6 +259,7 @@
 
 <!-- DUEL GAME -->
 <div id="screen-game" class="screen">
+  <button class="back-to-menu-btn" onclick="confirmLeaveGame()">🏠 Menu</button>
   <div class="game-hud">
     <div class="hud-center">
       <div class="question-counter" id="q-counter">1/40</div>
@@ -329,10 +332,24 @@
 </div>
 
 <!-- PROFILE -->
-<div id="screen-profile" class="screen">
+<div id="screen-profile" class="screen screen-profile-full">
   <div class="card card-profile">
     <button class="back-btn" onclick="showScreen('screen-home')">← Retour</button>
     <div id="profile-content"><div class="spinner-center"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- AVATAR PICKER MODAL -->
+<div id="avatar-modal" class="modal-overlay hidden" onclick="closeAvatarModal(event)">
+  <div class="modal-box">
+    <h3 style="margin-bottom:1rem">🖼️ Choisis ta photo de profil</h3>
+    <div class="avatar-grid" id="emoji-avatars"></div>
+    <div style="margin:1rem 0;text-align:center;color:var(--text2);font-size:.85rem">— ou —</div>
+    <label class="upload-label">
+      📁 Importer une photo
+      <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" style="display:none"/>
+    </label>
+    <button class="btn btn-ghost w-full" style="margin-top:.75rem" onclick="closeAvatarModal()">Annuler</button>
   </div>
 </div>
 

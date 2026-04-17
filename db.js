@@ -53,13 +53,14 @@ const db = {
         pseudo, password_hash: passwordHash,
         elo: 1000, wins: 0, losses: 0, draws: 0,
         total_games: 0, total_correct: 0, total_questions: 0,
+        total_seconds: 0, avatar: null,
         category_stats: {}, badges: [], level: 1,
         created_at: new Date().toISOString()
       });
       return { id: ref.id };
     }
     const id = store._nextId++;
-    store.users.push({ id, pseudo, password_hash: passwordHash, elo: 1000, wins: 0, losses: 0, total_games: 0, total_correct: 0, total_questions: 0, category_stats: {}, badges: [], level: 1 });
+    store.users.push({ id, pseudo, password_hash: passwordHash, elo: 1000, wins: 0, losses: 0, total_games: 0, total_correct: 0, total_questions: 0, total_seconds: 0, avatar: null, category_stats: {}, badges: [], level: 1 });
     return { id };
   },
 

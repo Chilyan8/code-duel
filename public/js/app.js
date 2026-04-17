@@ -15,6 +15,140 @@ const state = {
 };
 
 const socket = io({ auth: { token: state.token } });
+state.avatar = localStorage.getItem('avatar') || '🧑‍🎓';
+
+
+
+/* ═══════════════════════════════════════════════
+   AVATAR SYSTEM
+   ═══════════════════════════════════════════════ */
+const EMOJI_AVATARS = ['🧑‍🎓','👨‍🚗','👩‍🚗','🏎️','🚗','🚕','🚙','🏍️','🚓','🚑','🧑‍✈️','👮','🧑‍🔧','🦸','🧙','🎮','🔥','⚡','🌟','👑','🎯','🏆','💎','🚀','🦊','🐺','🐯','🦁','🐸','🤖'];
+
+function openAvatarModal() {
+  const grid = document.getElementById('emoji-avatars');
+  grid.innerHTML = EMOJI_AVATARS.map(e =>
+    `<div class="avatar-option" onclick="selectEmojiAvatar('${e}')">${e}</div>`
+  ).join('');
+  document.getElementById('avatar-modal').classList.remove('hidden');
+}
+
+function closeAvatarModal(e) {
+  if (!e || e.target === document.getElementById('avatar-modal'))
+    document.getElementById('avatar-modal').classList.add('hidden');
+}
+
+async function selectEmojiAvatar(emoji) {
+  state.avatar = emoji;
+  localStorage.setItem('avatar', emoji);
+  document.getElementById('avatar-modal').classList.add('hidden');
+  renderAvatarInProfile(emoji);
+  await saveAvatarToServer(emoji);
+  showToast(`Avatar mis à jour : ${emoji}`);
+}
+
+async function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 500000) { showToast('Image trop grande ! Max 500kb 📸'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    // Resize to 150x150 max
+    const resized = await resizeImage(dataUrl, 150);
+    state.avatar = resized;
+    localStorage.setItem('avatar', resized);
+    document.getElementById('avatar-modal').classList.add('hidden');
+    renderAvatarInProfile(resized);
+    await saveAvatarToServer(resized);
+    showToast('Photo de profil mise à jour ! 📸');
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizeImage(dataUrl, maxSize) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxSize / img.width, maxSize / img.height);
+      canvas.width = img.width * ratio;
+      canvas.height = img.height * ratio;
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = dataUrl;
+  });
+}
+
+async function saveAvatarToServer(avatar) {
+  if (!state.token) return;
+  try {
+    await fetch('/api/profile/photo', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo: avatar })
+    });
+  } catch {}
+}
+
+function renderAvatarInProfile(avatar) {
+  const wrap = document.getElementById('profile-avatar-display');
+  if (!wrap) return;
+  if (avatar && avatar.startsWith('data:')) {
+    wrap.innerHTML = `<img src="${avatar}" alt="avatar"/>`;
+  } else {
+    wrap.textContent = avatar || '🧑‍🎓';
+  }
+}
+
+function getAvatarEl(avatar, size = 22) {
+  if (!avatar) return `<span style="font-size:${size*.7}px">🧑‍🎓</span>`;
+  if (avatar.startsWith('data:')) return `<img src="${avatar}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover"/>`;
+  return `<span style="font-size:${size*.7}px">${avatar}</span>`;
+}
+
+/* ═══════════════════════════════════════════════
+   SESSION TIME TRACKING
+   ═══════════════════════════════════════════════ */
+let sessionStart = Date.now();
+let sessionSaveInterval = null;
+
+function startSessionTracking() {
+  sessionStart = Date.now();
+  // Save every 2 minutes
+  clearInterval(sessionSaveInterval);
+  sessionSaveInterval = setInterval(saveSessionTime, 120000);
+  // Save on page hide
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) saveSessionTime();
+  });
+}
+
+async function saveSessionTime() {
+  if (!state.token) return;
+  const seconds = Math.round((Date.now() - sessionStart) / 1000);
+  sessionStart = Date.now(); // reset so we don't double count
+  if (seconds < 5) return;
+  try {
+    await fetch('/api/profile/session-time', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${state.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seconds })
+    });
+  } catch {}
+}
+
+function formatTime(seconds) {
+  if (!seconds) return '0 min';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}min`;
+  return `${m} min`;
+}
+
+/* ═══════════════════════════════════════════════
+   SHOW PROFILE (full rewrite)
+   ═══════════════════════════════════════════════ */
 
 // ── Audio ──────────────────────────────────────────────
 let audioCtx = null;
@@ -94,7 +228,9 @@ function switchTab(tab){
 }
 function promptGuest(){const p=prompt('Choisis un pseudo invité :');if(p&&p.trim().length>=2){state.pseudo=p.trim().slice(0,20);showScreen('screen-home');}}
 function updateChips(){
-  ['play-user-info'].forEach(id=>{const c=document.getElementById(id);if(!c)return;if(state.pseudo){c.textContent=`👤 ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');});
+  const avatar = state.avatar || localStorage.getItem('avatar') || '🧑‍🎓';
+  const avatarHtml = avatar.startsWith('data:') ? `<img src="${avatar}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle"/>` : avatar;
+  ['play-user-info'].forEach(id=>{const c=document.getElementById(id);if(!c)return;if(state.pseudo){c.innerHTML=`${avatarHtml} ${state.pseudo} · ${state.elo} Elo`;c.classList.remove('hidden');}else c.classList.add('hidden');});
 }
 function updateSoloChip(){
   const c=document.getElementById('solo-user-info');if(!c)return;
@@ -103,37 +239,87 @@ function updateSoloChip(){
 
 // ── Profile ───────────────────────────────────────────
 async function showProfile(){
-  if(!state.token){showScreen('screen-auth');return;}
+  if(!state.token){ showScreen('screen-auth'); return; }
   showScreen('screen-profile');
-  const pc=document.getElementById('profile-content');
-  pc.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
-  try{
-    const data=await(await fetch('/api/profile',{headers:{Authorization:`Bearer ${state.token}`}})).json();
-    const level=data.level||{name:'🔰 Apprenti',next:1020};
-    const acc=data.total_questions>0?Math.round(data.total_correct/data.total_questions*100):0;
-    const catStats=data.category_stats||{};
-    const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,3);
-    const badges=data.badges||[];
-    const eloToNext=level.next?level.next-data.elo:null;
+  const pc = document.getElementById('profile-content');
+  pc.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
+  try {
+    const data = await (await fetch('/api/profile', { headers: { Authorization: `Bearer ${state.token}` } })).json();
+    const level = data.level || { name:'🔰 Apprenti', next:1020, level:1 };
+    const acc = data.total_questions > 0 ? Math.round(data.total_correct / data.total_questions * 100) : 0;
+    const avgScore = data.total_games > 0 ? Math.round(data.total_correct / data.total_games * 10) / 10 : 0;
+    const winRate = data.total_games > 0 ? Math.round((data.wins || 0) / data.total_games * 100) : 0;
+    const catStats = data.category_stats || {};
+    const weakCats = Object.entries(catStats).filter(([,s]) => s.sessions > 0).sort((a,b) => (b[1].errors/b[1].sessions) - (a[1].errors/a[1].sessions)).slice(0, 4);
+    const badges = data.badges || [];
+    const eloToNext = level.next ? level.next - data.elo : null;
+    const eloProgress = level.next ? Math.min(100, Math.round((data.elo - (level.level === 1 ? 0 : 1000)) / (level.next - 1000) * 100)) : 100;
+    const totalTime = data.total_seconds || 0;
+    const avatar = data.avatar || localStorage.getItem('avatar') || '🧑‍🎓';
+    state.avatar = avatar;
 
-    pc.innerHTML=`
+    pc.innerHTML = `
       <div class="profile-header">
-        <div class="profile-avatar-big">🧑‍🎓</div>
+        <div class="profile-avatar-wrap" onclick="openAvatarModal()">
+          <div class="profile-avatar-img" id="profile-avatar-display">
+            ${avatar.startsWith('data:') ? `<img src="${avatar}" alt="avatar"/>` : avatar}
+          </div>
+          <div class="avatar-edit-btn">✏️</div>
+        </div>
+        <div style="font-size:1.3rem;font-weight:800;margin-bottom:.2rem">${data.pseudo}</div>
         <div class="profile-level">${level.name}</div>
-        <div class="profile-elo">${data.elo} Elo${eloToNext?` · encore ${eloToNext} pts pour le niveau suivant`:' · Niveau max ! 🏆'}</div>
+        <div class="profile-elo">${data.elo} Elo${eloToNext ? ` · encore ${eloToNext} pts` : ' · Niveau max 🏆'}</div>
+        <div class="level-bar-wrap" style="margin-top:.5rem">
+          <div class="level-bar-bg"><div class="level-bar-fill" style="width:${eloProgress}%"></div></div>
+          <div class="level-bar-label">${eloToNext ? `${eloProgress}% vers le niveau suivant` : 'Niveau maximum atteint !'}</div>
+        </div>
       </div>
+
+      <div class="time-stat">
+        <div class="time-stat-icon">⏱️</div>
+        <div><div class="time-stat-val">${formatTime(totalTime)}</div><div class="time-stat-label">passées sur le site</div></div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="time-stat-val">${data.total_games || 0}</div>
+          <div class="time-stat-label">parties jouées</div>
+        </div>
+      </div>
+
       <div class="profile-stats-grid">
-        <div class="profile-stat"><div class="ps-num">${data.total_games||0}</div><div class="ps-label">Parties</div></div>
-        <div class="profile-stat"><div class="ps-num">${data.wins||0}</div><div class="ps-label">Victoires</div></div>
+        <div class="profile-stat"><div class="ps-num">${data.wins || 0}</div><div class="ps-label">Victoires</div></div>
+        <div class="profile-stat"><div class="ps-num">${data.losses || 0}</div><div class="ps-label">Défaites</div></div>
+        <div class="profile-stat"><div class="ps-num">${winRate}%</div><div class="ps-label">Taux victoire</div></div>
         <div class="profile-stat"><div class="ps-num">${acc}%</div><div class="ps-label">Précision</div></div>
+        <div class="profile-stat"><div class="ps-num">${avgScore}</div><div class="ps-label">Moy. réponses</div></div>
+        <div class="profile-stat"><div class="ps-num">${data.total_correct || 0}</div><div class="ps-label">Bonnes rép.</div></div>
       </div>
-      ${badges.length?`<div class="profile-badges"><div class="analysis-title">🎖️ Badges obtenus</div>${badges.map(b=>`<span class="badge-item">${b}</span>`).join('')}</div>`:''}
-      ${weakCats.length?`<div class="profile-weakness"><div class="analysis-title">🎯 Tes failles — à travailler</div>${weakCats.map(([cat,s])=>{
-        const pct=Math.round(s.errors/s.sessions*100);
-        return `<div class="cat-bar-item"><div class="cat-bar-label"><span>${catName(cat)}</span><span style="color:var(--red)">${pct}% d'erreurs</span></div><div class="cat-bar-bg"><div class="cat-bar-fill bad" style="width:${pct}%"></div></div></div>`;
-      }).join('')}<button class="btn btn-primary w-full" onclick="startSolo('training')">🧠 Entraînement ciblé</button></div>`:'<div style="color:var(--text2);text-align:center;padding:1rem">Joue des parties pour voir tes statistiques !</div>'}
+
+      <div class="profile-section-title">🎖️ Badges (${badges.length})</div>
+      ${badges.length
+        ? `<div class="profile-badges-wrap">${badges.map(b=>`<span class="badge-chip">${b}</span>`).join('')}</div>`
+        : '<div class="no-badge">Aucun badge encore — joue pour en débloquer ! 💪</div>'}
+
+      <div class="profile-section-title">📊 Analyse par thème</div>
+      ${weakCats.length
+        ? weakCats.map(([cat, s]) => {
+            const pct = Math.round(s.errors / s.sessions * 100);
+            const color = pct >= 60 ? '#f87171' : pct >= 30 ? '#fbbf24' : '#4ade80';
+            return `<div class="weakness-row">
+              <div class="weakness-cat">${catName(cat)}</div>
+              <div class="weakness-bar-bg"><div class="weakness-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+              <div class="weakness-pct">${pct}%</div>
+            </div>`;
+          }).join('') + `<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo('training')">🧠 Entraînement ciblé sur mes failles</button>`
+        : '<div class="no-badge">Joue des parties pour voir ton analyse ! 🚗</div>'}
+
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.65rem;flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="startSolo('examen_blanc')">📋 Examen blanc</button>
+        <button class="btn btn-ghost" onclick="showScreen('screen-solo')">🎯 Entraînement</button>
+        <button class="btn btn-ghost" onclick="showScreen('screen-leaderboard')">🏆 Classement</button>
+      </div>
     `;
-  }catch{pc.innerHTML='<p style="color:var(--red);text-align:center">Erreur de chargement</p>';}
+  } catch(e) {
+    pc.innerHTML = `<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement</p><button class="btn btn-primary" onclick="showScreen('screen-auth')">Se connecter</button></div>`;
+  }
 }
 
 // ── SOLO MODE ─────────────────────────────────────────
@@ -387,7 +573,7 @@ function selectMode(mode,el){document.querySelectorAll('.mode-card').forEach(c=>
 function openCreateGame(){
   if(!state.pseudo){promptGuest();if(!state.pseudo)return;}
   hideError('play-error');
-  socket.emit('create_game',{pseudo:state.pseudo,options:{maxPlayers:state.selectedOptions.players,questionCount:state.selectedOptions.questions,timeLimit:state.selectedOptions.time,category:state.selectedOptions.category,mode:state.selectedOptions.mode}});
+  socket.emit('create_game',{pseudo:state.pseudo,avatar:state.avatar,options:{maxPlayers:state.selectedOptions.players,questionCount:state.selectedOptions.questions,timeLimit:state.selectedOptions.time,category:state.selectedOptions.category,mode:state.selectedOptions.mode}});
 }
 function doJoinGame(){
   const code=document.getElementById('join-code').value.trim().toUpperCase();
@@ -404,8 +590,9 @@ function renderWaitingPlayers(players,maxPlayers){
   for(let i=0;i<maxPlayers;i++){
     const p=players[i];const div=document.createElement('div');
     div.className=`waiting-player ${p?'connected':'empty'}`;
+    const av = p?.avatar ? (p.avatar.startsWith('data:') ? `<img class="wp-avatar-img" src="${p.avatar}"/>` : p.avatar) : (p ? p.pseudo[0].toUpperCase() : '?');
     div.innerHTML=p
-      ?`<div class="wp-avatar connected">${p.pseudo[0].toUpperCase()}</div><div><div class="wp-name">${p.pseudo}${p.pseudo===state.pseudo?' <small style="color:var(--accent2)">(toi)</small>':''}</div><div class="wp-tag">${i===0?'👑 Hôte':'Joueur '+(i+1)}</div></div><div class="wp-status">${p.ready?'✅':'⏳'}</div>`
+      ?`<div class="wp-avatar connected" style="${!p.avatar||p.avatar.startsWith('data:')?'':'font-size:1.3rem'}">${av}</div><div><div class="wp-name">${p.pseudo}${p.pseudo===state.pseudo?' <small style="color:var(--accent2)">(toi)</small>':''}</div><div class="wp-tag">${i===0?'👑 Hôte':'Joueur '+(i+1)}</div></div><div class="wp-status">${p.ready?'✅':'⏳'}</div>`
       :`<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur ${i+1}</div></div><div class="wp-status">⏳</div>`;
     c.appendChild(div);
   }
@@ -431,7 +618,8 @@ function renderHUD(){
     const isMe=p.pseudo===state.pseudo;
     const div=document.createElement('div');
     div.className=`hud-player-score ${isMe?'me':''} ${p.score===max&&max>0&&!isMe?'leading':''}`;
-    div.innerHTML=`<div><div class="hps-name">${p.pseudo}</div>${p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':''}</div><div class="hps-score">${p.score}</div>${p.streak>=3?`<div style="font-size:.72rem">🔥${p.streak}</div>`:''}`;
+    const av2 = p.avatar ? (p.avatar.startsWith('data:') ? `<img src="${p.avatar}" style="width:20px;height:20px;border-radius:50%;object-fit:cover"/>` : `<span style="font-size:.85rem">${p.avatar}</span>`) : `<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">${p.pseudo[0].toUpperCase()}</span>`;
+    div.innerHTML=`<div style="display:flex;align-items:center;gap:.25rem;width:26px">${av2}</div><div><div class="hps-name">${p.pseudo}</div>${p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':''}</div><div class="hps-score">${p.score}</div>${p.streak>=3?`<div style="font-size:.72rem">🔥${p.streak}</div>`:''}`;
     c.appendChild(div);
   });
 }
@@ -596,10 +784,19 @@ socket.on('player_disconnected',({pseudo})=>showToast(`💔 ${pseudo} a quitté.
 socket.on('rematch_started',({roomCode,options,players})=>{state.roomCode=roomCode;state.isHost=players[0]?.pseudo===state.pseudo;state.gameOptions=options;showScreen('screen-waiting');setText('display-room-code',roomCode);renderOptionsDisplay(options);renderWaitingPlayers(players,options.maxPlayers);showToast('🔄 Revanche ! Cliquez sur Prêt !');});
 socket.on('error',msg=>{showError('play-error',msg);showError('join-error',msg);showToast(`❌ ${msg}`,3000);});
 
+
+function confirmLeaveGame() {
+  if (confirm('Quitter la partie en cours ? L'adversaire sera informé.')) {
+    stopTimer();
+    showScreen('screen-home');
+  }
+}
 // ── Init ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
-  if(state.pseudo){updateChips();updateSoloChip();}
+  if(state.pseudo){updateChips();updateSoloChip();startSessionTracking();}
   preloadQuestions();
+  // Load avatar from server if logged in
+  if(state.token){fetch('/api/profile',{headers:{Authorization:`Bearer ${state.token}`}}).then(r=>r.json()).then(data=>{if(data.avatar){state.avatar=data.avatar;localStorage.setItem('avatar',data.avatar);updateChips();}}).catch(()=>{});}
   document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
   document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});

@@ -173,13 +173,33 @@ app.post('/api/training/complete', authMiddleware, async (req, res) => {
   } catch (e) { console.error('training complete error:', e); res.status(500).json({ error: e.message }); }
 });
 
+
+// ── Profile photo ─────────────────────────────────────────────────────────────
+app.post('/api/profile/photo', authMiddleware, async (req, res) => {
+  try {
+    const { photo } = req.body; // base64 data URL
+    if (!photo) return res.status(400).json({ error: 'Photo manquante' });
+    if (photo.length > 500000) return res.status(400).json({ error: 'Image trop grande (max 500kb)' });
+    await db.updateUser(req.user.id, {}, { avatar: photo });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/profile/session-time', authMiddleware, async (req, res) => {
+  try {
+    const { seconds } = req.body;
+    if (seconds > 0 && seconds < 86400) await db.updateUser(req.user.id, { total_seconds: Math.round(seconds) });
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Socket.io ─────────────────────────────────────────────────────────────────
 io.on('connection', (socket) => {
   const token = socket.handshake.auth?.token;
   let connectedUser = null;
   if (token) { try { connectedUser = jwt.verify(token, JWT_SECRET); } catch {} }
 
-  socket.on('create_game', ({ pseudo, options }) => {
+  socket.on('create_game', ({ pseudo, options, avatar }) => {
     if (!pseudo) return socket.emit('error', 'Pseudo requis');
     const gameOptions = {
       maxPlayers: Math.min(options?.maxPlayers || 2, 10),
@@ -192,15 +212,16 @@ io.on('connection', (socket) => {
     do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
     const questions = pickQuestions(gameOptions);
     const player = makePlayer(socket.id, pseudo, connectedUser?.id || null);
+    if (avatar) player.avatar = avatar;
     const gameState = { roomCode, options: gameOptions, questions, players: [player], hostPseudo: pseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
     activeGames.set(roomCode, gameState);
     socket.join(roomCode);
     socket.roomCode = roomCode;
     db.createGame(roomCode, pseudo).catch(() => {});
-    socket.emit('game_created', { roomCode, options: gameOptions, totalQuestions: questions.length, isHost: true });
+    socket.emit('game_created', { roomCode, options: gameOptions, totalQuestions: questions.length, isHost: true, avatar: player.avatar });
   });
 
-  socket.on('join_game', ({ roomCode, pseudo }) => {
+  socket.on('join_game', ({ roomCode, pseudo, avatar }) => {
     const code = roomCode?.toUpperCase();
     const game = activeGames.get(code);
     if (!game) return socket.emit('error', 'Partie introuvable. Vérifie le code.');
@@ -208,11 +229,12 @@ io.on('connection', (socket) => {
     if (game.players.length >= game.options.maxPlayers) return socket.emit('error', `Partie complète (${game.options.maxPlayers} joueurs max).`);
     if (game.players.find(p => p.pseudo === pseudo)) return socket.emit('error', 'Ce pseudo est déjà utilisé dans cette partie !');
     const player = makePlayer(socket.id, pseudo, connectedUser?.id || null);
+    if (avatar) player.avatar = avatar;
     game.players.push(player);
     socket.join(code);
     socket.roomCode = code;
     socket.emit('game_joined', { roomCode: code, players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready })), options: game.options, totalQuestions: game.questions.length, isHost: false });
-    io.to(code).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready })), maxPlayers: game.options.maxPlayers });
+    io.to(code).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
   });
 
   socket.on('player_ready', () => {
@@ -220,7 +242,7 @@ io.on('connection', (socket) => {
     if (!game) return;
     const player = game.players.find(p => p.socketId === socket.id);
     if (player) player.ready = true;
-    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready })), maxPlayers: game.options.maxPlayers });
+    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
     if (game.players.length >= 2 && game.players.every(p => p.ready)) startGame(game);
   });
 
@@ -312,14 +334,14 @@ io.on('connection', (socket) => {
       if (game.players.length < 2) { clearTimeout(game.questionTimer); setTimeout(() => endGame(game), 1500); }
     } else {
       game.players = game.players.filter(p => p.socketId !== socket.id);
-      io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready })), maxPlayers: game.options.maxPlayers });
+      io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
       if (game.players.length === 0) activeGames.delete(game.roomCode);
     }
   });
 });
 
 function makePlayer(socketId, pseudo, userId) {
-  return { socketId, pseudo, userId: userId || null, score: 0, streak: 0, maxStreak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
+  return { socketId, pseudo, userId: userId || null, avatar: null, score: 0, streak: 0, maxStreak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
 }
 
 function startGame(game) {
@@ -434,3 +456,5 @@ async function endGame(game) {
 db.init().then(() => {
   httpServer.listen(PORT, () => console.log(`🚗 Code Duel v4 — port ${PORT}`));
 });
+
+// ── PROFILE PHOTO & STATS ROUTES (add before db.init()) ──────────────────────
