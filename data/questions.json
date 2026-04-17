@@ -1,8 +1,1162 @@
 [
   {
     "id": 1,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/France_road_sign_B1.svg/240px-France_road_sign_B1.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Sens interdit à tous les véhicules"
+      },
+      {
+        "id": "b",
+        "text": "Arrêt obligatoire"
+      },
+      {
+        "id": "c",
+        "text": "Sens unique"
+      },
+      {
+        "id": "d",
+        "text": "Interdit aux camions"
+      }
+    ],
+    "correct": [
+      "a"
+    ],
+    "explanation": "B1 = SENS INTERDIT. Aucun véhicule ne peut entrer dans ce sens, sans exception.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 2,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/France_road_sign_AB3a.svg/240px-France_road_sign_AB3a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Stop — arrêt obligatoire"
+      },
+      {
+        "id": "b",
+        "text": "Cédez le passage"
+      },
+      {
+        "id": "c",
+        "text": "Voie prioritaire"
+      },
+      {
+        "id": "d",
+        "text": "Priorité à droite"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Triangle pointe en bas = CÉDEZ LE PASSAGE. L'arrêt n'est pas obligatoire si la voie est libre, contrairement au STOP.",
+    "is_trap": true,
+    "trap_message": "On confond souvent STOP et cédez le passage ! Ici pas d'arrêt obligatoire si c'est libre 🔺",
+    "situation": null
+  },
+  {
+    "id": 3,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/240px-France_road_sign_AB4.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Intersection prioritaire à droite"
+      },
+      {
+        "id": "b",
+        "text": "Vous êtes sur une route prioritaire"
+      },
+      {
+        "id": "c",
+        "text": "Cédez le passage"
+      },
+      {
+        "id": "d",
+        "text": "Route à grande circulation"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Losange jaune = ROUTE PRIORITAIRE. Vous avez la priorité aux intersections non signalisées.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 4,
+    "category": "panneaux",
+    "question": "Quelle est la limitation indiquée par ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/240px-France_road_sign_B14-50.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Vitesse minimum 50 km/h"
+      },
+      {
+        "id": "b",
+        "text": "Vitesse maximum 50 km/h"
+      },
+      {
+        "id": "c",
+        "text": "Vitesse conseillée 50 km/h"
+      },
+      {
+        "id": "d",
+        "text": "Zone 50 km/h"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Cercle rouge avec chiffre = VITESSE MAXIMUM. Ici 50 km/h.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 5,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/France_road_sign_B2a.svg/240px-France_road_sign_B2a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Cédez le passage"
+      },
+      {
+        "id": "b",
+        "text": "Ralentissement obligatoire"
+      },
+      {
+        "id": "c",
+        "text": "Stop — arrêt ABSOLU obligatoire"
+      },
+      {
+        "id": "d",
+        "text": "Voie sans issue"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "STOP octogonal = arrêt total et absolu obligatoire, même si la route semble vide.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 6,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/France_road_sign_B26.svg/240px-France_road_sign_B26.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Fin de la limitation de vitesse uniquement"
+      },
+      {
+        "id": "b",
+        "text": "Fin de toutes les interdictions en cours"
+      },
+      {
+        "id": "c",
+        "text": "Fin de zone 30"
+      },
+      {
+        "id": "d",
+        "text": "Fin du dépassement interdit"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "B26 = FIN DE TOUTES LES PRESCRIPTIONS. Il annule toutes les limitations précédentes (vitesse, dépassement, klaxon, etc.).",
+    "is_trap": true,
+    "trap_message": "Il annule TOUT, pas juste la vitesse ! 😏",
+    "situation": null
+  },
+  {
+    "id": 7,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau triangulaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/France_road_sign_A7.svg/240px-France_road_sign_A7.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Voie rétrécie"
+      },
+      {
+        "id": "b",
+        "text": "Passage à niveau sans barrières"
+      },
+      {
+        "id": "c",
+        "text": "Route glissante"
+      },
+      {
+        "id": "d",
+        "text": "Descente dangereuse"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Ce panneau A7 signale un PASSAGE À NIVEAU sans barrières. Arrêt obligatoire, le train est toujours prioritaire.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 8,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/France_road_sign_B21d1.svg/240px-France_road_sign_B21d1.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Interdit d'aller tout droit"
+      },
+      {
+        "id": "b",
+        "text": "Sens obligatoire — tout droit"
+      },
+      {
+        "id": "c",
+        "text": "Voie réservée aux bus"
+      },
+      {
+        "id": "d",
+        "text": "Fin de sens obligatoire"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Cercle bleu flèche = SENS OBLIGATOIRE. Vous devez aller tout droit, aucune autre direction.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 9,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/France_road_sign_B22a.svg/240px-France_road_sign_B22a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Interdit aux cyclistes"
+      },
+      {
+        "id": "b",
+        "text": "Piste cyclable obligatoire pour les vélos"
+      },
+      {
+        "id": "c",
+        "text": "Voie partagée piétons-cyclistes"
+      },
+      {
+        "id": "d",
+        "text": "Recommandé aux cyclistes"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "B22a = PISTE CYCLABLE OBLIGATOIRE. Les cyclistes doivent l'emprunter, les autres véhicules ne peuvent pas y circuler.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 10,
+    "category": "panneaux",
+    "question": "Ce panneau rouge avec deux voitures signifie :",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/France_road_sign_B3.svg/240px-France_road_sign_B3.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Voie à double sens"
+      },
+      {
+        "id": "b",
+        "text": "Interdiction de dépasser pour tous les véhicules"
+      },
+      {
+        "id": "c",
+        "text": "Interdiction de dépasser pour les camions uniquement"
+      },
+      {
+        "id": "d",
+        "text": "Voie rétrécie"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "B3 = INTERDICTION DE DÉPASSER pour tous les véhicules à moteur. Ne peut être franchi ou dépassé.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 11,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/France_road_sign_B14-30.svg/240px-France_road_sign_B14-30.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Zone 30 recommandée"
+      },
+      {
+        "id": "b",
+        "text": "Vitesse minimum 30 km/h"
+      },
+      {
+        "id": "c",
+        "text": "Vitesse maximum 30 km/h"
+      },
+      {
+        "id": "d",
+        "text": "Fin de zone 30"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Cercle rouge 30 = LIMITATION À 30 km/h. Applicable à tous les véhicules motorisés.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 12,
+    "category": "panneaux",
+    "question": "Sur autoroute, que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/France_road_sign_B14-130.svg/240px-France_road_sign_B14-130.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Vitesse conseillée 130 km/h"
+      },
+      {
+        "id": "b",
+        "text": "Vitesse minimum 130 km/h"
+      },
+      {
+        "id": "c",
+        "text": "Vitesse maximum 130 km/h"
+      },
+      {
+        "id": "d",
+        "text": "Fin de limitation — 130 km/h libres"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "130 km/h est la limite légale sur autoroute par temps sec. Ce panneau le confirme explicitement.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 13,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau triangulaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/France_road_sign_A6a.svg/240px-France_road_sign_A6a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Route mouillée"
+      },
+      {
+        "id": "b",
+        "text": "Chaussée glissante"
+      },
+      {
+        "id": "c",
+        "text": "Zone de verglas fréquent"
+      },
+      {
+        "id": "d",
+        "text": "Route inondée"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "A6a = CHAUSSÉE GLISSANTE. Réduire la vitesse, éviter les freinages brusques, augmenter les distances.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 14,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau triangulaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/France_road_sign_A1a.svg/240px-France_road_sign_A1a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Virage dangereux à gauche"
+      },
+      {
+        "id": "b",
+        "text": "Virage dangereux à droite"
+      },
+      {
+        "id": "c",
+        "text": "Double virage"
+      },
+      {
+        "id": "d",
+        "text": "Route sinueuse"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "A1a = VIRAGE DANGEREUX À DROITE. Réduire la vitesse avant d'aborder le virage.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 15,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/France_road_sign_B14-80.svg/240px-France_road_sign_B14-80.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Vitesse minimum 80 km/h"
+      },
+      {
+        "id": "b",
+        "text": "Vitesse maximum 80 km/h (route hors agglo)"
+      },
+      {
+        "id": "c",
+        "text": "Route nationale — 80 km/h conseillé"
+      },
+      {
+        "id": "d",
+        "text": "Fin de limitation — retour à 80 km/h"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Depuis 2018, la vitesse est limitée à 80 km/h sur les routes bidirectionnelles sans séparateur hors agglomération.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 16,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/240px-France_road_sign_B14-110.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Autoroute — 110 km/h par temps de pluie"
+      },
+      {
+        "id": "b",
+        "text": "Voie express — vitesse maximum 110 km/h"
+      },
+      {
+        "id": "c",
+        "text": "Vitesse minimum 110 km/h"
+      },
+      {
+        "id": "d",
+        "text": "Route avec séparateur — 110 km/h"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "110 km/h = limite sur voies express (2x2 voies avec accès réglementés mais sans péage). Aussi applicable sur autoroute par temps de pluie.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 17,
+    "category": "panneaux",
+    "question": "Ce panneau avec une croix de Saint-André signifie :",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/France_road_sign_AB1.svg/240px-France_road_sign_AB1.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Intersection — vous êtes prioritaire"
+      },
+      {
+        "id": "b",
+        "text": "Passage à niveau avec barrières"
+      },
+      {
+        "id": "c",
+        "text": "Intersection avec route non prioritaire"
+      },
+      {
+        "id": "d",
+        "text": "Fin de route prioritaire"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "AB1 = intersection avec une route dont les usagers doivent céder le passage. Combiné souvent avec le losange jaune.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 18,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau bleu rectangulaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/France_road_sign_C13a.svg/240px-France_road_sign_C13a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Sens interdit"
+      },
+      {
+        "id": "b",
+        "text": "Sens unique — circulation dans un seul sens"
+      },
+      {
+        "id": "c",
+        "text": "Voie réservée"
+      },
+      {
+        "id": "d",
+        "text": "Route principale"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "C13a = SENS UNIQUE. La circulation ne se fait que dans le sens indiqué par la flèche.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 19,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau triangulaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/France_road_sign_A2a.svg/240px-France_road_sign_A2a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Virage simple"
+      },
+      {
+        "id": "b",
+        "text": "Double virage, le premier à droite"
+      },
+      {
+        "id": "c",
+        "text": "Route sinueuse sur longue distance"
+      },
+      {
+        "id": "d",
+        "text": "Virage en épingle à cheveux"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "A2a = DOUBLE VIRAGE, le premier à droite. Réduire la vitesse, les deux virages se suivent rapidement.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 20,
+    "category": "panneaux",
+    "question": "Que signifie ce panneau bleu avec un 'P' et une horloge ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/France_road_sign_B6a1.svg/240px-France_road_sign_B6a1.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Parking gratuit toute la journée"
+      },
+      {
+        "id": "b",
+        "text": "Parking payant"
+      },
+      {
+        "id": "c",
+        "text": "Zone bleue — stationnement avec disque obligatoire"
+      },
+      {
+        "id": "d",
+        "text": "Parking réservé aux résidents"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "P + horloge = ZONE BLEUE. Stationnement limité dans le temps, le disque de stationnement est OBLIGATOIRE.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 21,
+    "category": "situation",
+    "question": "🎬 Regardez cette situation : vous arrivez à ce carrefour giratoire. Quelle est la règle ?",
+    "video_url": "https://www.youtube.com/embed/lDPKV-KCUEY",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Priorité à droite — le véhicule à droite passe"
+      },
+      {
+        "id": "b",
+        "text": "Les véhicules dans le giratoire sont prioritaires — vous cédez"
+      },
+      {
+        "id": "c",
+        "text": "Le premier arrivé passe en premier"
+      },
+      {
+        "id": "d",
+        "text": "Vous accélérez pour vous insérer"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Dans un giratoire signalisé, les véhicules DÉJÀ dans le rond-point sont prioritaires. Vous cédez le passage avant d'entrer.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Entrée de rond-point avec panneau cédez le passage."
+  },
+  {
+    "id": 22,
+    "category": "situation",
+    "question": "🎬 Situation nocturne : vous roulez phares en route (plein phares). Un véhicule arrive en face. Que faites-vous ?",
+    "video_url": "https://www.youtube.com/embed/q6XAApJxMRQ",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Garder les pleins phares pour mieux voir"
+      },
+      {
+        "id": "b",
+        "text": "Passer en feux de croisement (codes) dès que vous voyez ses phares"
+      },
+      {
+        "id": "c",
+        "text": "Éteindre les phares"
+      },
+      {
+        "id": "d",
+        "text": "Allumer les feux de détresse"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Croiser un véhicule = passer obligatoirement en CODES (feux de croisement) pour ne pas l'éblouir. C'est une obligation légale.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Nuit, route de campagne, croisement."
+  },
+  {
+    "id": 23,
+    "category": "situation",
+    "question": "🎬 Situation : vous roulez à 80 km/h. La route devient mouillée. Que faites-vous ?",
+    "video_url": "https://www.youtube.com/embed/bnH8b1tSJhA",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Continuer à la même vitesse, ce n'est que de la pluie"
+      },
+      {
+        "id": "b",
+        "text": "Réduire la vitesse, allumer les codes, augmenter les distances"
+      },
+      {
+        "id": "c",
+        "text": "Allumer les feux de détresse"
+      },
+      {
+        "id": "d",
+        "text": "Passer en feux de route pour mieux voir"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Chaussée mouillée : réduire la vitesse, allumer les feux de croisement, DOUBLER la distance de sécurité. La distance de freinage peut doubler sur sol humide.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route nationale, début de pluie."
+  },
+  {
+    "id": 24,
+    "category": "situation",
+    "question": "🎬 Vous êtes sur autoroute, voie de droite. Voyez-vous une erreur dans ce comportement ?",
+    "video_url": "https://www.youtube.com/embed/kT-KQdBbUOM",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non, tout est correct"
+      },
+      {
+        "id": "b",
+        "text": "Oui — rester sur la voie du milieu sans raison est interdit"
+      },
+      {
+        "id": "c",
+        "text": "Oui — il devrait rouler plus vite"
+      },
+      {
+        "id": "d",
+        "text": "Oui — il faut toujours rouler à gauche sur autoroute"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Sur autoroute, la règle est de rouler sur la VOIE DE DROITE et de n'utiliser les voies de gauche QUE pour dépasser. Rester à gauche sans dépasser = infraction.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Autoroute, trafic fluide."
+  },
+  {
+    "id": 25,
+    "category": "situation",
+    "question": "🎬 Ce conducteur s'apprête à dépasser. La manœuvre est-elle correcte ?",
+    "video_url": "https://www.youtube.com/embed/ZFTJhDmhYs0",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui, il peut dépasser"
+      },
+      {
+        "id": "b",
+        "text": "Non — ligne continue, dépassement interdit"
+      },
+      {
+        "id": "c",
+        "text": "Non — il ne met pas son clignotant"
+      },
+      {
+        "id": "d",
+        "text": "Oui si la visibilité est bonne"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Une ligne blanche CONTINUE ne peut JAMAIS être franchie pour dépasser. C'est une interdiction absolue, quelle que soit la visibilité.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route nationale, ligne continue au centre."
+  },
+  {
+    "id": 26,
+    "category": "situation",
+    "question": "🎬 Situation : votre voiture dérape sur verglas. Quelle est la bonne réaction ?",
+    "video_url": "https://www.youtube.com/embed/0g_HyYkXM6E",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Freiner fort et brusquement"
+      },
+      {
+        "id": "b",
+        "text": "Accélérer pour stabiliser"
+      },
+      {
+        "id": "c",
+        "text": "Lâcher l'accélérateur, braquer dans le sens du dérapage"
+      },
+      {
+        "id": "d",
+        "text": "Braquer à l'opposé du dérapage"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Sur verglas : relâcher l'accélérateur et braquer DANS LE SENS du dérapage (contre-braquage). Ne JAMAIS freiner brusquement.",
+    "is_trap": true,
+    "trap_message": "L'instinct dit d'aller à l'opposé... mais il faut aller DANS le sens du dérapage ! 🚗",
+    "situation": "Route verglacée."
+  },
+  {
+    "id": 27,
+    "category": "situation",
+    "question": "🎬 Situation d'urgence : votre voiture prend feu. Que faites-vous en priorité ?",
+    "video_url": "https://www.youtube.com/embed/eYJP7B3NdgY",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Chercher l'extincteur dans le coffre"
+      },
+      {
+        "id": "b",
+        "text": "Appeler les pompiers depuis l'habitacle"
+      },
+      {
+        "id": "c",
+        "text": "S'arrêter, couper le moteur, s'éloigner immédiatement du véhicule"
+      },
+      {
+        "id": "d",
+        "text": "Tenter d'éteindre les flammes avec de l'eau"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Feu dans le véhicule : S'ARRÊTER immédiatement, COUPER le moteur, S'ÉLOIGNER rapidement (risque d'explosion), puis appeler le 18.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Tableau de bord qui fume, odeur de brûlé."
+  },
+  {
+    "id": 28,
+    "category": "situation",
+    "question": "🎬 Intersection : qui a la priorité dans cette situation ?",
+    "video_url": "https://www.youtube.com/embed/nPhZXR0ZBZE",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Vous — vous allez tout droit"
+      },
+      {
+        "id": "b",
+        "text": "Le véhicule venant de votre droite"
+      },
+      {
+        "id": "c",
+        "text": "Le véhicule qui a le plus klaxonné"
+      },
+      {
+        "id": "d",
+        "text": "Vous — vous êtes arrivé en premier"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Intersection sans signalisation = PRIORITÉ À DROITE. Le véhicule venant de votre droite est toujours prioritaire.",
+    "is_trap": true,
+    "trap_message": "Même si vous allez tout droit et arrivez en premier, la priorité à droite s'applique ! 🚦",
+    "situation": "Carrefour sans signalisation."
+  },
+  {
+    "id": 29,
+    "category": "situation",
+    "question": "🎬 Autoroute : un véhicule est en panne sur la voie. Que faire ?",
+    "video_url": "https://www.youtube.com/embed/JmKy56ZLi_g",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Rester dans le véhicule et attendre"
+      },
+      {
+        "id": "b",
+        "text": "Mettre les warnings, gilet AVANT de sortir, triangle, appeler le 15/17/18"
+      },
+      {
+        "id": "c",
+        "text": "Sortir immédiatement et marcher sur la voie pour demander de l'aide"
+      },
+      {
+        "id": "d",
+        "text": "Pousser le véhicule sur la BAU"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Panne sur autoroute : 1) Warnings 2) Gilet AVANT de sortir 3) Triangle 4) Appel secours (112). Ne JAMAIS marcher sur les voies.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Autoroute, véhicule immobilisé sur la voie."
+  },
+  {
+    "id": 30,
+    "category": "situation",
+    "question": "🎬 Situation scolaire : un bus scolaire est arrêté avec ses clignotants oranges. Que faites-vous ?",
+    "video_url": "https://www.youtube.com/embed/K0JkDSfTTic",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Dépasser normalement, il est juste arrêté"
+      },
+      {
+        "id": "b",
+        "text": "Ralentir fortement (≤30 km/h) ou s'arrêter — des enfants peuvent traverser"
+      },
+      {
+        "id": "c",
+        "text": "Klaxonner pour prévenir les enfants"
+      },
+      {
+        "id": "d",
+        "text": "Passer rapidement pour éviter les enfants"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Bus scolaire avec clignotants oranges = DANGER ENFANTS. Ralentir fortement ou s'arrêter. Des enfants peuvent traverser à tout moment.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route avec bus scolaire à l'arrêt, clignotants oranges."
+  },
+  {
+    "id": 31,
+    "category": "situation",
+    "question": "Vous voyez ce marquage au sol. Que signifie-t-il ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Stop_line_France.jpg/320px-Stop_line_France.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Passage piéton"
+      },
+      {
+        "id": "b",
+        "text": "Limite d'arrêt au feu ou au STOP"
+      },
+      {
+        "id": "c",
+        "text": "Ligne de cédez le passage"
+      },
+      {
+        "id": "d",
+        "text": "Zone de sécurité"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "La ligne blanche transversale au sol marque la LIMITE D'ARRÊT au feu rouge ou au panneau STOP. Vous devez vous arrêter avant cette ligne.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Intersection avec feu tricolore."
+  },
+  {
+    "id": 32,
+    "category": "situation",
+    "question": "Vous approchez de ce croisement. Quel panneau dicte votre comportement ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/STOP_sign.jpg/320px-STOP_sign.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Ralentir et passer si libre"
+      },
+      {
+        "id": "b",
+        "text": "Arrêt total et absolu — même si personne"
+      },
+      {
+        "id": "c",
+        "text": "Klaxonner avant de traverser"
+      },
+      {
+        "id": "d",
+        "text": "Céder le passage sans s'arrêter"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Le panneau STOP impose un arrêt TOTAL et ABSOLU. Même si la route semble complètement vide, l'arrêt est obligatoire.",
+    "is_trap": true,
+    "trap_message": "Un STOP, c'est un arrêt TOTAL, même à 3h du matin sur route déserte ! 🛑",
+    "situation": "Carrefour avec panneau STOP."
+  },
+  {
+    "id": 33,
+    "category": "situation",
+    "question": "Cette signalisation au sol indique :",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Zebra_crossing_France.jpg/320px-Zebra_crossing_France.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Zone de stationnement"
+      },
+      {
+        "id": "b",
+        "text": "Passage piéton — priorité absolue aux piétons engagés"
+      },
+      {
+        "id": "c",
+        "text": "Ralentisseur"
+      },
+      {
+        "id": "d",
+        "text": "Zone tampon entre deux voies"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Bandes blanches transversales = PASSAGE PIÉTON. Les piétons engagés ou sur le point de traverser sont prioritaires. Vous devez vous arrêter.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Trottoir avec passage piéton."
+  },
+  {
+    "id": 34,
+    "category": "situation",
+    "question": "Vous voyez ce panneau en entrant dans une commune. Quelle est votre vitesse maximale ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/France_road_sign_EB10.svg/320px-France_road_sign_EB10.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "70 km/h"
+      },
+      {
+        "id": "b",
+        "text": "60 km/h"
+      },
+      {
+        "id": "c",
+        "text": "50 km/h"
+      },
+      {
+        "id": "d",
+        "text": "Aucune limite indiquée — vous choisissez"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Le panneau d'ENTRÉE D'AGGLOMÉRATION (fond blanc, nom en noir) impose automatiquement 50 km/h sans qu'un panneau de vitesse soit nécessaire.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Entrée de village, panneau de nom de commune."
+  },
+  {
+    "id": 35,
+    "category": "situation",
+    "question": "Vous voyez ces marquages sur la chaussée. Pouvez-vous dépasser ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/French_road_marking_continuous_line.jpg/320px-French_road_marking_continuous_line.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui, si la visibilité est bonne"
+      },
+      {
+        "id": "b",
+        "text": "Oui, pour dépasser un vélo"
+      },
+      {
+        "id": "c",
+        "text": "Non — ligne continue, interdiction absolue"
+      },
+      {
+        "id": "d",
+        "text": "Oui, à faible vitesse"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Ligne blanche CONTINUE = interdiction absolue de franchissement. Même pour dépasser un cycliste ou un tracteur. Jamais, sans exception.",
+    "is_trap": true,
+    "trap_message": "Une ligne continue ne se franchit JAMAIS. Ni pour un vélo, ni pour un tracteur, ni pour rien ! ⬜",
+    "situation": "Route nationale, ligne continue au centre."
+  },
+  {
+    "id": 36,
+    "category": "situation",
+    "question": "Que représente ce panneau de signalisation temporaire orange ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/France_route_travaux.jpg/320px-France_route_travaux.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Panneau permanent — limitation définitive"
+      },
+      {
+        "id": "b",
+        "text": "Signalisation de chantier temporaire — prioritaire sur les panneaux permanents"
+      },
+      {
+        "id": "c",
+        "text": "Panneau à ignorer en dehors des heures de travaux"
+      },
+      {
+        "id": "d",
+        "text": "Recommandation non obligatoire"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Les panneaux ORANGE de chantier sont TEMPORAIRES mais PRIORITAIRES sur les panneaux permanents. Ils s'appliquent 24h/24 même sans ouvriers présents.",
+    "is_trap": true,
+    "trap_message": "Un panneau de chantier orange s'applique MÊME la nuit et le week-end ! 🟠",
+    "situation": "Zone de travaux, panneau temporaire orange."
+  },
+  {
+    "id": 37,
     "category": "priorites",
-    "question": "À une intersection sans signalisation, quelle règle s'applique ?",
+    "question": "À une intersection sans aucune signalisation, quelle règle s'applique ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -10,7 +1164,7 @@
       },
       {
         "id": "b",
-        "text": "Premier arrivé, premier servi"
+        "text": "Premier arrivé passe en premier"
       },
       {
         "id": "c",
@@ -24,79 +1178,117 @@
     "correct": [
       "a"
     ],
-    "explanation": "Sans signalisation, la priorité à droite s'applique : tout véhicule venant de votre droite est prioritaire.",
+    "explanation": "Sans signalisation : PRIORITÉ À DROITE. Tout véhicule venant de votre droite est prioritaire.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 2,
+    "id": 38,
     "category": "priorites",
-    "question": "Sur un rond-point signalisé 'Cédez le passage', qui est prioritaire ?",
+    "question": "Un cycliste arrive à votre droite à une intersection non signalisée. Qui est prioritaire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Vous, déjà engagé"
+        "text": "Vous — vous êtes motorisé"
       },
       {
         "id": "b",
-        "text": "Les véhicules déjà sur le rond-point"
+        "text": "Le cycliste — priorité à droite s'applique à tous"
       },
       {
         "id": "c",
-        "text": "Celui qui roule le plus vite"
+        "text": "Le cycliste n'a jamais la priorité"
       },
       {
         "id": "d",
-        "text": "Celui qui vient de droite sur le rond-point"
+        "text": "Le plus rapide passe"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Sur un rond-point signalisé, les véhicules déjà engagés sont prioritaires. Vous devez céder le passage.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 3,
-    "category": "priorites",
-    "question": "À un stop, que devez-vous faire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Ralentir fortement si la voie est libre"
-      },
-      {
-        "id": "b",
-        "text": "S'arrêter complètement, céder le passage, puis repartir"
-      },
-      {
-        "id": "c",
-        "text": "Klaxonner puis traverser"
-      },
-      {
-        "id": "d",
-        "text": "S'arrêter uniquement si un véhicule arrive"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Au panneau STOP, l'arrêt est OBLIGATOIRE même si la route semble libre.",
+    "explanation": "La priorité à droite s'applique à TOUS les usagers, y compris les cyclistes et les piétons. Le vélo est à droite = il est prioritaire.",
     "is_trap": true,
-    "trap_message": "Beaucoup ralentissent sans s'arrêter... mais le STOP c'est un arrêt TOTAL ! 🚨",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/STOP_sign.jpg/320px-STOP_sign.jpg"
+    "trap_message": "Les cyclistes ont les mêmes droits que les voitures aux intersections ! 🚲",
+    "situation": null
   },
   {
-    "id": 4,
+    "id": 39,
     "category": "priorites",
-    "question": "Un véhicule prioritaire avec sirène approche. Que faites-vous ?",
+    "question": "Vous êtes sur une route prioritaire (losange jaune). À une intersection, qui passe ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/120px-France_road_sign_AB4.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Accélérer pour lui laisser de la place"
+        "text": "La priorité à droite s'applique quand même"
+      },
+      {
+        "id": "b",
+        "text": "Vous êtes prioritaire sur tous les véhicules des routes secondaires"
+      },
+      {
+        "id": "c",
+        "text": "Vous cédez le passage"
+      },
+      {
+        "id": "d",
+        "text": "Klaxonner avant de traverser"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Route prioritaire = VOUS AVEZ LA PRIORITÉ aux intersections sur les routes latérales non prioritaires. Plus besoin de regarder à droite pour les routes secondaires.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 40,
+    "category": "priorites",
+    "question": "À un passage piéton sans feux, un piéton s'apprête à traverser. Que faites-vous ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Klaxonner pour le prévenir de votre passage"
+      },
+      {
+        "id": "b",
+        "text": "S'arrêter et attendre qu'il traverse complètement"
+      },
+      {
+        "id": "c",
+        "text": "Continuer si vous avez la priorité"
+      },
+      {
+        "id": "d",
+        "text": "Accélérer pour passer avant lui"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Le piéton qui s'engage ou manifeste clairement l'intention de traverser sur un passage piéton est TOUJOURS prioritaire. Vous devez vous arrêter.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 41,
+    "category": "priorites",
+    "question": "Un véhicule prioritaire (ambulance avec sirène) approche. Que faites-vous ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Accélérer pour le laisser passer"
       },
       {
         "id": "b",
@@ -114,435 +1306,81 @@
     "correct": [
       "c"
     ],
-    "explanation": "Face à un véhicule prioritaire en urgence, se rabattre à droite et s'arrêter si nécessaire.",
+    "explanation": "Véhicule prioritaire en urgence (gyrophare + sirène) : se rabattre à DROITE et s'arrêter si nécessaire. Ne pas freiner brusquement.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 5,
+    "id": 42,
     "category": "priorites",
-    "question": "Le panneau carré jaune (pointe en haut) signifie :",
+    "question": "Sur un rond-point sans signalisation (rare en France), qui est prioritaire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Route à grande circulation"
+        "text": "Les véhicules dans le rond-point"
       },
       {
         "id": "b",
-        "text": "Vous êtes sur une route prioritaire"
+        "text": "Les véhicules qui entrent (priorité à droite)"
       },
       {
         "id": "c",
-        "text": "Cédez le passage"
+        "text": "Le plus grand véhicule"
       },
       {
         "id": "d",
-        "text": "Zone de travaux"
+        "text": "Personne — c'est chacun pour soi"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Le panneau carré jaune indique que vous êtes sur une route prioritaire.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/240px-France_road_sign_AB4.svg.png"
+    "explanation": "SANS panneau 'cédez le passage' à l'entrée, c'est la priorité à droite qui s'applique — donc les véhicules ENTRANT ont la priorité ! C'est l'exception aux ronds-points en France.",
+    "is_trap": true,
+    "trap_message": "Cas rarissime : sans panneau, les entrants ont la priorité car ils viennent de droite ! 😱",
+    "situation": null
   },
   {
-    "id": 6,
+    "id": 43,
     "category": "priorites",
-    "question": "À un passage piéton sans feux, un piéton attend. Que faites-vous ?",
+    "question": "Un bus à l'arrêt repart et met son clignotant. Qui est prioritaire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Klaxonner pour prévenir"
+        "text": "Vous — vous circulez déjà"
       },
       {
         "id": "b",
-        "text": "Ralentir et s'arrêter pour laisser traverser"
+        "text": "Le bus — il est prioritaire avec son clignotant"
       },
       {
         "id": "c",
-        "text": "Continuer si vous avez la priorité"
+        "text": "Priorité à droite classique"
       },
       {
         "id": "d",
-        "text": "Accélérer pour passer avant lui"
+        "text": "Le bus uniquement en zone 30"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Le piéton sur un passage piéton est TOUJOURS prioritaire. Vous devez vous arrêter.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 7,
-    "category": "priorites",
-    "question": "Un cycliste est à votre droite à une intersection sans signalisation. Qui est prioritaire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous, car vous êtes motorisé"
-      },
-      {
-        "id": "b",
-        "text": "Le cycliste, car il est à droite"
-      },
-      {
-        "id": "c",
-        "text": "Le cycliste n'a jamais la priorité"
-      },
-      {
-        "id": "d",
-        "text": "Vous négociez au cas par cas"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La priorité à droite s'applique à tous les usagers, y compris les cyclistes. Le vélo est à votre droite, donc prioritaire.",
+    "explanation": "Un autobus qui signale sa sortie d'arrêt (clignotant) est PRIORITAIRE. Vous devez ralentir et lui laisser le passage si vous pouvez le faire sans danger.",
     "is_trap": true,
-    "trap_message": "Les cyclistes ont les mêmes droits que les voitures aux intersections ! 🚲",
-    "image_url": null
+    "trap_message": "Le bus reprend la route et a la priorité ! Ne forcez pas le passage 🚌",
+    "situation": null
   },
   {
-    "id": 8,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau circulaire rouge avec un chiffre blanc ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vitesse recommandée"
-      },
-      {
-        "id": "b",
-        "text": "Vitesse minimale obligatoire"
-      },
-      {
-        "id": "c",
-        "text": "Vitesse maximale autorisée"
-      },
-      {
-        "id": "d",
-        "text": "Fin de limitation"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Un panneau circulaire rouge avec un chiffre = limitation de vitesse maximale.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/240px-France_road_sign_B14-50.svg.png"
-  },
-  {
-    "id": 9,
-    "category": "panneaux",
-    "question": "Un panneau triangulaire à fond blanc avec bordure rouge signifie :",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Obligation"
-      },
-      {
-        "id": "b",
-        "text": "Danger"
-      },
-      {
-        "id": "c",
-        "text": "Interdiction"
-      },
-      {
-        "id": "d",
-        "text": "Indication d'itinéraire"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Les panneaux triangulaires à fond blanc avec bordure rouge sont des panneaux de DANGER.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 10,
-    "category": "panneaux",
-    "question": "Un panneau rond bleu avec un chiffre signifie :",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vitesse maximale"
-      },
-      {
-        "id": "b",
-        "text": "Vitesse minimale obligatoire"
-      },
-      {
-        "id": "c",
-        "text": "Zone de stationnement"
-      },
-      {
-        "id": "d",
-        "text": "Voie réservée"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Rond bleu + chiffre = vitesse MINIMALE obligatoire. Contrairement au rouge !",
-    "is_trap": true,
-    "trap_message": "Le bleu c'est une OBLIGATION, pas une interdiction ! Rouge ≠ Bleu 🔵",
-    "image_url": null
-  },
-  {
-    "id": 11,
-    "category": "panneaux",
-    "question": "Quelle est la forme des panneaux d'interdiction en France ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Triangle rouge"
-      },
-      {
-        "id": "b",
-        "text": "Carré jaune"
-      },
-      {
-        "id": "c",
-        "text": "Cercle rouge"
-      },
-      {
-        "id": "d",
-        "text": "Rectangle vert"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Les panneaux d'INTERDICTION sont des cercles rouges (avec barre ou non).",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 12,
-    "category": "panneaux",
-    "question": "Que signifie le panneau 'Sens interdit' (cercle rouge avec barre blanche) ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Interdit aux voitures uniquement"
-      },
-      {
-        "id": "b",
-        "text": "Interdit à tous les véhicules"
-      },
-      {
-        "id": "c",
-        "text": "Interdit de nuit uniquement"
-      },
-      {
-        "id": "d",
-        "text": "Sauf véhicules d'urgence"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le sens interdit s'applique à TOUS les véhicules sans exception.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/France_road_sign_B1.svg/240px-France_road_sign_B1.svg.png"
-  },
-  {
-    "id": 13,
-    "category": "panneaux",
-    "question": "Un panneau 'Zone 30' s'applique à :",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Les camions uniquement"
-      },
-      {
-        "id": "b",
-        "text": "Tous les véhicules motorisés"
-      },
-      {
-        "id": "c",
-        "text": "Seulement en semaine"
-      },
-      {
-        "id": "d",
-        "text": "C'est une vitesse recommandée"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "En zone 30, la limitation s'applique à tous les véhicules motorisés 24h/24.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 14,
-    "category": "panneaux",
-    "question": "Que signifie le panneau 'Cédez le passage' (triangle pointe en bas) ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Arrêt obligatoire"
-      },
-      {
-        "id": "b",
-        "text": "Ralentir et laisser passer si nécessaire"
-      },
-      {
-        "id": "c",
-        "text": "Vous êtes prioritaire"
-      },
-      {
-        "id": "d",
-        "text": "Voie sans issue"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le cédez-le-passage vous oblige à laisser passer les autres usagers, sans arrêt obligatoire contrairement au STOP.",
-    "is_trap": true,
-    "trap_message": "Contrairement au STOP, le cédez-le-passage n'impose pas l'arrêt si la voie est libre ! 🔺",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/France_road_sign_AB3a.svg/240px-France_road_sign_AB3a.svg.png"
-  },
-  {
-    "id": 15,
-    "category": "panneaux",
-    "question": "Le marquage en zigzag jaune sur la chaussée signifie :",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Voie réservée aux bus"
-      },
-      {
-        "id": "b",
-        "text": "Zone de travaux"
-      },
-      {
-        "id": "c",
-        "text": "Stationnement et arrêt strictement interdits"
-      },
-      {
-        "id": "d",
-        "text": "Voie cyclable"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Les zigzags jaunes = interdiction absolue de stationner ET de s'arrêter.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 16,
-    "category": "panneaux",
-    "question": "Que signifie la croix de Saint-André (deux barres croisées) ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Passage piéton"
-      },
-      {
-        "id": "b",
-        "text": "Passage à niveau sans barrières"
-      },
-      {
-        "id": "c",
-        "text": "Intersection principale"
-      },
-      {
-        "id": "d",
-        "text": "Entrée de tunnel"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La croix de Saint-André signale un passage à niveau sans barrières. Arrêt obligatoire.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 17,
-    "category": "panneaux",
-    "question": "Un panneau carré bleu avec un 'P' blanc signifie :",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Stationnement interdit"
-      },
-      {
-        "id": "b",
-        "text": "Parking autorisé"
-      },
-      {
-        "id": "c",
-        "text": "Zone payante uniquement"
-      },
-      {
-        "id": "d",
-        "text": "Réservé aux résidents"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le panneau carré bleu P = parc de stationnement autorisé.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 18,
-    "category": "panneaux",
-    "question": "Le panneau d'entrée d'agglomération est de quelle couleur ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Blanc avec texte noir"
-      },
-      {
-        "id": "b",
-        "text": "Bleu avec texte blanc"
-      },
-      {
-        "id": "c",
-        "text": "Vert avec texte blanc"
-      },
-      {
-        "id": "d",
-        "text": "Orange avec texte noir"
-      }
-    ],
-    "correct": [
-      "a"
-    ],
-    "explanation": "Le panneau d'agglomération est blanc avec le nom en noir. Il implique la limite à 50 km/h.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 19,
+    "id": 44,
     "category": "vitesse",
     "question": "Vitesse maximale sur autoroute par temps sec ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/France_road_sign_B14-130.svg/120px-France_road_sign_B14-130.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -564,15 +1402,17 @@
     "correct": [
       "c"
     ],
-    "explanation": "Sur autoroute par temps sec : 130 km/h. Par pluie : 110 km/h. Brouillard < 50m : 50 km/h.",
+    "explanation": "Autoroute par temps sec = 130 km/h. Par pluie = 110 km/h. Brouillard visibilité < 50m = 50 km/h.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 20,
+    "id": 45,
     "category": "vitesse",
-    "question": "Vitesse maximale hors agglomération sur route bidirectionnelle sans séparateur ?",
+    "question": "Quelle est la vitesse max sur route hors agglo sans séparateur central depuis 2018 ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/France_road_sign_B14-80.svg/120px-France_road_sign_B14-80.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -584,7 +1424,7 @@
       },
       {
         "id": "c",
-        "text": "110 km/h"
+        "text": "70 km/h"
       },
       {
         "id": "d",
@@ -594,15 +1434,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "Depuis 2018, la vitesse est limitée à 80 km/h sur les routes bidirectionnelles sans séparateur central.",
+    "explanation": "Depuis 2018, la vitesse est limitée à 80 km/h sur les routes bidirectionnelles sans séparateur hors agglomération (réforme sécurité routière).",
     "is_trap": true,
-    "trap_message": "Beaucoup pensent encore à 90 km/h... La réforme de 2018 a changé ça ! 📰",
-    "image_url": null
+    "trap_message": "Beaucoup pensent encore à 90... C'était avant 2018 ! 📰",
+    "situation": null
   },
   {
-    "id": 21,
+    "id": 46,
     "category": "vitesse",
-    "question": "Vitesse maximale en agglomération (sauf panneau contraire) ?",
+    "question": "En agglomération, sauf panneau contraire, quelle est la vitesse maximum ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/120px-France_road_sign_B14-50.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -624,15 +1466,49 @@
     "correct": [
       "c"
     ],
-    "explanation": "En agglomération : 50 km/h sauf panneau zone 30, zone de rencontre (20 km/h)...",
+    "explanation": "En agglomération = 50 km/h par défaut, sauf panneau (zone 30, zone de rencontre 20 km/h...).",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 22,
+    "id": 47,
     "category": "vitesse",
-    "question": "Sur autoroute par temps de pluie, vitesse maximale ?",
+    "question": "Zone de rencontre — vitesse maximum ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "30 km/h"
+      },
+      {
+        "id": "b",
+        "text": "20 km/h"
+      },
+      {
+        "id": "c",
+        "text": "10 km/h"
+      },
+      {
+        "id": "d",
+        "text": "50 km/h"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Zone de rencontre = 20 km/h max. Les piétons ont la priorité absolue partout et peuvent traverser où ils veulent.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 48,
+    "category": "vitesse",
+    "question": "Sur autoroute par temps de pluie, quelle est la vitesse max ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/120px-France_road_sign_B14-110.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -654,15 +1530,17 @@
     "correct": [
       "c"
     ],
-    "explanation": "Pluie sur autoroute = 110 km/h (au lieu de 130). Brouillard < 50m = 50 km/h partout.",
+    "explanation": "Pluie sur autoroute = 110 km/h (au lieu de 130). Brouillard < 50m = 50 km/h sur toutes les routes.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 23,
+    "id": 49,
     "category": "vitesse",
-    "question": "Vitesse maximale pour un conducteur en période probatoire sur autoroute ?",
+    "question": "Conducteur en permis probatoire : vitesse max sur autoroute ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -684,45 +1562,49 @@
     "correct": [
       "a"
     ],
-    "explanation": "Permis probatoire (< 3 ans) : 110 km/h sur autoroute, 100 sur voie express, 80 sur les autres routes.",
+    "explanation": "Permis probatoire (moins de 3 ans) : 110 km/h sur autoroute, 100 sur voie express, 80 sur les autres routes.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 24,
+    "id": 50,
     "category": "vitesse",
-    "question": "Sur une voie express (2x2 voies avec accès réglementés), vitesse max ?",
+    "question": "Distance d'arrêt totale à 50 km/h sur route sèche (réaction + freinage) ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "90 km/h"
+        "text": "15 mètres"
       },
       {
         "id": "b",
-        "text": "110 km/h"
+        "text": "28 mètres"
       },
       {
         "id": "c",
-        "text": "130 km/h"
+        "text": "50 mètres"
       },
       {
         "id": "d",
-        "text": "100 km/h"
+        "text": "8 mètres"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Voie express : 110 km/h par temps sec, 100 km/h sous la pluie.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
+    "explanation": "À 50 km/h : réaction (~14m) + freinage (~14m) = ~28m. En conditions dégradées (pluie, fatigue), jusqu'à 50m. La distance augmente au carré de la vitesse !",
+    "is_trap": true,
+    "trap_message": "28 mètres à 50 km/h — soit la longueur de 2 bus ! Plus qu'on ne le pense 😱",
+    "situation": null
   },
   {
-    "id": 25,
+    "id": 51,
     "category": "alcool",
-    "question": "Taux d'alcoolémie légal maximum pour un conducteur standard ?",
+    "question": "Taux légal maximum d'alcoolémie pour un conducteur standard ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -747,12 +1629,14 @@
     "explanation": "Taux légal : 0,5 g/L de sang. Au-delà de 0,8 g/L = délit pénal.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 26,
+    "id": 52,
     "category": "alcool",
     "question": "Taux légal pour un conducteur en permis probatoire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -768,21 +1652,23 @@
       },
       {
         "id": "d",
-        "text": "0 (tolérance zéro)"
+        "text": "0 g/L (tolérance zéro)"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Permis probatoire = 0,2 g/L (quasi zéro). Même chose pour les professionnels du transport.",
+    "explanation": "Permis probatoire = 0,2 g/L (quasi-zéro). Même chose pour les professionnels du transport.",
     "is_trap": true,
-    "trap_message": "Beaucoup répondent 0 ou 0,5... C'est 0,2 g/L pour les jeunes conducteurs ! 🎓",
-    "image_url": null
+    "trap_message": "0,2 g/L pour les jeunes conducteurs, pas 0 ni 0,5 ! 🎓",
+    "situation": null
   },
   {
-    "id": 27,
+    "id": 53,
     "category": "alcool",
-    "question": "La conduite sous emprise de drogue est autorisée si on se sent capable ?",
+    "question": "La conduite sous emprise de drogue est-elle tolérée à faible dose ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -790,29 +1676,31 @@
       },
       {
         "id": "b",
-        "text": "Oui pour certaines drogues douces"
+        "text": "Oui pour les drogues douces"
       },
       {
         "id": "c",
-        "text": "Non, tolérance zéro pour toutes les drogues"
+        "text": "Non — tolérance ZÉRO pour tous les stupéfiants"
       },
       {
         "id": "d",
-        "text": "Dépend du type de drogue"
+        "text": "Dépend du type"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Tolérance ZÉRO pour les stupéfiants. Toute trace = délit pénal, peu importe la dose.",
+    "explanation": "TOLÉRANCE ZÉRO pour les stupéfiants. Toute trace détectée = délit pénal, quel que soit le taux ou la substance.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 28,
+    "id": 54,
     "category": "alcool",
     "question": "Comment éliminer l'alcool plus rapidement avant de conduire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -828,111 +1716,151 @@
       },
       {
         "id": "d",
-        "text": "Seul le temps élimine l'alcool (≈0,1 g/L/heure)"
+        "text": "Seul le TEMPS élimine l'alcool (~1 verre/heure)"
       }
     ],
     "correct": [
       "d"
     ],
-    "explanation": "RIEN n'accélère l'élimination de l'alcool. Ni café, ni eau, ni sport. Seul le temps ! ≈1 verre/heure.",
+    "explanation": "RIEN n'accélère l'élimination. Ni café, ni eau, ni sport. Seul le temps. Environ 1 verre standard = 0,1 g/L éliminé en 1 heure.",
     "is_trap": true,
-    "trap_message": "Le café ne dessaoule pas ! Seul le temps élimine l'alcool ☕ ≠ 🍺",
-    "image_url": null
+    "trap_message": "Le café ne dessaoule PAS ! Seul le temps élimine l'alcool ☕",
+    "situation": null
   },
   {
-    "id": 29,
-    "category": "regles",
-    "question": "Le téléphone tenu en main au volant est-il autorisé ?",
+    "id": 55,
+    "category": "alcool",
+    "question": "Un médicament niveau 2 (fond orange). Peut-on conduire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Oui, pour une conversation courte"
+        "text": "Oui, sans restriction"
       },
       {
         "id": "b",
-        "text": "Oui, à l'arrêt au feu rouge"
+        "text": "Oui, avec prudence"
       },
       {
         "id": "c",
-        "text": "Non, jamais"
+        "text": "Déconseillé, consulter médecin ou pharmacien avant de conduire"
       },
       {
         "id": "d",
-        "text": "Oui, en mode haut-parleur"
+        "text": "Interdit absolument"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Téléphone tenu en main = INTERDIT même à l'arrêt au feu rouge. Seul le kit mains-libres intégré est autorisé.",
-    "is_trap": true,
-    "trap_message": "Même au feu rouge, tenir son téléphone = amende + retrait de points ! 📵",
-    "image_url": null
-  },
-  {
-    "id": 30,
-    "category": "regles",
-    "question": "Peut-on dépasser une ligne continue blanche ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Oui, si visibilité suffisante"
-      },
-      {
-        "id": "b",
-        "text": "Oui, pour dépasser un vélo"
-      },
-      {
-        "id": "c",
-        "text": "Non, jamais"
-      },
-      {
-        "id": "d",
-        "text": "Oui, à basse vitesse"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Ligne continue = interdiction ABSOLUE de franchissement ou chevaucher. Jamais.",
+    "explanation": "Niveau 2 (orange) = peut perturber la vigilance. La conduite est FORTEMENT DÉCONSEILLÉE. Consultez votre médecin ou pharmacien.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 31,
+    "id": 56,
     "category": "regles",
-    "question": "La ceinture de sécurité est-elle obligatoire sur les sièges arrière ?",
+    "question": "Utiliser son téléphone tenu en main au volant est-il autorisé ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Non, uniquement à l'avant"
+        "text": "Oui pour une conversation courte"
       },
       {
         "id": "b",
-        "text": "Oui, pour tous les passagers avant et arrière"
+        "text": "Oui à l'arrêt au feu rouge"
       },
       {
         "id": "c",
-        "text": "Oui, sauf sur autoroute"
+        "text": "Non — jamais, même au feu rouge"
       },
       {
         "id": "d",
-        "text": "Non, pour les adultes à l'arrière"
+        "text": "Oui en mode haut-parleur"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Téléphone tenu en main = INTERDIT même au feu rouge. Seul un kit mains-libres intégré au véhicule est autorisé. 135€ + 3 points.",
+    "is_trap": true,
+    "trap_message": "Au feu rouge tu es toujours en train de conduire ! Téléphone = interdit 📵",
+    "situation": null
+  },
+  {
+    "id": 57,
+    "category": "regles",
+    "question": "Peut-on dépasser une ligne continue blanche axiale ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui si visibilité suffisante"
+      },
+      {
+        "id": "b",
+        "text": "Oui pour dépasser un vélo"
+      },
+      {
+        "id": "c",
+        "text": "Non — jamais, sans exception"
+      },
+      {
+        "id": "d",
+        "text": "Oui à basse vitesse"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Ligne continue = interdiction ABSOLUE de franchissement. Ni pour un vélo, ni pour un tracteur, ni pour rien.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 58,
+    "category": "regles",
+    "question": "La ceinture est-elle obligatoire sur les sièges arrière ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non — uniquement à l'avant"
+      },
+      {
+        "id": "b",
+        "text": "Oui — pour tous les passagers avant et arrière"
+      },
+      {
+        "id": "c",
+        "text": "Oui — sauf sur autoroute"
+      },
+      {
+        "id": "d",
+        "text": "Non — pour les adultes à l'arrière"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Ceinture obligatoire pour TOUS les occupants, avant et arrière. Le conducteur est responsable pour les mineurs.",
+    "explanation": "Ceinture obligatoire pour TOUS les occupants, avant et arrière. Le conducteur est responsable du bouclage des passagers de moins de 18 ans.",
     "is_trap": true,
-    "trap_message": "L'arrière est tout aussi obligatoire ! Et le conducteur est responsable pour les mineurs 😅",
-    "image_url": null
+    "trap_message": "L'arrière est tout aussi obligatoire ! Le conducteur est responsable des mineurs 😅",
+    "situation": null
   },
   {
-    "id": 32,
+    "id": 59,
     "category": "regles",
-    "question": "Sur quelle voie doit-on rouler normalement sur autoroute ?",
+    "question": "Sur autoroute, sur quelle voie doit-on normalement rouler ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -944,25 +1872,27 @@
       },
       {
         "id": "c",
-        "text": "La voie de droite, sauf pour dépasser"
+        "text": "La voie de droite — gauche uniquement pour dépasser"
       },
       {
         "id": "d",
-        "text": "N'importe quelle voie"
+        "text": "N'importe laquelle"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Sur autoroute : voie de droite obligatoire, sauf pour dépasser. Rester à gauche sans dépasser = infraction.",
+    "explanation": "Sur autoroute : voie de DROITE obligatoire. Les voies de gauche = uniquement pour dépasser. Rester à gauche sans dépasser = infraction.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 33,
+    "id": 60,
     "category": "regles",
     "question": "Peut-on faire demi-tour sur autoroute ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -970,33 +1900,35 @@
       },
       {
         "id": "b",
-        "text": "Oui en marche arrière"
+        "text": "Oui si la route est vide"
       },
       {
         "id": "c",
-        "text": "Non, strictement interdit"
+        "text": "Non — strictement interdit"
       },
       {
         "id": "d",
-        "text": "Oui si visibilité suffisante"
+        "text": "Oui si on a raté sa sortie"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Demi-tour STRICTEMENT interdit sur autoroute. Si vous ratez une sortie, continuer jusqu'à la prochaine.",
+    "explanation": "Demi-tour STRICTEMENT INTERDIT sur autoroute. Si vous ratez une sortie, continuez jusqu'à la prochaine.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 34,
+    "id": 61,
     "category": "regles",
     "question": "Dans un tunnel, que faire en cas d'incendie ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Continuer pour sortir vite"
+        "text": "Continuer à rouler pour sortir vite"
       },
       {
         "id": "b",
@@ -1004,7 +1936,7 @@
       },
       {
         "id": "c",
-        "text": "S'arrêter, couper le moteur, évacuer, rejoindre la sortie de secours"
+        "text": "S'arrêter, couper le moteur, laisser les clés, évacuer vers la sortie de secours"
       },
       {
         "id": "d",
@@ -1014,75 +1946,49 @@
     "correct": [
       "c"
     ],
-    "explanation": "Incendie en tunnel : arrêt, moteur coupé, clés sur le contact, évacuation, sortie de secours.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
+    "explanation": "Incendie en tunnel : ARRÊT, moteur coupé, CLÉ SUR LE CONTACT (les secours en auront besoin), évacuation vers sortie de secours.",
+    "is_trap": true,
+    "trap_message": "Laisser les CLÉS sur le contact ! Les secours doivent pouvoir déplacer le véhicule 🔑",
+    "situation": null
   },
   {
-    "id": 35,
+    "id": 62,
     "category": "regles",
-    "question": "Lors du dépassement d'un cycliste, quel écart latéral minimum hors agglomération ?",
+    "question": "Lors d'un dépassement, quand peut-on se rabattre ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "0,5 m"
+        "text": "Dès que vous êtes à sa hauteur"
       },
       {
         "id": "b",
-        "text": "1 m"
+        "text": "Quand le véhicule est visible EN ENTIER dans le rétroviseur intérieur"
       },
       {
         "id": "c",
-        "text": "1,5 m"
+        "text": "Immédiatement après l'avoir dépassé"
       },
       {
         "id": "d",
-        "text": "2 m"
+        "text": "Après 100 mètres"
       }
     ],
     "correct": [
-      "c"
+      "b"
     ],
-    "explanation": "Dépassement cycliste : 1,5 m minimum hors agglomération, 1 m en agglomération.",
+    "explanation": "Rabattement uniquement quand le véhicule dépassé est visible EN ENTIER dans le rétroviseur intérieur. Se rabattre trop tôt = dangereux et interdit.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 36,
-    "category": "regles",
-    "question": "Peut-on klaxonner en agglomération la nuit ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Oui pour prévenir d'un danger"
-      },
-      {
-        "id": "b",
-        "text": "Non, utiliser les appels de phares à la place"
-      },
-      {
-        "id": "c",
-        "text": "Oui librement"
-      },
-      {
-        "id": "d",
-        "text": "Non, interdit sauf danger immédiat"
-      }
-    ],
-    "correct": [
-      "d"
-    ],
-    "explanation": "En agglomération, klaxon interdit la nuit sauf danger immédiat. On utilise les appels de phares.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 37,
+    "id": 63,
     "category": "regles",
     "question": "Le dépassement par la droite est-il toujours interdit ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1090,11 +1996,11 @@
       },
       {
         "id": "b",
-        "text": "Non, autorisé en embouteillage si les files avancent"
+        "text": "Non — autorisé en embouteillage si les files avancent normalement"
       },
       {
         "id": "c",
-        "text": "Non, autorisé si voie libre"
+        "text": "Non — autorisé si la voie est libre"
       },
       {
         "id": "d",
@@ -1104,45 +2010,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "Le dépassement par la droite est autorisé en embouteillage si les files avancent normalement.",
+    "explanation": "Dépassement par la droite autorisé en circulation en files (embouteillages) si la file de droite avance plus vite, et pour tourner à droite.",
     "is_trap": true,
-    "trap_message": "Contre-intuitif ! Par la droite c'est autorisé dans les bouchons si les files avancent 🚦",
-    "image_url": null
+    "trap_message": "Par la droite c'est autorisé dans les bouchons si les files avancent ! 🚦",
+    "situation": null
   },
   {
-    "id": 38,
-    "category": "regles",
-    "question": "Recharger son téléphone (branché, sans y toucher) au volant est-il autorisé ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Non, tout usage est interdit"
-      },
-      {
-        "id": "b",
-        "text": "Oui, s'il est en mode silencieux"
-      },
-      {
-        "id": "c",
-        "text": "Oui, branché sans y toucher c'est autorisé"
-      },
-      {
-        "id": "d",
-        "text": "Seulement à l'arrêt"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Recharger (branché, sans toucher) = autorisé. C'est la manipulation tenue en main qui est interdite.",
-    "is_trap": true,
-    "trap_message": "Recharger sans y toucher, c'est OK ! 🔋",
-    "image_url": null
-  },
-  {
-    "id": 39,
+    "id": 64,
     "category": "regles",
     "question": "Dans un carrefour giratoire, dans quel sens circule-t-on ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1164,75 +2042,81 @@
     "correct": [
       "b"
     ],
-    "explanation": "Dans un rond-point : TOUJOURS sens anti-horaire (contraire des aiguilles d'une montre).",
+    "explanation": "Rond-point : TOUJOURS sens anti-horaire (contraire des aiguilles d'une montre) en France.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 40,
+    "id": 65,
     "category": "regles",
-    "question": "Quand peut-on se rabattre après un dépassement ?",
+    "question": "Les feux de détresse (warnings) sont obligatoires dans quelle situation ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Dès que vous êtes à sa hauteur"
+        "text": "À chaque freinage d'urgence"
       },
       {
         "id": "b",
-        "text": "Quand le véhicule est visible en entier dans le rétroviseur intérieur"
+        "text": "En cas d'arrêt ou de danger pour les autres usagers"
       },
       {
         "id": "c",
-        "text": "Immédiatement après l'avoir dépassé"
+        "text": "Dans tous les embouteillages"
       },
       {
         "id": "d",
-        "text": "Après 100 mètres"
+        "text": "Quand on cherche son chemin"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "On peut se rabattre seulement quand le véhicule dépassé est visible en ENTIER dans le rétroviseur intérieur.",
+    "explanation": "Feux de détresse = signaler un danger immédiat (panne, accident, véhicule immobilisé). Ils ne remplacent pas le gilet et le triangle.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 41,
+    "id": 66,
     "category": "securite",
-    "question": "Un enfant de 3 ans doit-il être dans un siège auto ?",
+    "question": "Un enfant de 4 ans doit être installé comment dans un véhicule ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Non, la ceinture classique suffit"
+        "text": "Ceinture classique suffit"
       },
       {
         "id": "b",
-        "text": "Oui, dans un siège adapté à son poids"
+        "text": "Siège auto homologué adapté à son gabarit"
       },
       {
         "id": "c",
-        "text": "Oui, uniquement sur autoroute"
+        "text": "Sur les genoux d'un adulte"
       },
       {
         "id": "d",
-        "text": "Non, à l'arrière c'est optionnel"
+        "text": "Uniquement sur autoroute"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Tout enfant < 10 ans ou < 135 cm doit être dans un dispositif de retenue homologué.",
+    "explanation": "Tout enfant de moins de 10 ans (ou moins de 135 cm) doit être dans un dispositif de retenue homologué adapté à son poids.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 42,
+    "id": 67,
     "category": "securite",
     "question": "En cas d'accident avec blessés, quelle est la priorité absolue ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1240,7 +2124,7 @@
       },
       {
         "id": "b",
-        "text": "Sécuriser, alerter, protéger sans déplacer les blessés"
+        "text": "PAS : Protéger, Alerter, Secourir sans déplacer les blessés"
       },
       {
         "id": "c",
@@ -1254,45 +2138,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "PAS (Protéger-Alerter-Secourir) : sécuriser, alerter (15/17/18), secourir sans déplacer.",
+    "explanation": "PAS = Protéger les lieux (triangle, gilet), Alerter (15/17/18/112), Secourir SANS déplacer les blessés (sauf danger immédiat).",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 43,
-    "category": "securite",
-    "question": "Le triangle de présignalisation est-il obligatoire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Non, optionnel"
-      },
-      {
-        "id": "b",
-        "text": "Oui, depuis 2008"
-      },
-      {
-        "id": "c",
-        "text": "Seulement sur autoroute"
-      },
-      {
-        "id": "d",
-        "text": "Seulement pour les professionnels"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Triangle obligatoire depuis 2008 (sauf 2 roues). À placer à 30m en ville, 100m hors ville.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 44,
+    "id": 68,
     "category": "securite",
     "question": "Le gilet de haute visibilité doit être accessible :",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1304,7 +2160,7 @@
       },
       {
         "id": "c",
-        "text": "Depuis l'habitacle sans sortir du véhicule"
+        "text": "Depuis l'habitacle SANS sortir du véhicule"
       },
       {
         "id": "d",
@@ -1314,45 +2170,17 @@
     "correct": [
       "c"
     ],
-    "explanation": "Le gilet doit être accessible DEPUIS L'HABITACLE sans descendre du véhicule (pas dans le coffre !).",
+    "explanation": "Le gilet doit être accessible DEPUIS L'HABITACLE sans descendre. Dans le coffre = inaccessible sans sortir = illégal.",
     "is_trap": true,
-    "trap_message": "Piège classique ! Dans le coffre = inaccessible sans sortir. Illégal ! 🦺",
-    "image_url": null
+    "trap_message": "Dans le coffre ça ne compte pas ! Inaccessible sans sortir du véhicule 🦺",
+    "situation": null
   },
   {
-    "id": 45,
+    "id": 69,
     "category": "securite",
-    "question": "Un extincteur est-il obligatoire dans une voiture particulière ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Oui, depuis 2010"
-      },
-      {
-        "id": "b",
-        "text": "Oui, seulement sur autoroute"
-      },
-      {
-        "id": "c",
-        "text": "Non, pas obligatoire"
-      },
-      {
-        "id": "d",
-        "text": "Oui, pour les voitures > 5 ans"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "L'extincteur n'est PAS obligatoire dans un véhicule de tourisme ! Obligatoire dans bus et véhicules professionnels.",
-    "is_trap": true,
-    "trap_message": "Ah ah ! L'extincteur n'est pas obligatoire dans une voiture particulière 🔥",
-    "image_url": null
-  },
-  {
-    "id": 46,
-    "category": "securite",
-    "question": "La profondeur minimale légale des sculptures de pneus est de :",
+    "question": "La profondeur minimale légale des sculptures de pneus ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1374,15 +2202,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "Profondeur minimale : 1,6 mm. En dessous = illégal et dangereux (aquaplanage, adhérence réduite).",
+    "explanation": "Minimum légal = 1,6 mm. En dessous = illégal et dangereux (risque d'aquaplanage, adhérence réduite drastiquement).",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 47,
+    "id": 70,
     "category": "securite",
     "question": "L'aquaplanage se produit quand :",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1394,25 +2224,27 @@
       },
       {
         "id": "c",
-        "text": "Le pare-brise se brise"
+        "text": "Les essuie-glaces ne fonctionnent plus"
       },
       {
         "id": "d",
-        "text": "Les essuie-glaces ne fonctionnent plus"
+        "text": "La route est trop mouillée pour freiner"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Aquaplanage = les pneus flottent sur un film d'eau. Plus de direction ni de freinage.",
+    "explanation": "Aquaplanage = les pneus flottent sur un film d'eau. Perte totale de direction et de freinage. Réduire la vitesse, ne pas freiner brusquement.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 48,
+    "id": 71,
     "category": "securite",
     "question": "La fatigue au volant multiplie le risque d'accident par :",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1434,15 +2266,17 @@
     "correct": [
       "c"
     ],
-    "explanation": "La fatigue multiplie le risque par 8 ! Après 20h sans sommeil = effets similaires à 0,5 g/L d'alcool.",
+    "explanation": "La fatigue multiplie le risque par 8 ! Après 20h sans sommeil = effets comparables à 0,5 g/L d'alcool dans le sang.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 49,
+    "id": 72,
     "category": "securite",
     "question": "En cas de crevaison sur autoroute, que faire en priorité ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1450,11 +2284,11 @@
       },
       {
         "id": "b",
-        "text": "Tenir le volant, ralentir progressivement, rejoindre la BAU"
+        "text": "Tenir le volant fermement, ralentir progressivement, rejoindre la BAU"
       },
       {
         "id": "c",
-        "text": "Continuer jusqu'à la prochaine sortie"
+        "text": "Continuer jusqu'à la sortie"
       },
       {
         "id": "d",
@@ -1464,105 +2298,81 @@
     "correct": [
       "b"
     ],
-    "explanation": "Crevaison : tenir le volant fermement, NE PAS freiner brutalement, relâcher l'accélérateur, rejoindre la BAU.",
+    "explanation": "Crevaison : tenir le volant fermement (le véhicule tire), NE PAS freiner brutalement, relâcher l'accélérateur, rejoindre calmement la BAU.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 50,
+    "id": 73,
     "category": "securite",
-    "question": "Un angle mort est :",
+    "question": "À un passage à niveau sans barrières, que faire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/France_road_sign_A7.svg/120px-France_road_sign_A7.svg.png",
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Une zone non couverte par les rétroviseurs"
+        "text": "Ralentir et traverser rapidement"
       },
       {
         "id": "b",
-        "text": "Une zone interdite sur les routes"
+        "text": "Arrêt OBLIGATOIRE, vérifier des deux côtés, traverser sans s'arrêter sur les rails"
       },
       {
         "id": "c",
-        "text": "L'espace uniquement derrière un camion"
+        "text": "Traverser normalement"
       },
       {
         "id": "d",
-        "text": "Une intersection sans signalisation"
-      }
-    ],
-    "correct": [
-      "a"
-    ],
-    "explanation": "L'angle mort = zone autour du véhicule invisible dans les rétroviseurs. Toujours tourner la tête avant de changer de voie.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 51,
-    "category": "vehicule",
-    "question": "À quelle fréquence le contrôle technique est-il obligatoire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Tous les ans"
-      },
-      {
-        "id": "b",
-        "text": "Tous les 2 ans"
-      },
-      {
-        "id": "c",
-        "text": "Premier à 4 ans, puis tous les 2 ans"
-      },
-      {
-        "id": "d",
-        "text": "Uniquement en cas de revente"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Premier CT dans les 6 mois avant le 4e anniversaire, puis tous les 2 ans.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 52,
-    "category": "vehicule",
-    "question": "L'assurance responsabilité civile est-elle obligatoire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Non, c'est optionnel"
-      },
-      {
-        "id": "b",
-        "text": "Oui, c'est la garantie minimum obligatoire"
-      },
-      {
-        "id": "c",
-        "text": "Uniquement pour les véhicules > 5 ans"
-      },
-      {
-        "id": "d",
-        "text": "Uniquement sur autoroute"
+        "text": "Attendre un agent"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "L'assurance RC (au tiers) est OBLIGATOIRE pour tout véhicule, même stationné. Sans = délit pénal.",
+    "explanation": "PN sans barrières : ARRÊT OBLIGATOIRE, regarder des deux côtés, traverser sans JAMAIS s'arrêter sur les rails. Le train est TOUJOURS prioritaire.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 53,
+    "id": 74,
+    "category": "securite",
+    "question": "Dans un virage, pourquoi ne pas freiner brutalement ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Ça use les freins prématurément"
+      },
+      {
+        "id": "b",
+        "text": "Risque de perte de contrôle ou tête-à-queue"
+      },
+      {
+        "id": "c",
+        "text": "Les freins sont moins efficaces en virage"
+      },
+      {
+        "id": "d",
+        "text": "Cela dérange les autres conducteurs"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Freiner brutalement en virage = blocage des roues, perte d'adhérence. Il faut freiner AVANT le virage, puis accélérer progressivement en sortie.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 75,
     "category": "permis",
     "question": "Combien de points possède un nouveau conducteur ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1584,15 +2394,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "Nouveau conducteur = 6 points. Gain de 2 points/an sans infraction jusqu'à 12 points maximum.",
+    "explanation": "Nouveau conducteur = 6 points. Gain de 2 points/an sans infraction jusqu'à 12 points.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 54,
+    "id": 76,
     "category": "permis",
     "question": "Le permis de conduire comporte combien de points maximum ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1614,15 +2426,17 @@
     "correct": [
       "b"
     ],
-    "explanation": "Le permis comporte 12 points maximum. À 0 point = permis annulé.",
+    "explanation": "12 points maximum. À 0 point = permis annulé. On récupère des points après 1 an sans infraction.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 55,
+    "id": 77,
     "category": "permis",
-    "question": "Combien de temps sans infraction pour récupérer des points automatiquement ?",
+    "question": "Combien de temps sans infraction pour reconstituer intégralement son capital de points ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1644,75 +2458,593 @@
     "correct": [
       "c"
     ],
-    "explanation": "1 point récupéré après 1 an sans infraction. Capital intégralement reconstitué après 2 ans sans infraction.",
+    "explanation": "Capital intégralement reconstitué après 2 ans sans infraction entraînant retrait de points. 1 an = récupération d'un seul point.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 56,
-    "category": "regles",
-    "question": "Les feux de détresse sont obligatoires :",
+    "id": 78,
+    "category": "vehicule",
+    "question": "À quelle fréquence le contrôle technique est-il obligatoire ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "À chaque freinage"
+        "text": "Tous les ans"
       },
       {
         "id": "b",
-        "text": "En cas d'arrêt d'urgence ou de danger"
+        "text": "Tous les 2 ans"
       },
       {
         "id": "c",
-        "text": "Dans les embouteillages systématiquement"
+        "text": "Premier CT à 4 ans, puis tous les 2 ans"
       },
       {
         "id": "d",
-        "text": "Quand on cherche son chemin"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Feux de détresse = signaler un danger immédiat (panne, accident). Ils ne remplacent pas le triangle et le gilet.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 57,
-    "category": "regles",
-    "question": "Que signifie une ligne discontinue (tirets) sur l'axe central ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Interdiction de changer de voie"
-      },
-      {
-        "id": "b",
-        "text": "Interdiction de dépasser"
-      },
-      {
-        "id": "c",
-        "text": "Changement de voie et dépassement autorisés avec prudence"
-      },
-      {
-        "id": "d",
-        "text": "Zone scolaire"
+        "text": "Uniquement en cas de revente"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Ligne discontinue = changement de file et dépassement autorisés si visibilité suffisante.",
+    "explanation": "Premier CT dans les 6 mois avant le 4e anniversaire, puis tous les 2 ans. En cas de contre-visite, délai raccourci.",
     "is_trap": false,
     "trap_message": null,
-    "image_url": null
+    "situation": null
   },
   {
-    "id": 58,
+    "id": 79,
+    "category": "vehicule",
+    "question": "L'assurance responsabilité civile est-elle obligatoire ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non, c'est optionnel"
+      },
+      {
+        "id": "b",
+        "text": "Oui — garantie minimum obligatoire pour tout véhicule"
+      },
+      {
+        "id": "c",
+        "text": "Uniquement pour les voitures de + de 5 ans"
+      },
+      {
+        "id": "d",
+        "text": "Uniquement sur autoroute"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "L'assurance RC (au tiers) est OBLIGATOIRE pour tout véhicule à moteur, même stationné. Circuler sans = délit pénal.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 80,
+    "category": "vehicule",
+    "question": "Un extincteur est-il obligatoire dans une voiture particulière ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui, depuis 2010"
+      },
+      {
+        "id": "b",
+        "text": "Non — pas obligatoire"
+      },
+      {
+        "id": "c",
+        "text": "Oui, uniquement sur autoroute"
+      },
+      {
+        "id": "d",
+        "text": "Oui, pour les voitures > 5 ans"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "L'extincteur N'EST PAS obligatoire dans un véhicule de tourisme ! Il l'est dans les bus, autocars et certains véhicules professionnels.",
+    "is_trap": true,
+    "trap_message": "Comme la trousse de secours, l'extincteur n'est pas obligatoire en voiture particulière 🔥",
+    "situation": null
+  },
+  {
+    "id": 81,
+    "category": "situation",
+    "question": "Vous voyez ce marquage au sol avant un passage piéton. Que signifie-t-il ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Zig-zag_road_marking.jpg/320px-Zig-zag_road_marking.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Ralentisseur prévu"
+      },
+      {
+        "id": "b",
+        "text": "Zone de dépassement interdit"
+      },
+      {
+        "id": "c",
+        "text": "Arrêt et stationnement STRICTEMENT interdits"
+      },
+      {
+        "id": "d",
+        "text": "Voie réservée aux bus"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Zigzags jaunes = ARRÊT ET STATIONNEMENT STRICTEMENT INTERDITS. On les trouve devant les écoles, arrêts de bus, entrées de pompiers.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 82,
+    "category": "situation",
+    "question": "🎬 Situation : vous circulez en agglomération la nuit. Devez-vous allumer vos feux ?",
+    "video_url": "https://www.youtube.com/embed/rL5Xt-4gFBQ",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non si les rues sont bien éclairées"
+      },
+      {
+        "id": "b",
+        "text": "Oui — les feux de croisement sont obligatoires la nuit en toutes circonstances"
+      },
+      {
+        "id": "c",
+        "text": "Uniquement sur routes non éclairées"
+      },
+      {
+        "id": "d",
+        "text": "Seulement après minuit"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Les feux de croisement (codes) sont OBLIGATOIRES la nuit, quelle que soit l'éclairage public. Également obligatoires dans les tunnels et par mauvaise visibilité.",
+    "is_trap": true,
+    "trap_message": "Même en ville bien éclairée, les feux sont obligatoires la nuit ! 💡",
+    "situation": "Nuit, agglomération bien éclairée."
+  },
+  {
+    "id": 83,
+    "category": "situation",
+    "question": "🎬 Un piéton traverse en dehors du passage piéton. Qui a la priorité ?",
+    "video_url": "https://www.youtube.com/embed/GYP9e0T5Ys4",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Le piéton — il est toujours prioritaire"
+      },
+      {
+        "id": "b",
+        "text": "Vous — hors passage piéton, les véhicules sont prioritaires"
+      },
+      {
+        "id": "c",
+        "text": "Vous négociez"
+      },
+      {
+        "id": "d",
+        "text": "Le piéton si la vitesse est < 50 km/h"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "HORS passage piéton balisé, les véhicules ont la priorité. Mais le conducteur doit toujours adapter sa vitesse et éviter l'accident.",
+    "is_trap": true,
+    "trap_message": "Hors passage piéton = véhicules prioritaires. Mais ça ne veut pas dire qu'on peut foncer ! 🚶",
+    "situation": "Route, piéton traversant hors passage."
+  },
+  {
+    "id": 84,
+    "category": "situation",
+    "question": "🎬 Vous approchez d'une intersection. Le feu passe à l'orange. Que faites-vous ?",
+    "video_url": "https://www.youtube.com/embed/WKp_dyGZe8c",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Accélérer pour passer avant le rouge"
+      },
+      {
+        "id": "b",
+        "text": "Freiner et s'arrêter si vous pouvez le faire en sécurité"
+      },
+      {
+        "id": "c",
+        "text": "Continuer — l'orange veut dire préparez-vous"
+      },
+      {
+        "id": "d",
+        "text": "Klaxonner et passer"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Feu orange = RALENTIR et s'arrêter si possible en sécurité. On ne peut franchir un feu orange QUE si l'arrêt est impossible sans danger. Accélérer = infraction.",
+    "is_trap": true,
+    "trap_message": "Le feu orange ne signifie pas 'accélérez pour passer' ! C'est l'inverse 🚦",
+    "situation": "Intersection avec feu tricolore."
+  },
+  {
+    "id": 85,
+    "category": "situation",
+    "question": "🎬 Sur une voie à sens unique, vous tournez à gauche. Devez-vous vous placer à gauche avant de tourner ?",
+    "video_url": "https://www.youtube.com/embed/Y_JcQD4kV1o",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non, on tourne depuis la voie de droite"
+      },
+      {
+        "id": "b",
+        "text": "Oui — il faut se positionner à gauche et mettre le clignotant"
+      },
+      {
+        "id": "c",
+        "text": "On peut tourner depuis n'importe quelle voie"
+      },
+      {
+        "id": "d",
+        "text": "Uniquement s'il n'y a pas de bus"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Pour tourner à gauche, on se positionne à gauche de la chaussée (ou à la file de gauche si plusieurs voies) et on signale avec le clignotant gauche.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Voie à sens unique, virage à gauche."
+  },
+  {
+    "id": 86,
+    "category": "situation",
+    "question": "Quelle est la bonne position sur la route pour un cycliste ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Cyclist_on_road_France.jpg/320px-Cyclist_on_road_France.jpg",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Au milieu de la voie pour se faire voir"
+      },
+      {
+        "id": "b",
+        "text": "Sur le côté droit, à au moins 50 cm du bord"
+      },
+      {
+        "id": "c",
+        "text": "Sur le trottoir si disponible"
+      },
+      {
+        "id": "d",
+        "text": "N'importe où, les voitures doivent les contourner"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Le cycliste circule sur la partie droite de la chaussée, à environ 50 cm du bord (pour éviter les caniveaux, gravillons et portières). Il peut circuler sur la piste cyclable si elle existe.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 87,
+    "category": "situation",
+    "question": "🎬 Vous circulez sur route à 80 km/h derrière un tracteur. Pouvez-vous dépasser ?",
+    "video_url": "https://www.youtube.com/embed/aIbJGr_TZTU",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui, les tracteurs ne comptent pas"
+      },
+      {
+        "id": "b",
+        "text": "Oui, si la visibilité est suffisante et la ligne discontinue"
+      },
+      {
+        "id": "c",
+        "text": "Non, on ne peut jamais dépasser un tracteur"
+      },
+      {
+        "id": "d",
+        "text": "Oui, même avec une ligne continue"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "On peut dépasser un tracteur si : ligne discontinue, visibilité suffisante, pas de véhicule en face, et on respecte la procédure complète de dépassement.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route nationale, tracteur à 30 km/h, ligne discontinue."
+  },
+  {
+    "id": 88,
+    "category": "situation",
+    "question": "Vous voyez ce panneau. Que signifie-t-il pour votre conduite ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/France_road_sign_A6a.svg/180px-France_road_sign_A6a.svg.png",
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Route mouillée — ralentir un peu"
+      },
+      {
+        "id": "b",
+        "text": "Chaussée glissante — réduire la vitesse, éviter les freinages brusques"
+      },
+      {
+        "id": "c",
+        "text": "Attention verglas uniquement en hiver"
+      },
+      {
+        "id": "d",
+        "text": "Route inondée — faire demi-tour"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "A6a = CHAUSSÉE GLISSANTE. Réduire la vitesse, éviter les freinages et accélérations brusques, augmenter les distances de sécurité.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 89,
+    "category": "situation",
+    "question": "🎬 Situation : embouteillage sur autoroute. Un véhicule de secours approche avec sirène. Que fait-on ?",
+    "video_url": "https://www.youtube.com/embed/3kV2LRSiXpA",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "On reste immobile, on ne peut rien faire"
+      },
+      {
+        "id": "b",
+        "text": "On forme un couloir d'urgence en se serrant à droite ou à gauche selon sa voie"
+      },
+      {
+        "id": "c",
+        "text": "On s'arrête et on sort du véhicule"
+      },
+      {
+        "id": "d",
+        "text": "On accélère pour s'écarter"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "COULOIR D'URGENCE obligatoire depuis 2021 en France : voie gauche = se serrer à gauche, autres voies = se serrer à droite. Pénalité de 135€ + 3 points si non respecté.",
+    "is_trap": true,
+    "trap_message": "Le couloir d'urgence est obligatoire en France depuis 2021 ! 🚨",
+    "situation": "Embouteillage sur autoroute ou voie rapide."
+  },
+  {
+    "id": 90,
+    "category": "situation",
+    "question": "Sur route de montagne étroite, deux voitures se croisent. Qui cède ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Priorité à droite"
+      },
+      {
+        "id": "b",
+        "text": "Le plus petit véhicule"
+      },
+      {
+        "id": "c",
+        "text": "Le véhicule descendant cède la place au montant"
+      },
+      {
+        "id": "d",
+        "text": "Le premier arrivé"
+      }
+    ],
+    "correct": [
+      "c"
+    ],
+    "explanation": "Route de montagne étroite : le véhicule DESCENDANT laisse passer le véhicule MONTANT car il lui est plus facile de reculer en descente.",
+    "is_trap": true,
+    "trap_message": "Règle spéciale montagne : le descendant cède, pas la priorité à droite ! ⛰️",
+    "situation": null
+  },
+  {
+    "id": 91,
+    "category": "situation",
+    "question": "🎬 Vous circulez en ville. Un enfant court vers la route. Que faites-vous ?",
+    "video_url": "https://www.youtube.com/embed/dHgFYb0VQHM",
+    "image_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Klaxonner fort pour prévenir l'enfant"
+      },
+      {
+        "id": "b",
+        "text": "Freiner d'urgence et s'arrêter"
+      },
+      {
+        "id": "c",
+        "text": "Accélérer pour passer avant lui"
+      },
+      {
+        "id": "d",
+        "text": "Faire une embardée à gauche"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Un enfant imprévisible sur la route = FREINAGE D'URGENCE immédiat. L'enfant ne peut pas évaluer les risques. Votre réflexe de freinage peut lui sauver la vie.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Zone résidentielle, enfant courant vers la chaussée."
+  },
+  {
+    "id": 92,
+    "category": "regles",
+    "question": "Que signifie la ligne jaune discontinue sur le bord de la chaussée ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Arrêt et stationnement interdits"
+      },
+      {
+        "id": "b",
+        "text": "Stationnement interdit mais arrêt autorisé"
+      },
+      {
+        "id": "c",
+        "text": "Voie réservée aux bus"
+      },
+      {
+        "id": "d",
+        "text": "Fin d'agglomération"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Ligne jaune discontinue sur le bord = STATIONNEMENT INTERDIT mais l'arrêt momentané est autorisé (pour déposer quelqu'un, livraison rapide...).",
+    "is_trap": true,
+    "trap_message": "Discontinue = stationnement interdit MAIS arrêt autorisé. Continue = les deux interdits ! ⚡",
+    "situation": null
+  },
+  {
+    "id": 93,
+    "category": "regles",
+    "question": "Recharger son téléphone (branché, sans y toucher) en conduisant est-il autorisé ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non, tout usage est interdit"
+      },
+      {
+        "id": "b",
+        "text": "Oui, branché sans y toucher = autorisé"
+      },
+      {
+        "id": "c",
+        "text": "Non, le câble distrait"
+      },
+      {
+        "id": "d",
+        "text": "Seulement à l'arrêt"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Recharger (branché, sans toucher) = autorisé. C'est la MANIPULATION tenu en main qui est interdite.",
+    "is_trap": true,
+    "trap_message": "Recharger sans y toucher = OK ! 🔋",
+    "situation": null
+  },
+  {
+    "id": 94,
+    "category": "securite",
+    "question": "Le triangle de présignalisation est-il obligatoire dans le véhicule ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Non, optionnel"
+      },
+      {
+        "id": "b",
+        "text": "Oui, depuis 2008 (sauf 2 roues)"
+      },
+      {
+        "id": "c",
+        "text": "Seulement sur autoroute"
+      },
+      {
+        "id": "d",
+        "text": "Seulement pour les professionnels"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Triangle obligatoire depuis 2008 pour tout véhicule à moteur (sauf 2 roues). À placer à 30m en ville, 100m hors ville, avant le véhicule.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 95,
+    "category": "securite",
+    "question": "Une trousse de premiers secours est-elle obligatoire en voiture particulière ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      {
+        "id": "a",
+        "text": "Oui, depuis 2012"
+      },
+      {
+        "id": "b",
+        "text": "Non, mais vivement recommandée"
+      },
+      {
+        "id": "c",
+        "text": "Oui, uniquement sur autoroute"
+      },
+      {
+        "id": "d",
+        "text": "Oui, pour les voitures > 5 places"
+      }
+    ],
+    "correct": [
+      "b"
+    ],
+    "explanation": "Trousse de secours NON OBLIGATOIRE en voiture particulière. Seuls le gilet et le triangle le sont.",
+    "is_trap": true,
+    "trap_message": "Comme l'extincteur, la trousse n'est pas obligatoire ! 🚑",
+    "situation": null
+  },
+  {
+    "id": 96,
     "category": "regles",
     "question": "Peut-on stationner devant un passage piéton ?",
+    "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
@@ -1724,7 +3056,7 @@
       },
       {
         "id": "c",
-        "text": "Non, interdit sur et aux abords immédiats"
+        "text": "Non — interdit sur et aux abords immédiats (5 mètres)"
       },
       {
         "id": "d",
@@ -1734,1200 +3066,7 @@
     "correct": [
       "c"
     ],
-    "explanation": "Stationnement interdit sur les passages piétons et à leurs abords immédiats (5 mètres).",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 59,
-    "category": "securite",
-    "question": "À un passage à niveau sans barrières, que devez-vous faire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Ralentir et traverser rapidement"
-      },
-      {
-        "id": "b",
-        "text": "Arrêt obligatoire, vérifier, traverser sans s'arrêter sur les rails"
-      },
-      {
-        "id": "c",
-        "text": "Traverser normalement, les trains sont toujours signalés"
-      },
-      {
-        "id": "d",
-        "text": "Attendre un agent"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "PN sans barrières : ARRÊT OBLIGATOIRE, regarder des deux côtés, traverser SANS s'arrêter sur les rails.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 60,
-    "category": "regles",
-    "question": "Dans un virage, pourquoi ne pas freiner brutalement ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Ça use les freins"
-      },
-      {
-        "id": "b",
-        "text": "Risque de perte de contrôle ou tête-à-queue"
-      },
-      {
-        "id": "c",
-        "text": "Les freins sont moins efficaces en virage"
-      },
-      {
-        "id": "d",
-        "text": "Cela dérange les autres"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Freiner brutalement en virage = blocage des roues, perte d'adhérence. Freiner AVANT le virage.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null
-  },
-  {
-    "id": 61,
-    "category": "situation",
-    "question": "🚦 Situation : Vous arrivez à ce carrefour. Vous allez tout droit, la voiture à droite tourne à gauche. Qui passe en premier ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous, car vous allez tout droit"
-      },
-      {
-        "id": "b",
-        "text": "La voiture à droite, car elle est à droite"
-      },
-      {
-        "id": "c",
-        "text": "Vous négociez"
-      },
-      {
-        "id": "d",
-        "text": "Celui qui klaxonne"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Priorité à droite : la voiture venant de votre droite est prioritaire, même si elle tourne.",
-    "is_trap": true,
-    "trap_message": "Même en tournant, elle vient de votre droite donc elle est prioritaire ! 🚦",
-    "image_url": null,
-    "situation": "Vous êtes à une intersection sans signalisation. Une voiture arrive sur votre droite."
-  },
-  {
-    "id": 62,
-    "category": "situation",
-    "question": "🌧️ Situation : Il pleut, vous êtes sur autoroute à 120 km/h. Êtes-vous en infraction ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Non, 130 km/h est toujours la limite"
-      },
-      {
-        "id": "b",
-        "text": "Oui, la limite est 110 km/h sous la pluie"
-      },
-      {
-        "id": "c",
-        "text": "Non, 120 km/h c'est prudent"
-      },
-      {
-        "id": "d",
-        "text": "Oui, la limite est 90 km/h sous la pluie"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Pluie sur autoroute = 110 km/h maximum. À 120 km/h = excès de vitesse.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Il pleut, visibilité réduite, vous roulez sur l'autoroute."
-  },
-  {
-    "id": 63,
-    "category": "situation",
-    "question": "🏙️ Situation : Vous entrez dans une ville. Pas de panneau de limitation. Quelle est votre vitesse max ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "70 km/h"
-      },
-      {
-        "id": "b",
-        "text": "60 km/h"
-      },
-      {
-        "id": "c",
-        "text": "50 km/h"
-      },
-      {
-        "id": "d",
-        "text": "30 km/h"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Le panneau d'agglomération (fond blanc, nom en noir) impose automatiquement 50 km/h.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Vous venez de passer le panneau d'entrée de ville sans voir de limitation spécifique."
-  },
-  {
-    "id": 64,
-    "category": "situation",
-    "question": "🚗 Situation : Votre voiture tombe en panne sur l'autoroute. Quelle est la première chose à faire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Téléphoner depuis l'habitacle"
-      },
-      {
-        "id": "b",
-        "text": "Mettre le gilet avant de sortir, puis les feux de détresse"
-      },
-      {
-        "id": "c",
-        "text": "Mettre les feux de détresse, puis enfiler le gilet AVANT de sortir"
-      },
-      {
-        "id": "d",
-        "text": "Sortir immédiatement et placer le triangle"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Ordre : 1) Feux de détresse 2) Enfiler le gilet AVANT de sortir 3) Placer le triangle. Ne jamais sortir sans gilet sur autoroute.",
-    "is_trap": true,
-    "trap_message": "On enfile le gilet AVANT de sortir du véhicule, pas après ! ⚠️",
-    "image_url": null,
-    "situation": "Panne sur autoroute, BAU disponible."
-  },
-  {
-    "id": 65,
-    "category": "situation",
-    "question": "🌫️ Situation : Brouillard épais, visibilité de 30 mètres. Vous êtes sur route nationale. Vitesse max ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "80 km/h"
-      },
-      {
-        "id": "b",
-        "text": "50 km/h"
-      },
-      {
-        "id": "c",
-        "text": "30 km/h"
-      },
-      {
-        "id": "d",
-        "text": "60 km/h"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Visibilité < 50m = vitesse limitée à 50 km/h sur TOUTES les routes, y compris autoroute.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Brouillard dense, visibilité inférieure à 50 mètres."
-  },
-  {
-    "id": 66,
-    "category": "situation",
-    "question": "🚌 Situation : Un bus scolaire est arrêté avec ses clignotants oranges. Que faites-vous ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Dépasser à 30 km/h avec prudence"
-      },
-      {
-        "id": "b",
-        "text": "S'arrêter obligatoirement"
-      },
-      {
-        "id": "c",
-        "text": "Continuer normalement"
-      },
-      {
-        "id": "d",
-        "text": "Klaxonner"
-      }
-    ],
-    "correct": [
-      "a",
-      "b"
-    ],
-    "explanation": "Face à un bus scolaire à l'arrêt avec signaux : ralentir fortement (≤30 km/h) ou s'arrêter. Les enfants peuvent traverser.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Bus scolaire à l'arrêt avec clignotants orange allumés."
-  },
-  {
-    "id": 67,
-    "category": "situation",
-    "question": "⛽ Situation : Vous êtes en panne d'essence sur autoroute. Que devez-vous PAS faire ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Mettre les feux de détresse"
-      },
-      {
-        "id": "b",
-        "text": "Porter le gilet fluorescent"
-      },
-      {
-        "id": "c",
-        "text": "Marcher sur la voie pour trouver de l'aide"
-      },
-      {
-        "id": "d",
-        "text": "Appeler le 15 ou le 112"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Il ne faut JAMAIS marcher sur les voies d'autoroute. Rester derrière la glissière de sécurité et appeler les secours.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Panne d'essence, véhicule sur la BAU de l'autoroute."
-  },
-  {
-    "id": 68,
-    "category": "situation",
-    "question": "🌙 Situation : Nuit, route non éclairée, vous croisez un véhicule. Que faites-vous avec vos phares ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Garder les pleins phares pour mieux voir"
-      },
-      {
-        "id": "b",
-        "text": "Passer en feux de croisement (codes)"
-      },
-      {
-        "id": "c",
-        "text": "Éteindre les phares"
-      },
-      {
-        "id": "d",
-        "text": "Alterner pleins phares et codes"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Croiser un véhicule = obligatoirement passer en codes (croisement) pour ne pas éblouir.",
-    "is_trap": false,
-    "trap_message": null,
-    "image_url": null,
-    "situation": "Nuit, route non éclairée, vous croisez un véhicule en sens inverse."
-  },
-  {
-    "id": 69,
-    "category": "situation",
-    "question": "🏍️ Situation : Un moto vous dépasse par la droite sur autoroute en bouchon. Est-ce légal ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Non, interdit"
-      },
-      {
-        "id": "b",
-        "text": "Oui, les motos ont le droit"
-      },
-      {
-        "id": "c",
-        "text": "Oui, en bouchon c'est autorisé pour tous"
-      },
-      {
-        "id": "d",
-        "text": "Oui mais seulement à moins de 50 km/h"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La circulation inter-files est autorisée pour les 2 roues motorisés dans les zones d'expérimentation (dont l'Île-de-France et autres régions).",
-    "is_trap": true,
-    "trap_message": "La circulation inter-files est légale et en cours d'expérimentation nationale ! 🏍️",
-    "image_url": null,
-    "situation": "Embouteillage sur autoroute."
-  },
-  {
-    "id": 70,
-    "category": "situation",
-    "question": "🛑 Situation : Vous roulez à 50 km/h en ville. Quelle est votre distance d'arrêt approximative ?",
-    "answers": [
-      {
-        "id": "a",
-        "text": "15 mètres"
-      },
-      {
-        "id": "b",
-        "text": "28 mètres"
-      },
-      {
-        "id": "c",
-        "text": "50 mètres"
-      },
-      {
-        "id": "d",
-        "text": "35 mètres"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "À 50 km/h : réaction (14m) + freinage (14m) = 28m par temps sec. En conditions dégradées, jusqu'à 50m. Toujours prévoir une marge !",
-    "is_trap": true,
-    "trap_message": "La distance d'arrêt inclut le temps de réaction ! À 50 km/h c'est bien plus que vous ne le pensez 🛑",
-    "image_url": null,
-    "situation": "Route sèche, réflexes normaux, véhicule en bon état."
-  },
-  {
-    "id": 71,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/France_road_sign_B1.svg/240px-France_road_sign_B1.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Entrée interdite à tous les véhicules"
-      },
-      {
-        "id": "b",
-        "text": "Stop obligatoire"
-      },
-      {
-        "id": "c",
-        "text": "Sens unique"
-      },
-      {
-        "id": "d",
-        "text": "Interdit aux camions"
-      }
-    ],
-    "correct": [
-      "a"
-    ],
-    "explanation": "Le panneau B1 (cercle rouge avec barre blanche) = SENS INTERDIT. Aucun véhicule ne peut s'y engager dans ce sens.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 72,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/France_road_sign_AB3a.svg/240px-France_road_sign_AB3a.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Stop — arrêt obligatoire"
-      },
-      {
-        "id": "b",
-        "text": "Cédez le passage"
-      },
-      {
-        "id": "c",
-        "text": "Voie prioritaire"
-      },
-      {
-        "id": "d",
-        "text": "Intersection avec priorité à droite"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le triangle pointe vers le bas = CÉDEZ LE PASSAGE. Pas d'arrêt obligatoire, mais vous devez laisser passer les autres usagers.",
-    "is_trap": true,
-    "trap_message": "Beaucoup confondent avec le STOP... mais ici l'arrêt n'est PAS obligatoire si la voie est libre ! 🔺",
-    "situation": null
-  },
-  {
-    "id": 73,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/240px-France_road_sign_AB4.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Cédez le passage à l'intersection"
-      },
-      {
-        "id": "b",
-        "text": "Vous êtes sur une route prioritaire"
-      },
-      {
-        "id": "c",
-        "text": "Intersection dangereuse"
-      },
-      {
-        "id": "d",
-        "text": "Route à grande circulation"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le losange jaune = ROUTE PRIORITAIRE. Vous avez la priorité aux intersections sur les routes non prioritaires.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 74,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/240px-France_road_sign_B14-50.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vitesse recommandée 50 km/h"
-      },
-      {
-        "id": "b",
-        "text": "Vitesse minimale 50 km/h"
-      },
-      {
-        "id": "c",
-        "text": "Vitesse maximale 50 km/h"
-      },
-      {
-        "id": "d",
-        "text": "Fin de limitation à 50 km/h"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Cercle rouge avec chiffre = LIMITATION DE VITESSE. Ici maximum 50 km/h.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 75,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/France_road_sign_B2a.svg/240px-France_road_sign_B2a.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Voie sans issue"
-      },
-      {
-        "id": "b",
-        "text": "Arrêt au poste de contrôle"
-      },
-      {
-        "id": "c",
-        "text": "Stop — arrêt absolu obligatoire"
-      },
-      {
-        "id": "d",
-        "text": "Cédez le passage"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Le panneau STOP (octogone rouge) = arrêt ABSOLU et TOTAL obligatoire, même si la route est vide.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 76,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/France_road_sign_B26.svg/240px-France_road_sign_B26.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Fin de toutes les interdictions"
-      },
-      {
-        "id": "b",
-        "text": "Fin de la limitation de vitesse"
-      },
-      {
-        "id": "c",
-        "text": "Fin du dépassement interdit"
-      },
-      {
-        "id": "d",
-        "text": "Fin de zone 30"
-      }
-    ],
-    "correct": [
-      "a"
-    ],
-    "explanation": "Le rond barré avec des tirets = FIN DE TOUTES LES PRESCRIPTIONS. Il annule toutes les limitations précédentes (vitesse, dépassement, etc.).",
-    "is_trap": true,
-    "trap_message": "Beaucoup pensent que ça annule juste la limitation de vitesse... mais ça annule TOUT ! 😏",
-    "situation": null
-  },
-  {
-    "id": 77,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau triangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/France_road_sign_A7.svg/240px-France_road_sign_A7.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Voie rétrécie"
-      },
-      {
-        "id": "b",
-        "text": "Passage à niveau sans barrières"
-      },
-      {
-        "id": "c",
-        "text": "Route glissante"
-      },
-      {
-        "id": "d",
-        "text": "Descente dangereuse"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Ce panneau triangulaire signale un PASSAGE À NIVEAU sans barrières. L'arrêt est obligatoire et le train est toujours prioritaire.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 78,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/France_road_sign_B21d1.svg/240px-France_road_sign_B21d1.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Interdit aux piétons"
-      },
-      {
-        "id": "b",
-        "text": "Sens obligatoire tout droit"
-      },
-      {
-        "id": "c",
-        "text": "Voie réservée aux bus"
-      },
-      {
-        "id": "d",
-        "text": "Passage piéton obligatoire"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Cercle bleu avec flèche droite = SENS OBLIGATOIRE. Vous devez aller tout droit, aucune autre direction n'est autorisée.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 79,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/France_road_sign_B15.svg/240px-France_road_sign_B15.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vitesse maximum 45 km/h"
-      },
-      {
-        "id": "b",
-        "text": "Vitesse minimum 45 km/h"
-      },
-      {
-        "id": "c",
-        "text": "Vitesse conseillée 45 km/h"
-      },
-      {
-        "id": "d",
-        "text": "Zone 45"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Cercle BLEU avec chiffre = vitesse MINIMUM obligatoire. Vous devez rouler au moins à cette vitesse (différent du cercle rouge = maximum).",
-    "is_trap": true,
-    "trap_message": "Piège classique ! Bleu = minimum, Rouge = maximum. L'inverse de ce qu'on croit parfois ! 🔵🔴",
-    "situation": null
-  },
-  {
-    "id": 80,
-    "category": "panneaux",
-    "question": "Quel panneau signale une voie réservée aux cyclistes ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/France_road_sign_B22a.svg/240px-France_road_sign_B22a.svg.png",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Interdit aux cyclistes"
-      },
-      {
-        "id": "b",
-        "text": "Piste cyclable obligatoire"
-      },
-      {
-        "id": "c",
-        "text": "Voie partagée"
-      },
-      {
-        "id": "d",
-        "text": "Fin de piste cyclable"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Cercle bleu avec symbole vélo = PISTE CYCLABLE OBLIGATOIRE. Les cyclistes doivent l'emprunter et les autres véhicules ne peuvent pas y circuler.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 81,
-    "category": "situation",
-    "question": "🎬 Dans cette situation : vous arrivez à une intersection, le feu est vert pour vous. Un piéton traverse en dehors du passage. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/nPhZXR0ZBZE",
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous avez la priorité, vous continuez"
-      },
-      {
-        "id": "b",
-        "text": "Vous klaxonnez pour prévenir"
-      },
-      {
-        "id": "c",
-        "text": "Vous ralentissez et laissez traverser si nécessaire"
-      },
-      {
-        "id": "d",
-        "text": "Vous accélérez pour passer avant lui"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Même si le feu est vert, vous devez adapter votre vitesse. Un piéton hors passage piéton a tort légalement, mais votre devoir est d'éviter l'accident.",
-    "is_trap": true,
-    "trap_message": "Le feu vert ne vous dispense pas de prudence face à un piéton ! 🚦",
-    "situation": "Feu vert, intersection en ville, piéton traversant en dehors du passage."
-  },
-  {
-    "id": 82,
-    "category": "situation",
-    "question": "🎬 Vous roulez à 90 km/h sur route. Il commence à pleuvoir légèrement. Quelle est la bonne réaction ?",
-    "video_url": null,
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Wet_road_-_geograph.org.uk_-_1481872.jpg/320px-Wet_road_-_geograph.org.uk_-_1481872.jpg",
-    "answers": [
-      {
-        "id": "a",
-        "text": "Continuer à la même vitesse, c'est juste de la pluie"
-      },
-      {
-        "id": "b",
-        "text": "Réduire la vitesse, allumer les feux de croisement, augmenter la distance"
-      },
-      {
-        "id": "c",
-        "text": "Allumer les feux de détresse"
-      },
-      {
-        "id": "d",
-        "text": "Passer en feux de route pour mieux voir"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Par temps de pluie : réduire la vitesse, allumer les codes (croisement), augmenter la distance de sécurité. La distance de freinage peut doubler sur sol mouillé.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": "Début de pluie sur route nationale."
-  },
-  {
-    "id": 83,
-    "category": "situation",
-    "question": "🎬 Situation : vous êtes sur une route bidirectionnelle, un camion arrive en face et déborde légèrement sur votre voie. Que faites-vous ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous accélérez pour passer vite"
-      },
-      {
-        "id": "b",
-        "text": "Vous klaxonnez et maintenez votre trajectoire"
-      },
-      {
-        "id": "c",
-        "text": "Vous réduisez la vitesse, vous serrez à droite et si besoin vous vous arrêtez"
-      },
-      {
-        "id": "d",
-        "text": "Vous faites un appel de phares"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Face à un danger, on réduit la vitesse et on se dégage à droite. Ne jamais forcer le passage face à un véhicule plus lourd.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": "Route nationale étroite, camion débordant en face."
-  },
-  {
-    "id": 84,
-    "category": "situation",
-    "question": "🎬 Vous roulez sur autoroute à 130 km/h. La voiture devant freine brusquement. Quelle est la distance minimale recommandée que vous devriez avoir maintenue ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "30 mètres (2 secondes)"
-      },
-      {
-        "id": "b",
-        "text": "70-80 mètres (2 secondes à 130 km/h)"
-      },
-      {
-        "id": "c",
-        "text": "130 mètres (1 mètre par km/h)"
-      },
-      {
-        "id": "d",
-        "text": "50 mètres suffit"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La règle des 2 secondes : à 130 km/h = environ 72 mètres. En pratique on vise 100 m. Les marquages au sol (tirets de 13 m) aident à évaluer.",
-    "is_trap": true,
-    "trap_message": "Beaucoup surestiment leur distance de freinage à haute vitesse ! À 130 km/h, 2 secondes = 72 mètres 😱",
-    "situation": "Autoroute, trafic fluide."
-  },
-  {
-    "id": 85,
-    "category": "situation",
-    "question": "🎬 Vous approchez d'un rond-point. Quelle est la règle d'entrée correcte ?",
-    "video_url": "https://www.youtube.com/embed/lDPKV-KCUEY",
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Priorité à droite donc vous passez en premier"
-      },
-      {
-        "id": "b",
-        "text": "Les véhicules dans le rond-point sont prioritaires, vous cédez le passage"
-      },
-      {
-        "id": "c",
-        "text": "Vous accélérez pour vous insérer entre deux voitures"
-      },
-      {
-        "id": "d",
-        "text": "Le premier arrivé passe en premier"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Dans un rond-point signalisé, les véhicules déjà engagés sont PRIORITAIRES. Vous devez céder le passage avant d'entrer.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": "Entrée d'un rond-point avec panneau cédez le passage."
-  },
-  {
-    "id": 86,
-    "category": "situation",
-    "question": "🎬 Nuit, feux de route allumés. Vous croisez un véhicule. Que faites-vous ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous gardez les pleins phares pour mieux voir"
-      },
-      {
-        "id": "b",
-        "text": "Vous passez en feux de croisement dès que vous voyez ses phares"
-      },
-      {
-        "id": "c",
-        "text": "Vous éteignez vos phares temporairement"
-      },
-      {
-        "id": "d",
-        "text": "Vous allumez les feux de détresse"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Dès l'apparition d'un véhicule en sens inverse, on passe en FEUX DE CROISEMENT (codes) pour ne pas l'éblouir. Obligation légale.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": "Nuit, route de campagne non éclairée."
-  },
-  {
-    "id": 87,
-    "category": "situation",
-    "question": "🎬 Vous êtes arrêté à un feu rouge. Votre téléphone sonne. Que faites-vous ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Vous répondez rapidement, vous êtes à l'arrêt"
-      },
-      {
-        "id": "b",
-        "text": "Vous regardez qui appelle sans décrocher"
-      },
-      {
-        "id": "c",
-        "text": "Vous n'y touchez pas — utiliser son téléphone tenu en main est interdit même au feu rouge"
-      },
-      {
-        "id": "d",
-        "text": "Vous le mettez sur haut-parleur"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Tenir son téléphone en main est INTERDIT même à l'arrêt au feu rouge. Le moteur est allumé, vous conduisez. Amende 135€ + 3 points.",
-    "is_trap": true,
-    "trap_message": "Au feu rouge tu es toujours 'en train de conduire' ! Le téléphone en main = interdit 📵",
-    "situation": "Arrêt au feu rouge en ville."
-  },
-  {
-    "id": 88,
-    "category": "situation",
-    "question": "🎬 Vous conduisez sur une route de montagne étroite. Vous croisez un véhicule venant en sens inverse. Qui cède le passage ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Priorité à droite — celui à droite passe"
-      },
-      {
-        "id": "b",
-        "text": "Le véhicule qui monte est prioritaire"
-      },
-      {
-        "id": "c",
-        "text": "Le véhicule descendant cède la place à celui qui monte"
-      },
-      {
-        "id": "d",
-        "text": "Le plus petit véhicule cède"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Sur route de montagne étroite, le véhicule DESCENDANT cède le passage au véhicule MONTANT car il lui est plus facile de faire marche arrière en descente.",
-    "is_trap": true,
-    "trap_message": "Route de montagne = règle spéciale ! Le descendant cède, pas celui à droite ⛰️",
-    "situation": "Route de montagne à voie unique."
-  },
-  {
-    "id": 89,
-    "category": "situation",
-    "question": "🎬 Votre voiture dérape sur une route mouillée. Que faites-vous ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Freinez fort et brusquement"
-      },
-      {
-        "id": "b",
-        "text": "Tournez le volant dans le sens opposé au dérapage"
-      },
-      {
-        "id": "c",
-        "text": "Lâchez l'accélérateur et tournez le volant dans le sens du dérapage"
-      },
-      {
-        "id": "d",
-        "text": "Accélérez pour stabiliser le véhicule"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "En cas de dérapage : lâcher l'accélérateur et braquer DANS LE SENS du dérapage (contre-braquage) pour récupérer le véhicule. Ne jamais freiner brusquement.",
-    "is_trap": true,
-    "trap_message": "L'instinct dit de braquer à l'opposé... mais il faut braquer DANS le sens du dérapage ! 🚗💨",
-    "situation": "Route mouillée, virage."
-  },
-  {
-    "id": 90,
-    "category": "situation",
-    "question": "🎬 Vous êtes sur une 2x2 voies et vous souhaitez dépasser. Quelle procédure est correcte ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Rétroviseur, clignotant, accélération, dépassement, rabattement"
-      },
-      {
-        "id": "b",
-        "text": "Clignotant, accélération, dépassement"
-      },
-      {
-        "id": "c",
-        "text": "Rétroviseur, angle mort, clignotant, dépassement, angle mort, rétroviseur, rabattement"
-      },
-      {
-        "id": "d",
-        "text": "Klaxon, dépassement, rabattement"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Procédure complète : Rétroviseur → Angle mort → Clignotant → Dépassement → Rétroviseur → Angle mort → Rabattement (quand le véhicule est visible en entier dans le rétro).",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": "Route à 2x2 voies, trafic modéré."
-  },
-  {
-    "id": 91,
-    "category": "regles",
-    "question": "Quelle est la distance minimale de sécurité à respecter à 50 km/h en agglomération ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "10 mètres"
-      },
-      {
-        "id": "b",
-        "text": "14 mètres (2 secondes)"
-      },
-      {
-        "id": "c",
-        "text": "25 mètres"
-      },
-      {
-        "id": "d",
-        "text": "50 mètres"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La règle des 2 secondes s'applique partout. À 50 km/h, 2 secondes = environ 28 mètres. La distance varie selon la vitesse.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 92,
-    "category": "regles",
-    "question": "Peut-on dépasser un véhicule stoppé devant un passage piéton ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Oui, si la voie est libre"
-      },
-      {
-        "id": "b",
-        "text": "Non, c'est interdit"
-      },
-      {
-        "id": "c",
-        "text": "Oui, à basse vitesse"
-      },
-      {
-        "id": "d",
-        "text": "Oui si aucun piéton n'est visible"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Il est INTERDIT de dépasser un véhicule arrêté devant un passage piéton. Il s'est probablement arrêté pour laisser traverser un piéton.",
-    "is_trap": true,
-    "trap_message": "Même si vous ne voyez pas de piéton, le véhicule s'est arrêté pour une raison ! Dépasser = dangereux et interdit 🚶",
-    "situation": null
-  },
-  {
-    "id": 93,
-    "category": "securite",
-    "question": "Que faire si vos freins tombent en panne sur autoroute ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Couper le moteur immédiatement"
-      },
-      {
-        "id": "b",
-        "text": "Pomper la pédale de frein, rétrograder, serrer le frein à main progressivement"
-      },
-      {
-        "id": "c",
-        "text": "Ouvrir les portières pour ralentir"
-      },
-      {
-        "id": "d",
-        "text": "Accélérer pour rejoindre la prochaine sortie"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Défaillance des freins : 1) Pomper la pédale rapidement, 2) Rétrograder successivement, 3) Frein à main progressif, 4) Se diriger vers la BAU. Ne jamais couper le moteur (perd la direction assistée).",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 94,
-    "category": "vitesse",
-    "question": "Quelle est la distance d'arrêt totale à 130 km/h sur autoroute sèche ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Environ 50 mètres"
-      },
-      {
-        "id": "b",
-        "text": "Environ 80 mètres"
-      },
-      {
-        "id": "c",
-        "text": "Environ 160 mètres"
-      },
-      {
-        "id": "d",
-        "text": "Environ 230 mètres"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "À 130 km/h : réaction (36m) + freinage (~125m) = ~161 mètres. La distance de freinage augmente au CARRÉ de la vitesse !",
-    "is_trap": true,
-    "trap_message": "Beaucoup sous-estiment les distances à haute vitesse... 160 mètres c'est l'équivalent de 2 Airbus ! ✈️",
-    "situation": null
-  },
-  {
-    "id": 95,
-    "category": "regles",
-    "question": "Quelle est la règle pour l'utilisation de l'avertisseur sonore (klaxon) hors agglomération ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Interdit à toute heure"
-      },
-      {
-        "id": "b",
-        "text": "Autorisé uniquement pour signaler un dépassement"
-      },
-      {
-        "id": "c",
-        "text": "Autorisé pour signaler un danger et pour les dépassements"
-      },
-      {
-        "id": "d",
-        "text": "Autorisé librement à toute heure"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "Hors agglomération, le klaxon est autorisé pour signaler un danger imminent ET pour prévenir lors d'un dépassement (sauf sur autoroute).",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 96,
-    "category": "alcool",
-    "question": "Combien de verres standards d'alcool élimines-tu en 1 heure en moyenne ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "2 verres/heure"
-      },
-      {
-        "id": "b",
-        "text": "1 verre/heure"
-      },
-      {
-        "id": "c",
-        "text": "3 verres/heure"
-      },
-      {
-        "id": "d",
-        "text": "Cela dépend des personnes mais en moyenne 0,5 verre"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Le foie élimine environ 1 verre standard (0,1 g/L de sang) par heure. Ce taux varie selon le poids, le sexe et l'alimentation, mais la moyenne est d'1 verre/heure.",
+    "explanation": "Stationnement interdit sur les passages piétons ET à leurs abords immédiats (5 mètres). Cela masquerait les piétons.",
     "is_trap": false,
     "trap_message": null,
     "situation": null
@@ -2935,289 +3074,129 @@
   {
     "id": 97,
     "category": "regles",
-    "question": "Dans une zone de rencontre, quelle est la vitesse maximale autorisée ?",
-    "video_url": null,
+    "question": "Peut-on dépasser un véhicule arrêté devant un passage piéton ?",
     "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "30 km/h"
+        "text": "Oui si la voie est libre"
       },
       {
         "id": "b",
-        "text": "20 km/h"
+        "text": "Non — c'est interdit"
       },
       {
         "id": "c",
-        "text": "10 km/h"
+        "text": "Oui à basse vitesse"
       },
       {
         "id": "d",
-        "text": "50 km/h"
+        "text": "Oui si aucun piéton visible"
       }
     ],
     "correct": [
       "b"
     ],
-    "explanation": "Zone de rencontre = 20 km/h maximum. Les piétons ont la priorité absolue partout et peuvent traverser où ils veulent.",
-    "is_trap": false,
-    "trap_message": null,
+    "explanation": "Dépasser un véhicule arrêté devant un passage piéton est INTERDIT. Il s'est probablement arrêté pour laisser traverser un piéton invisible depuis votre position.",
+    "is_trap": true,
+    "trap_message": "Un véhicule arrêté au passage piéton = piéton caché derrière ! Jamais dépasser ! 🚶",
     "situation": null
   },
   {
     "id": 98,
-    "category": "securite",
-    "question": "À quelle fréquence faut-il vérifier la pression des pneus ?",
-    "video_url": null,
+    "category": "regles",
+    "question": "Dans quel sens doit-on circuler dans un carrefour giratoire ?",
     "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Tous les 6 mois"
+        "text": "Dans le sens des aiguilles d'une montre"
       },
       {
         "id": "b",
-        "text": "Une fois par an"
+        "text": "Dans le sens contraire des aiguilles d'une montre"
       },
       {
         "id": "c",
-        "text": "Tous les mois ou avant un long trajet"
+        "text": "Dans le sens du flux dominant"
       },
       {
         "id": "d",
-        "text": "Uniquement au contrôle technique"
+        "text": "Le sens est libre"
       }
     ],
     "correct": [
-      "c"
+      "b"
     ],
-    "explanation": "La pression des pneus doit être vérifiée TOUS LES MOIS et avant tout long trajet. Un pneu sous-gonflé augmente la consommation, réduit l'adhérence et risque l'éclatement.",
+    "explanation": "En France, les ronds-points se parcourent TOUJOURS dans le sens anti-horaire (contraire des aiguilles d'une montre), soit en gardant le centre à sa gauche.",
     "is_trap": false,
     "trap_message": null,
     "situation": null
   },
   {
     "id": 99,
-    "category": "regles",
-    "question": "Que signifie la ligne jaune continue sur le bord de la chaussée ?",
-    "video_url": null,
+    "category": "vitesse",
+    "question": "Votre voiture équipée de pneus neige peut-elle rouler à la vitesse normale en été ?",
     "image_url": null,
+    "video_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Arrêt et stationnement interdits"
+        "text": "Non — les pneus neige sont interdits en été"
       },
       {
         "id": "b",
-        "text": "Stationnement interdit uniquement"
+        "text": "Oui mais c'est déconseillé (usure, sécurité)"
       },
       {
         "id": "c",
-        "text": "Voie réservée aux bus"
+        "text": "Oui, sans aucune différence"
       },
       {
         "id": "d",
-        "text": "Limite de vitesse réduite"
+        "text": "Uniquement si < 3 ans"
       }
     ],
     "correct": [
-      "a"
+      "b"
     ],
-    "explanation": "Une ligne jaune continue sur le bord = ARRÊT ET STATIONNEMENT INTERDITS à tout moment. Plus strict que le simple stationnement interdit.",
+    "explanation": "Rouler avec des pneus neige en été n'est pas interdit mais est DÉCONSEILLÉ : distances de freinage plus longues par temps chaud, usure accélérée, consommation plus élevée.",
     "is_trap": false,
     "trap_message": null,
     "situation": null
   },
   {
     "id": 100,
-    "category": "priorites",
-    "question": "Qui est prioritaire entre un autobus et une voiture à un arrêt de bus ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "La voiture, elle est déjà en circulation"
-      },
-      {
-        "id": "b",
-        "text": "Le bus, il signale sa sortie de l'arrêt avec son clignotant"
-      },
-      {
-        "id": "c",
-        "text": "Priorité à droite comme d'habitude"
-      },
-      {
-        "id": "d",
-        "text": "Le bus uniquement s'il est en zone 30"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Un autobus ou un car de transport scolaire qui signale sa sortie d'arrêt DOIT vous céder la priorité... attends, c'est l'inverse ! Tu dois lui CÉDER le passage s'il met son clignotant pour quitter l'arrêt.",
-    "is_trap": true,
-    "trap_message": "Le bus qui reprend sa route après un arrêt est PRIORITAIRE si tu peux t'arrêter sans danger ! 🚌",
-    "situation": null
-  },
-  {
-    "id": 101,
-    "category": "regles",
-    "question": "Est-il obligatoire d'avoir une trousse de premiers secours dans son véhicule ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Oui, c'est obligatoire depuis 2012"
-      },
-      {
-        "id": "b",
-        "text": "Non, mais fortement recommandé"
-      },
-      {
-        "id": "c",
-        "text": "Oui, uniquement sur autoroute"
-      },
-      {
-        "id": "d",
-        "text": "Oui, uniquement pour les conducteurs pro"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "La trousse de premiers secours N'EST PAS obligatoire en France pour les véhicules particuliers, mais elle est vivement recommandée. Seuls le gilet et le triangle sont obligatoires.",
-    "is_trap": true,
-    "trap_message": "Non obligatoire ! Comme l'extincteur. Seuls le gilet et le triangle sont obligatoires 🚗",
-    "situation": null
-  },
-  {
-    "id": 102,
-    "category": "vitesse",
-    "question": "Sur une route à 80 km/h, vous apercevez un panneau travaux avec 'Vitesse limitée à 50'. À quelle distance doit-on avoir réduit sa vitesse ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Au niveau du panneau"
-      },
-      {
-        "id": "b",
-        "text": "150 mètres avant"
-      },
-      {
-        "id": "c",
-        "text": "Dès que vous voyez le panneau"
-      },
-      {
-        "id": "d",
-        "text": "50 mètres avant"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "La réduction de vitesse doit être PROGRESSIVE et commencer DÈS que vous voyez le panneau, pas juste au niveau de celui-ci. Le panneau est placé suffisamment en avance.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 103,
-    "category": "panneaux",
-    "question": "Que signifie ce panneau rectangulaire bleu avec un 'P' et une horloge ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Parking gratuit toute la journée"
-      },
-      {
-        "id": "b",
-        "text": "Parking payant"
-      },
-      {
-        "id": "c",
-        "text": "Stationnement autorisé avec limitation de durée (disque obligatoire)"
-      },
-      {
-        "id": "d",
-        "text": "Parking réservé aux résidents"
-      }
-    ],
-    "correct": [
-      "c"
-    ],
-    "explanation": "P + horloge = zone bleue. Stationnement limité dans le temps, le disque de stationnement est OBLIGATOIRE. Généralement 1h30 en journée.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 104,
-    "category": "regles",
-    "question": "Que faire lorsqu'un conducteur vous fait un appel de phares sur autoroute ?",
-    "video_url": null,
-    "image_url": null,
-    "answers": [
-      {
-        "id": "a",
-        "text": "Il vous demande d'accélérer"
-      },
-      {
-        "id": "b",
-        "text": "Il vous signale généralement que vous le gênez (vous roulez trop lentement sur la voie gauche)"
-      },
-      {
-        "id": "c",
-        "text": "Il indique un danger devant"
-      },
-      {
-        "id": "d",
-        "text": "Il veut vous dépasser par la droite"
-      }
-    ],
-    "correct": [
-      "b"
-    ],
-    "explanation": "Sur autoroute, un appel de phares par derrière signifie souvent que vous gênez le trafic sur la voie de gauche. Vous devez vous rabattre à droite pour laisser passer.",
-    "is_trap": false,
-    "trap_message": null,
-    "situation": null
-  },
-  {
-    "id": 105,
     "category": "securite",
-    "question": "Quel est l'effet principal de la conduite en état de fatigue ?",
-    "video_url": null,
+    "question": "🎬 Votre capot s'ouvre brusquement en roulant. Que faire ?",
+    "video_url": "https://www.youtube.com/embed/hWaL_n2MKBE",
     "image_url": null,
     "answers": [
       {
         "id": "a",
-        "text": "Améliore la concentration par l'adrénaline"
+        "text": "Accélérer pour rejoindre le prochain arrêt"
       },
       {
         "id": "b",
-        "text": "N'a pas d'effet significatif pour un conducteur expérimenté"
+        "text": "Freiner brusquement"
       },
       {
         "id": "c",
-        "text": "Équivalent à conduire avec 0,5 g/L d'alcool après 20h sans sommeil"
+        "text": "Ralentir progressivement, passer la tête par la fenêtre si nécessaire, se garer en sécurité"
       },
       {
         "id": "d",
-        "text": "Réduit légèrement les réflexes"
+        "text": "Continuer — le capot se refermera seul"
       }
     ],
     "correct": [
       "c"
     ],
-    "explanation": "Après 20h sans sommeil, les effets sur la conduite sont comparables à 0,5 g/L d'alcool dans le sang ! La fatigue multiplie le risque d'accident par 8.",
+    "explanation": "Capot ouvert = perte de visibilité ! Ralentir progressivement, regarder par le côté ou le bas si possible, se garer en sécurité, ne jamais freiner brutalement.",
     "is_trap": false,
     "trap_message": null,
-    "situation": null
+    "situation": "Route nationale, capot qui s'ouvre à 80 km/h."
   }
 ]
