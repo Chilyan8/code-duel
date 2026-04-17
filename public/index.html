@@ -87,11 +87,6 @@
         <div class="sm-desc">Que des questions pièges ! Stats incluses</div>
         <div class="sm-tag">Viral</div>
       </div>
-      <div class="solo-mode-card" onclick="startSolo('international')">
-        <div class="sm-icon">🌍</div><div class="sm-title">International</div>
-        <div class="sm-desc">Règles surprenantes : UK, Allemagne, USA...</div>
-        <div class="sm-tag">Fun</div>
-      </div>
       <div class="solo-mode-card" onclick="document.getElementById('solo-category-picker').classList.toggle('hidden')">
         <div class="sm-icon">📚</div><div class="sm-title">Thème Libre</div>
         <div class="sm-desc">Choisis ta catégorie et entraîne-toi</div>
@@ -165,7 +160,6 @@
           <button class="pill" onclick="selectOpt('category','priorites',this)">🚦 Priorités</button>
           <button class="pill" onclick="selectOpt('category','vitesse',this)">⚡ Vitesses</button>
           <button class="pill" onclick="selectOpt('category','securite',this)">🛡️ Sécurité</button>
-          <button class="pill" onclick="selectOpt('category','international',this)">🌍 International</button>
         </div>
       </div>
       <div class="option-group">
@@ -176,7 +170,6 @@
           <div class="mode-card" onclick="selectMode('examen_blanc',this)"><div class="mode-icon">📋</div><div class="mode-name">Examen</div><div class="mode-desc">Résultats à la fin</div></div>
           <div class="mode-card" onclick="selectMode('piege',this)"><div class="mode-icon">😈</div><div class="mode-name">Piège</div><div class="mode-desc">Que des pièges !</div></div>
           <div class="mode-card" onclick="selectMode('micro',this)"><div class="mode-icon">⚡</div><div class="mode-name">Micro</div><div class="mode-desc">5 questions rapides</div></div>
-          <div class="mode-card" onclick="selectMode('international',this)"><div class="mode-icon">🌍</div><div class="mode-name">International</div><div class="mode-desc">Règles du monde</div></div>
         </div>
       </div>
       <div id="play-err" class="error-msg hidden"></div>
@@ -234,7 +227,7 @@
     <div class="category-badge" id="sq-category"></div>
     <div id="sq-trap-indicator" class="trap-indicator hidden">⚠️ Question piège !</div>
     <div id="sq-situation-box" class="situation-box hidden"></div>
-    <div id="sq-image-wrap" class="q-image-wrap hidden"><img id="sq-image" src="" alt=""/></div>
+    <div id="sq-image-wrap" class="q-image-wrap hidden"></div>
     <div class="question-text" id="sq-text"></div>
     <div class="answers-grid" id="sq-answers"></div>
     <div id="sq-feedback" class="answer-feedback hidden"></div>
@@ -267,7 +260,7 @@
     <div class="category-badge" id="q-category"></div>
     <div id="trap-indicator" class="trap-indicator hidden">⚠️ Question piège !</div>
     <div id="situation-box" class="situation-box hidden"></div>
-    <div id="q-image-wrap" class="q-image-wrap hidden"><img id="q-image" src="" alt=""/></div>
+    <div id="q-image-wrap" class="q-image-wrap hidden"></div>
     <div class="question-text" id="q-text"></div>
     <div class="answers-grid" id="answers-container"></div>
     <div id="answer-feedback" class="answer-feedback hidden"></div>

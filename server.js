@@ -29,7 +29,7 @@ function generateRoomCode() {
 }
 
 function pickQuestions(options) {
-  let pool = [...allQuestions];
+  let pool = allQuestions.filter(q => q.category !== 'international'); // No international
   if (options.mode === 'piege') pool = pool.filter(q => q.is_trap);
   else if (options.mode === 'micro') pool = pool.sort(() => Math.random() - 0.5).slice(0, 5);
   else if (options.category && options.category !== 'all') {
@@ -366,7 +366,7 @@ function sendQuestion(game) {
     id: q.id, category: q.category, question: q.question, answers: q.answers,
     isMultiple: q.correct.length > 1, isTrap: q.is_trap,
     timeLimit: game.options.timeLimit, mode: game.options.mode,
-    image_url: q.image_url || null, situation: q.situation || null,
+    image_url: q.image_url || null, video_url: q.video_url || null, situation: q.situation || null,
   });
   game.questionTimer = setTimeout(() => {
     game.players.filter(p => !p.answered).forEach(p => {

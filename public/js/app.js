@@ -509,7 +509,14 @@ function renderDuelQuestion(data) {
   const sb = document.getElementById('situation-box');
   if (data.situation) { sb.textContent = '📍 ' + data.situation; sb.classList.remove('hidden'); } else sb.classList.add('hidden');
   const iw = document.getElementById('q-image-wrap');
-  if (data.image_url) { document.getElementById('q-image').src = data.image_url; iw.classList.remove('hidden'); } else iw.classList.add('hidden');
+  if (data.video_url) {
+    iw.innerHTML = `<iframe src="${data.video_url}?controls=1&modestbranding=1&rel=0" style="width:100%;height:200px;border:none;border-radius:8px" allowfullscreen></iframe>`;
+    iw.classList.remove('hidden');
+  } else if (data.image_url) {
+    iw.innerHTML = `<img id="q-image" src="${data.image_url}" alt="Illustration" style="max-width:100%;max-height:220px;object-fit:contain"/>`;
+    iw.classList.remove('hidden');
+    document.getElementById('q-image') && (document.getElementById('q-image').onerror = () => iw.classList.add('hidden'));
+  } else { iw.innerHTML = ''; iw.classList.add('hidden'); }
 
   const cont = document.getElementById('answers-container'); cont.innerHTML = '';
   data.answers.forEach(a => {
@@ -719,7 +726,13 @@ function renderSoloQ() {
   const sb = document.getElementById('sq-situation-box');
   if (q.situation) { sb.textContent = '📍 ' + q.situation; sb.classList.remove('hidden'); } else sb.classList.add('hidden');
   const iw = document.getElementById('sq-image-wrap');
-  if (q.image_url) { document.getElementById('sq-image').src = q.image_url; iw.classList.remove('hidden'); } else iw.classList.add('hidden');
+  if (q.video_url) {
+    iw.innerHTML = `<iframe src="${q.video_url}?controls=1&modestbranding=1&rel=0" style="width:100%;height:200px;border:none;border-radius:8px" allowfullscreen></iframe>`;
+    iw.classList.remove('hidden');
+  } else if (q.image_url) {
+    iw.innerHTML = `<img src="${q.image_url}" alt="" style="max-width:100%;max-height:220px;object-fit:contain;border-radius:8px"/>`;
+    iw.classList.remove('hidden');
+  } else { iw.innerHTML = ''; iw.classList.add('hidden'); }
 
   const cont = document.getElementById('sq-answers'); cont.innerHTML = '';
   q.answers.forEach(a => {
