@@ -15,6 +15,7 @@ const S = {
   soloQs: [], soloAnswers: [], soloIdx: 0,
   soloCorrect: 0, soloWrong: 0, soloStreak: 0, soloMaxStreak: 0,
   soloTimer: null, soloSecs: 30,
+  queueTimer: null, queueSecs: 0, queueCountdownInterval: null,
 };
 
 const socket = io({ auth: { token: S.token } });
@@ -212,6 +213,33 @@ function catName(c){return catNames[c]||c;}
 function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',training:'🧠 Entraînement',libre:'📚 Libre'}[m]||m;}
 const COACH={priorites:['Priorité à droite SAUF panneau 🚦','STOP = arrêt TOTAL 🛑','Cédez ≠ arrêt obligatoire 🔺'],panneaux:['Rouge=interdit, Bleu=obligation, Triangle=danger 🪧','Losange jaune=route prioritaire 💛','Rond bleu+chiffre=vitesse MINIMALE 🔵'],vitesse:['Autoroute: 130 sec, 110 pluie ⚡','Ville=50 km/h par défaut 🏙️','Permis probatoire: 110 max autoroute 🔰'],alcool:['0,5 g/L standard · 0,2 g/L jeune 🍺','Seul le TEMPS élimine alcool ☕'],securite:['Gilet AVANT de sortir 🦺','PAS=Protéger,Alerter,Secourir 🚨'],regles:['Ligne continue=jamais franchir ⚡','Ceinture avant ET arrière 🔒']};
 function coachTip(cat){const t=COACH[cat]||['Lis bien la question ! 📖','Prends le temps ⏱️'];return t[Math.floor(Math.random()*t.length)];}
+
+// ── Matchmaking queue ──
+function joinQueue() {
+  if (!S.pseudo) { promptGuest(); if (!S.pseudo) return; }
+  if (!S.token) { toast('Connecte-toi pour jouer en classé ! 🔒', 3000); go('screen-auth'); return; }
+  clearInterval(S.queueTimer); clearInterval(S.queueCountdownInterval);
+  S.queueSecs = 0;
+  go('screen-queue');
+  document.getElementById('queue-icon').textContent = '🔍';
+  document.getElementById('queue-title').textContent = 'Recherche en cours...';
+  document.getElementById('queue-matched-box').classList.add('hidden');
+  document.getElementById('queue-searching-box').classList.remove('hidden');
+  document.getElementById('btn-leave-queue').classList.remove('hidden');
+  document.getElementById('queue-wait-time').textContent = '0s';
+  document.getElementById('queue-position').textContent = 'Connexion à la file...';
+  S.queueTimer = setInterval(() => {
+    S.queueSecs++;
+    document.getElementById('queue-wait-time').textContent = S.queueSecs + 's';
+  }, 1000);
+  socket.emit('join_queue', { pseudo: S.pseudo, elo: S.elo, avatar: S.avatar });
+}
+
+function leaveQueue() {
+  clearInterval(S.queueTimer); clearInterval(S.queueCountdownInterval);
+  socket.emit('leave_queue');
+  go('screen-home');
+}
 
 // ── Play screen ──
 function showCreateForm(){if(!S.pseudo){promptGuest();return;}document.getElementById('create-form').classList.toggle('hidden');document.getElementById('join-form').classList.add('hidden');}
@@ -466,6 +494,43 @@ socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){S
 socket.on('game_end',data=>showDuelResults(data));
 socket.on('player_disconnected',({pseudo})=>toast('💔 '+pseudo+' a quitté...',3000));
 socket.on('rematch_started',({roomCode,options,players})=>{S.roomCode=roomCode;S.isHost=players[0]?.pseudo===S.pseudo;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);toast('🔄 Revanche ! Cliquez sur Prêt !');});
+socket.on('queue_joined',({position,total,eloRange})=>{
+  document.getElementById('queue-position').textContent='Position #'+position+(total>1?' sur '+total+' joueurs':' — seul dans la file');
+  document.getElementById('queue-elo-range').textContent='Fourchette Elo : ±'+eloRange;
+});
+socket.on('queue_update',({position,total,eloRange})=>{
+  document.getElementById('queue-position').textContent='Position #'+position+' sur '+total+' joueur'+(total>1?'s':'');
+  document.getElementById('queue-elo-range').textContent='Fourchette Elo : ±'+eloRange;
+});
+socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
+  clearInterval(S.queueTimer);
+  S.roomCode=roomCode; S.isHost=isHost;
+  S.gameOptions={maxPlayers:2,questionCount:totalQuestions,timeLimit:30,category:'all',mode:'normal'};
+  S.gameMode='normal';
+  // UI match trouvé
+  document.getElementById('queue-icon').textContent='⚔️';
+  document.getElementById('queue-title').textContent='Adversaire trouvé !';
+  document.getElementById('queue-searching-box').classList.add('hidden');
+  document.getElementById('btn-leave-queue').classList.add('hidden');
+  document.getElementById('queue-matched-box').classList.remove('hidden');
+  document.getElementById('queue-opponent-pseudo').textContent=esc(opponent.pseudo);
+  document.getElementById('queue-opponent-elo').textContent=esc(opponent.elo)+' Elo';
+  const diff=opponent.elo-S.elo;
+  const diffEl=document.getElementById('queue-elo-diff');
+  if(diff>0)diffEl.innerHTML='<span style="color:var(--red)">Adversaire +'+diff+' Elo — tu es l\'outsider 💪</span>';
+  else if(diff<0)diffEl.innerHTML='<span style="color:var(--green)">Adversaire '+diff+' Elo — tu es le favori 🎯</span>';
+  else diffEl.innerHTML='<span style="color:var(--yellow)">Même niveau ! ⚖️</span>';
+  sfx.start();
+  // Compte à rebours
+  let count=3;
+  document.getElementById('queue-countdown').textContent=count;
+  S.queueCountdownInterval=setInterval(()=>{
+    count--;
+    if(count>0)document.getElementById('queue-countdown').textContent=count;
+    else{clearInterval(S.queueCountdownInterval);}
+  },1000);
+});
+socket.on('queue_left',()=>{clearInterval(S.queueTimer);clearInterval(S.queueCountdownInterval);});
 socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg,3000);});
 
 // ── Init ──

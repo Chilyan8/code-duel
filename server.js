@@ -21,6 +21,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const activeGames = new Map();
+const matchmakingQueue = [];
+const QUEUE_ELO_START  = 200;
+const QUEUE_ELO_STEP   = 100;
+const QUEUE_ELO_EVERY  = 10;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function generateRoomCode() {
@@ -72,6 +76,64 @@ function checkBadges(user, gameResult) {
   if (gameResult.allCorrectInCategory) badges.push(`🌟 Expert ${gameResult.allCorrectInCategory}`);
   return badges.filter(b => !((user.badges || []).includes(b)));
 }
+
+// ── Matchmaking queue ─────────────────────────────────────────────────────────
+function queueEloRange(entry) {
+  const secs = (Date.now() - entry.joinedAt) / 1000;
+  return QUEUE_ELO_START + Math.floor(secs / QUEUE_ELO_EVERY) * QUEUE_ELO_STEP;
+}
+
+function findQueueMatch(entry) {
+  let best = null, bestDiff = Infinity;
+  for (const other of matchmakingQueue) {
+    if (other.socketId === entry.socketId) continue;
+    const diff = Math.abs(other.elo - entry.elo);
+    if (diff <= Math.max(queueEloRange(entry), queueEloRange(other)) && diff < bestDiff) {
+      best = other; bestDiff = diff;
+    }
+  }
+  return best;
+}
+
+function broadcastQueueUpdate() {
+  matchmakingQueue.forEach((p, i) => {
+    io.sockets.sockets.get(p.socketId)?.emit('queue_update', {
+      position: i + 1, total: matchmakingQueue.length, eloRange: queueEloRange(p)
+    });
+  });
+}
+
+function tryQueueMatch() {
+  if (matchmakingQueue.length < 2) return;
+  const p1 = matchmakingQueue[0];
+  const p2 = findQueueMatch(p1);
+  if (!p2) return;
+  matchmakingQueue.splice(matchmakingQueue.indexOf(p2), 1);
+  matchmakingQueue.splice(matchmakingQueue.indexOf(p1), 1);
+  broadcastQueueUpdate();
+
+  let roomCode;
+  do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
+  const gameOptions = { maxPlayers: 2, questionCount: 40, timeLimit: 30, category: 'all', mode: 'normal' };
+  const questions = pickQuestions(gameOptions);
+  const pl1 = makePlayer(p1.socketId, p1.pseudo, p1.userId); pl1.avatar = p1.avatar;
+  const pl2 = makePlayer(p2.socketId, p2.pseudo, p2.userId); pl2.avatar = p2.avatar;
+  const game = { roomCode, options: gameOptions, questions, players: [pl1, pl2], hostPseudo: p1.pseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
+  activeGames.set(roomCode, game);
+
+  const s1 = io.sockets.sockets.get(p1.socketId);
+  const s2 = io.sockets.sockets.get(p2.socketId);
+  if (s1) { s1.join(roomCode); s1.roomCode = roomCode; }
+  if (s2) { s2.join(roomCode); s2.roomCode = roomCode; }
+  db.createGame(roomCode, p1.pseudo).catch(() => {});
+
+  s1?.emit('queue_matched', { roomCode, isHost: true,  opponent: { pseudo: p2.pseudo, elo: p2.elo, avatar: p2.avatar }, totalQuestions: questions.length });
+  s2?.emit('queue_matched', { roomCode, isHost: false, opponent: { pseudo: p1.pseudo, elo: p1.elo, avatar: p1.avatar }, totalQuestions: questions.length });
+
+  setTimeout(() => { const g = activeGames.get(roomCode); if (g?.status === 'waiting') startGame(g); }, 3500);
+}
+
+setInterval(() => { if (matchmakingQueue.length >= 2) tryQueueMatch(); }, 3000);
 
 function authMiddleware(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -310,6 +372,22 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('join_queue', ({ pseudo, elo, avatar }) => {
+    if (!pseudo) return socket.emit('error', 'Pseudo requis');
+    if (matchmakingQueue.find(p => p.socketId === socket.id)) return;
+    if (socket.roomCode && activeGames.has(socket.roomCode)) return socket.emit('error', 'Tu es déjà dans une partie !');
+    const entry = { socketId: socket.id, pseudo, elo: elo || 1000, userId: connectedUser?.id || null, avatar: avatar || null, joinedAt: Date.now() };
+    matchmakingQueue.push(entry);
+    socket.emit('queue_joined', { position: matchmakingQueue.length, total: matchmakingQueue.length, eloRange: QUEUE_ELO_START });
+    tryQueueMatch();
+  });
+
+  socket.on('leave_queue', () => {
+    const qi = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+    if (qi >= 0) { matchmakingQueue.splice(qi, 1); broadcastQueueUpdate(); }
+    socket.emit('queue_left');
+  });
+
   socket.on('request_rematch', () => {
     const game = activeGames.get(socket.roomCode);
     if (!game || game.status !== 'finished') return;
@@ -330,6 +408,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    const qi = matchmakingQueue.findIndex(p => p.socketId === socket.id);
+    if (qi >= 0) { matchmakingQueue.splice(qi, 1); broadcastQueueUpdate(); }
+
     const game = activeGames.get(socket.roomCode);
     if (!game) return;
     const player = game.players.find(p => p.socketId === socket.id);

@@ -115,6 +115,10 @@
     <button class="back-btn" onclick="go('screen-home')">← Retour</button>
     <h2>Prêt pour le duel ? ⚔️</h2>
     <div class="play-options">
+      <div class="option-card option-card-ranked" onclick="joinQueue()">
+        <div class="option-icon">⚡</div><div class="option-title">Classé 1v1</div><div class="option-desc">File d'attente · Elo en jeu</div>
+        <div style="position:absolute;top:.5rem;right:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:10px">RANKED</div>
+      </div>
       <div class="option-card" onclick="showCreateForm()">
         <div class="option-icon">🏠</div><div class="option-title">Créer</div><div class="option-desc">Configure et partage le code</div>
       </div>
@@ -323,6 +327,36 @@
     <button class="back-btn" onclick="go('screen-home')">← Retour</button>
     <h2>🏆 Classement</h2>
     <div id="leaderboard-list" class="lb-list"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════ QUEUE ══ -->
+<div id="screen-queue" class="screen">
+  <div class="card card-play" style="text-align:center">
+    <button class="back-btn" onclick="leaveQueue()">← Annuler</button>
+    <div style="padding:1.5rem 0">
+      <div id="queue-icon" style="font-size:3.5rem;margin-bottom:1rem;transition:all .5s">🔍</div>
+      <h2 id="queue-title" style="margin-bottom:.5rem">Recherche en cours...</h2>
+      <div id="queue-position" style="color:var(--text2);font-size:.95rem;margin-bottom:.3rem">En attente d'adversaire</div>
+      <div id="queue-elo-range" style="color:var(--text3);font-size:.82rem;margin-bottom:1.5rem">Fourchette Elo : ±200</div>
+
+      <div id="queue-searching-box" style="display:inline-flex;align-items:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.75rem 1.5rem;margin-bottom:1.5rem">
+        <div class="spinner"></div>
+        <span id="queue-wait-time" style="font-size:1.1rem;font-weight:700">0s</span>
+        <span style="color:var(--text3);font-size:.85rem">d'attente</span>
+      </div>
+
+      <div id="queue-matched-box" class="hidden" style="background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(167,139,250,.12));border:1px solid var(--accent);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem">
+        <div style="font-size:.85rem;color:var(--accent2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.75rem">Adversaire trouvé !</div>
+        <div id="queue-opponent-pseudo" style="font-size:1.4rem;font-weight:800;margin-bottom:.2rem"></div>
+        <div id="queue-opponent-elo" style="color:var(--text2);font-size:.9rem;margin-bottom:.75rem"></div>
+        <div id="queue-elo-diff" style="font-size:.85rem;margin-bottom:1rem"></div>
+        <div style="font-size:.85rem;color:var(--text2);margin-bottom:.4rem">La partie commence dans</div>
+        <div id="queue-countdown" style="font-size:3rem;font-weight:900;color:var(--accent2);line-height:1">3</div>
+      </div>
+
+      <button id="btn-leave-queue" class="btn btn-ghost w-full" style="margin-top:0" onclick="leaveQueue()">✖ Quitter la file</button>
+    </div>
   </div>
 </div>
 
