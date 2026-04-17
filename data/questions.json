@@ -643,7 +643,7 @@
     "id": 21,
     "category": "situation",
     "question": "🎬 Regardez cette situation : vous arrivez à ce carrefour giratoire. Quelle est la règle ?",
-    "video_url": "https://www.youtube.com/embed/lDPKV-KCUEY",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -675,7 +675,7 @@
     "id": 22,
     "category": "situation",
     "question": "🎬 Situation nocturne : vous roulez phares en route (plein phares). Un véhicule arrive en face. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/q6XAApJxMRQ",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -707,7 +707,7 @@
     "id": 23,
     "category": "situation",
     "question": "🎬 Situation : vous roulez à 80 km/h. La route devient mouillée. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/bnH8b1tSJhA",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -739,7 +739,7 @@
     "id": 24,
     "category": "situation",
     "question": "🎬 Vous êtes sur autoroute, voie de droite. Voyez-vous une erreur dans ce comportement ?",
-    "video_url": "https://www.youtube.com/embed/kT-KQdBbUOM",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -771,7 +771,7 @@
     "id": 25,
     "category": "situation",
     "question": "🎬 Ce conducteur s'apprête à dépasser. La manœuvre est-elle correcte ?",
-    "video_url": "https://www.youtube.com/embed/ZFTJhDmhYs0",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -803,7 +803,7 @@
     "id": 26,
     "category": "situation",
     "question": "🎬 Situation : votre voiture dérape sur verglas. Quelle est la bonne réaction ?",
-    "video_url": "https://www.youtube.com/embed/0g_HyYkXM6E",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -835,7 +835,7 @@
     "id": 27,
     "category": "situation",
     "question": "🎬 Situation d'urgence : votre voiture prend feu. Que faites-vous en priorité ?",
-    "video_url": "https://www.youtube.com/embed/eYJP7B3NdgY",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -867,7 +867,7 @@
     "id": 28,
     "category": "situation",
     "question": "🎬 Intersection : qui a la priorité dans cette situation ?",
-    "video_url": "https://www.youtube.com/embed/nPhZXR0ZBZE",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -899,7 +899,7 @@
     "id": 29,
     "category": "situation",
     "question": "🎬 Autoroute : un véhicule est en panne sur la voie. Que faire ?",
-    "video_url": "https://www.youtube.com/embed/JmKy56ZLi_g",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -931,7 +931,7 @@
     "id": 30,
     "category": "situation",
     "question": "🎬 Situation scolaire : un bus scolaire est arrêté avec ses clignotants oranges. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/K0JkDSfTTic",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2595,7 +2595,7 @@
     "id": 82,
     "category": "situation",
     "question": "🎬 Situation : vous circulez en agglomération la nuit. Devez-vous allumer vos feux ?",
-    "video_url": "https://www.youtube.com/embed/rL5Xt-4gFBQ",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2627,7 +2627,7 @@
     "id": 83,
     "category": "situation",
     "question": "🎬 Un piéton traverse en dehors du passage piéton. Qui a la priorité ?",
-    "video_url": "https://www.youtube.com/embed/GYP9e0T5Ys4",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2659,7 +2659,7 @@
     "id": 84,
     "category": "situation",
     "question": "🎬 Vous approchez d'une intersection. Le feu passe à l'orange. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/WKp_dyGZe8c",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2691,7 +2691,7 @@
     "id": 85,
     "category": "situation",
     "question": "🎬 Sur une voie à sens unique, vous tournez à gauche. Devez-vous vous placer à gauche avant de tourner ?",
-    "video_url": "https://www.youtube.com/embed/Y_JcQD4kV1o",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2755,7 +2755,7 @@
     "id": 87,
     "category": "situation",
     "question": "🎬 Vous circulez sur route à 80 km/h derrière un tracteur. Pouvez-vous dépasser ?",
-    "video_url": "https://www.youtube.com/embed/aIbJGr_TZTU",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2819,7 +2819,7 @@
     "id": 89,
     "category": "situation",
     "question": "🎬 Situation : embouteillage sur autoroute. Un véhicule de secours approche avec sirène. Que fait-on ?",
-    "video_url": "https://www.youtube.com/embed/3kV2LRSiXpA",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -2883,7 +2883,7 @@
     "id": 91,
     "category": "situation",
     "question": "🎬 Vous circulez en ville. Un enfant court vers la route. Que faites-vous ?",
-    "video_url": "https://www.youtube.com/embed/dHgFYb0VQHM",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {
@@ -3171,7 +3171,7 @@
     "id": 100,
     "category": "securite",
     "question": "🎬 Votre capot s'ouvre brusquement en roulant. Que faire ?",
-    "video_url": "https://www.youtube.com/embed/hWaL_n2MKBE",
+    "video_url": null,
     "image_url": null,
     "answers": [
       {

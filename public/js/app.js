@@ -51,31 +51,27 @@ const sfx = {
 };
 
 // ── Navigation ─────────────────────────────────────────────
-function go(id) {
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = '';
-  });
-  const el = document.getElementById(id);
-  if (el) el.classList.add('active');
-  if (id === 'screen-leaderboard') loadLeaderboard();
-  if (id === 'screen-home') updateHomeUI();
-  if (id === 'screen-profile') loadProfile();
-}
+// go() replaced above
 
-// Dedicated profile opener — never shows wrong screen
-function openProfile() {
-  // Force hide ALL screens
+// ─── NAVIGATION — bulletproof screen switcher ───────────────
+function go(screenId) {
+  // 1. Force-hide every screen (clear both class AND inline style)
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
   });
-  // Force show ONLY profile
-  const el = document.getElementById('screen-profile');
-  el.style.display = 'flex';
-  el.classList.add('active');
-  loadProfile();
+  // 2. Force-show only the target screen
+  const target = document.getElementById(screenId);
+  if (!target) return;
+  target.style.display = 'flex';
+  target.classList.add('active');
+  // 3. Side effects
+  if (screenId === 'screen-home')        updateHomeUI();
+  if (screenId === 'screen-leaderboard') loadLeaderboard();
+  if (screenId === 'screen-profile')     loadProfile();
 }
+
+function openProfile() { go('screen-profile'); }
 
 function updateHomeUI() {
   const el = document.getElementById('home-user');
