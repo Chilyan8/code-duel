@@ -45,7 +45,7 @@ function go(id) {
   el.classList.add('active');
   if (id === 'screen-home') {
     updateHomeUI();
-    if (S.isAuth) fetch('/api/profile',{credentials:'include'}).then(r=>r.ok?r.json():null).then(d=>{if(d?.elo!==undefined&&d.elo!==S.elo){S.elo=d.elo;localStorage.setItem('elo',String(d.elo));updateHomeUI();}}).catch(()=>{});
+    if (S.isAuth) apiFetch('/api/profile').then(r=>r.ok?r.json():null).then(d=>{if(d?.elo!==undefined&&d.elo!==S.elo){S.elo=d.elo;localStorage.setItem('elo',String(d.elo));updateHomeUI();}}).catch(()=>{});
   }
   if (id === 'screen-leaderboard') loadLeaderboard();
   if (id === 'screen-profile')     loadProfile();
@@ -68,6 +68,14 @@ function err(id,msg) { const e=document.getElementById(id); if(e){e.textContent=
 function clearErr(id) { document.getElementById(id)?.classList.add('hidden'); }
 function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 
+async function apiFetch(url, opts={}) {
+  return fetch(url, {
+    ...opts,
+    credentials: 'include',
+    headers: {'Authorization':'Bearer '+(window.__K__||''), ...opts.headers},
+  });
+}
+
 // ── Auth ──
 async function doLogin() {
   clearErr('login-err');
@@ -75,7 +83,7 @@ async function doLogin() {
   const password=document.getElementById('login-password').value;
   if(!pseudo||!password) return err('login-err','Remplis tous les champs');
   try {
-    const r=await fetch('/api/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
+    const r=await apiFetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const d=await r.json();
     if(!r.ok) return err('login-err',d.error||'Erreur');
     saveAuth(d); toast('Bienvenue '+pseudo+' ! 🎉'); go('screen-home');
@@ -90,7 +98,7 @@ async function doRegister() {
   if(pseudo.length<3) return err('reg-err','Pseudo trop court (min 3)');
   if(password.length<6) return err('reg-err','Mot de passe trop court (min 6)');
   try {
-    const r=await fetch('/api/auth/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
+    const r=await apiFetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const d=await r.json();
     if(!r.ok) return err('reg-err',d.error||'Erreur');
     saveAuth(d); toast('Compte créé ! Bienvenue '+pseudo+' 🚗'); go('screen-home');
@@ -109,7 +117,7 @@ function saveAuth(d) {
 }
 
 function doLogout() {
-  fetch('/api/auth/logout',{method:'POST',credentials:'include'}).catch(()=>{});
+  apiFetch('/api/auth/logout',{method:'POST'}).catch(()=>{});
   S.isAuth=false; S.pseudo=null; S.elo=0; S.avatar=null;
   ['pseudo','elo','avatar'].forEach(k=>localStorage.removeItem(k));
   socket.disconnect();
@@ -186,7 +194,7 @@ async function loadProfile() {
   }
   pc.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
   try {
-    const r=await fetch('/api/profile',{credentials:'include'});
+    const r=await apiFetch('/api/profile');
     if(r.status===401){doLogout();return;}
     const d=await r.json();
     const wins=d.wins||0,losses=d.losses||0,games=d.total_games||0;
@@ -267,7 +275,7 @@ async function savePseudo(){
   if(!pseudo)return;
   clearErr('pseudo-modal-err');
   try{
-    const r=await fetch('/api/profile/pseudo',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo})});
+    const r=await apiFetch('/api/profile/pseudo',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo})});
     const d=await r.json();
     if(!r.ok)return err('pseudo-modal-err',d.error||'Erreur');
     S.pseudo=d.pseudo;
@@ -324,7 +332,7 @@ async function uploadAvatar(event) {
 }
 async function saveAvatar(av) {
   if (!S.isAuth) return;
-  try { await fetch('/api/profile/photo', {method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo:av})}); } catch {}
+  try { await apiFetch('/api/profile/photo', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo:av})}); } catch {}
 }
 
 // ── Helpers ──
@@ -539,7 +547,7 @@ async function startSolo(mode){
   let questions=[];
   const count=mode==='micro'?5:mode==='examen_blanc'?40:10;
   try{
-    const res=await fetch('/api/training/session?count='+count+'&mode='+mode+'&category='+S.soloCategory,{credentials:'include'});
+    const res=await apiFetch('/api/training/session?count='+count+'&mode='+mode+'&category='+S.soloCategory);
     const d=await res.json();questions=d.fullQuestions||[];
     if(d.weakCategories?.length&&mode==='training')toast('Session ciblée : '+d.weakCategories.map(c=>catName(c)).join(', '),3000);
   }catch(e){console.error(e);}
@@ -623,7 +631,7 @@ async function endSolo(){
   const wrongs=S.soloAnswers.filter(a=>!a.isCorrect).slice(0,5);
   const replayEl=document.getElementById('solo-replay');
   if(wrongs.length){replayEl.innerHTML='<div class="analysis-title">📹 Questions manquées</div>'+wrongs.map(a=>{const q=S.soloQs[a.questionIndex];return '<div class="replay-item wrong-q"><div class="replay-q">'+esc(q.question)+'</div><div style="color:var(--green);font-size:.8rem">✅ '+esc(q.correct.join(', '))+' — '+esc((q.explanation||'').slice(0,80))+'...</div></div>';}).join('');}else replayEl.innerHTML='';
-  if(S.isAuth){try{await fetch('/api/training/complete',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:S.soloAnswers.map(a=>a.answers),questions:S.soloQs,mode:S.soloMode})});}catch{}}
+  if(S.isAuth){try{await apiFetch('/api/training/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:S.soloAnswers.map(a=>a.answers),questions:S.soloQs,mode:S.soloMode})});}catch{}}
 }
 
 // ── Leaderboard ──
@@ -633,7 +641,7 @@ async function loadLeaderboard() {
   el.innerHTML = '<div class="spinner-center"><div class="spinner"></div></div>';
   try {
     const res = await Promise.race([
-      fetch('/api/leaderboard'),
+      apiFetch('/api/leaderboard'),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000))
     ]);
     if (!res.ok) throw new Error('Erreur ' + res.status);
@@ -653,7 +661,7 @@ async function loadLeaderboard() {
 
 // ── Session time ──
 let _ss = Date.now();
-setInterval(async()=>{if(!S.isAuth)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await fetch('/api/profile/session-time',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},30000);
+setInterval(async()=>{if(!S.isAuth)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await apiFetch('/api/profile/session-time',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},30000);
 
 // ── Socket events ──
 socket.on('game_created',({roomCode,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting([{pseudo:S.pseudo,ready:false,avatar:S.avatar}],options.maxPlayers);});
@@ -735,7 +743,7 @@ socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg
 // ── Init ──
 document.addEventListener('DOMContentLoaded', () => {
   // Restauration session cookie
-  fetch('/api/profile', {credentials:'include'})
+  apiFetch('/api/profile')
     .then(r => r.ok ? r.json() : null)
     .then(d => {
       if (d) {

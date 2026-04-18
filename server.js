@@ -1,8 +1,11 @@
+require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -21,6 +24,13 @@ if (!JWT_SECRET) {
   console.error('❌  JWT_SECRET non défini — arrêt pour sécurité.');
   process.exit(1);
 }
+const API_KEY = process.env.API_KEY;
+if (!API_KEY) {
+  console.error('❌  API_KEY non défini — arrêt pour sécurité.');
+  process.exit(1);
+}
+
+const indexHtml = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
 
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGINS || 'http://localhost:' + PORT;
 
@@ -37,24 +47,36 @@ const COOKIE_OPTS = {
 };
 
 // ── Middleware ─────────────────────────────────────────────────────────────────
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc:  ["'self'"],
-      styleSrc:   ["'self'", "'unsafe-inline'"],
-      imgSrc:     ["'self'", "data:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      fontSrc:    ["'self'"],
-      objectSrc:  ["'none'"],
-      frameAncestors: ["'none'"],
-    }
-  }
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
+
+function buildCsp(nonce) {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://upload.wikimedia.org https://i.ytimg.com",
+    "connect-src 'self' ws: wss:",
+    "font-src 'self'",
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+  ].join('; ');
+}
+
+app.get('/', (req, res) => {
+  const nonce = crypto.randomBytes(16).toString('base64');
+  res.setHeader('Content-Security-Policy', buildCsp(nonce));
+  const html = indexHtml.replace(
+    '<script src="/js/app.js"></script>',
+    `<script nonce="${nonce}">window.__K__=${JSON.stringify(API_KEY)};</script>` +
+    `<script src="/js/app.js" nonce="${nonce}"></script>`
+  );
+  res.send(html);
+});
 app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '600kb' }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 // ── Rate limiters ──────────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
@@ -72,6 +94,15 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api/', apiLimiter);
+
+function apiKeyMiddleware(req, res, next) {
+  const auth = req.headers['authorization'];
+  if (!auth || auth !== `Bearer ${API_KEY}`) {
+    return res.status(401).json({ error: 'Accès non autorisé' });
+  }
+  next();
+}
+app.use('/api/', apiKeyMiddleware);
 
 // ── Auth middleware ────────────────────────────────────────────────────────────
 async function authMiddleware(req, res, next) {
