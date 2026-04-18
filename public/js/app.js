@@ -253,12 +253,12 @@ async function loadProfile() {
     const flag = countryFlag(d.country);
     pc.innerHTML=
       '<div style="text-align:center;padding:.5rem 0 1.5rem">'+
-        '<div class="profile-avatar-wrap avatar-wrap-rel" onclick="openAvatarModal()">'+
+        '<div class="profile-avatar-wrap avatar-wrap-rel" id="prof-avatar-wrap">'+
           '<div class="profile-avatar-img" id="prof-av">'+avHtml+'</div>'+
           '<div class="avatar-edit-btn">✏️</div>'+
           (flag ? '<div class="country-badge" style="font-size:1.2rem;bottom:22px;right:-2px">'+flag+'</div>' : '')+
         '</div>'+
-        '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+esc(d.pseudo)+' <button onclick="openPseudoModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:.1rem .4rem;color:var(--text3);cursor:pointer;font-size:.65rem;vertical-align:middle">✏️</button></div>'+
+        '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+esc(d.pseudo)+' <button id="prof-pseudo-btn" style="background:none;border:1px solid var(--border);border-radius:6px;padding:.1rem .4rem;color:var(--text3);cursor:pointer;font-size:.65rem;vertical-align:middle">✏️</button></div>'+
         '<div style="color:var(--accent2);font-weight:700">'+esc(lv.name)+'</div>'+
         '<div style="color:var(--text2);font-size:.85rem">'+esc(d.elo)+' Elo'+(lv.next?' · encore '+(lv.next-d.elo)+' pts':' · Niveau max 🏆')+'</div>'+
         '<div style="width:180px;margin:.6rem auto 0">'+
@@ -273,7 +273,7 @@ async function loadProfile() {
         '<div><div style="font-weight:700">'+timeStr+'</div><div style="color:var(--text2);font-size:.78rem">passées sur le site</div></div>'+
         '<div style="margin-left:auto;text-align:right"><div style="font-weight:700">'+games+'</div><div style="color:var(--text2);font-size:.78rem">parties jouées</div></div>'+
       '</div>'+
-      '<div class="profile-country-row" onclick="openCountryModal()">'+
+      '<div class="profile-country-row" id="prof-country-row">'+
         '<div class="pcr-flag">'+(flag || '🌍')+'</div>'+
         '<div class="pcr-info">'+
           '<div class="pcr-label">🌍 Mon pays</div>'+
@@ -292,15 +292,26 @@ async function loadProfile() {
       '<div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">🎖️ Badges ('+badges.length+')</div>'+
       (badges.length?'<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">'+badges.map(b=>'<span style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--yellow);padding:.3rem .75rem;border-radius:16px;font-size:.82rem">'+esc(b)+'</span>').join('')+'</div>':'<div style="color:var(--text3);font-size:.85rem;margin-bottom:.5rem">Aucun badge encore — joue pour en débloquer ! 💪</div>')+
       '<div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">📊 Analyse par thème</div>'+
-      (weakCats.length?weakCats.map(([cat,s])=>{const pct=Math.round(s.errors/s.sessions*100);const col=pct>=60?'#f87171':pct>=30?'#fbbf24':'#4ade80';return '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem"><span style="font-size:.82rem;width:110px;flex-shrink:0">'+catName(cat)+'</span><div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:4px"></div></div><span style="font-size:.78rem;color:'+col+';width:36px;text-align:right">'+pct+'%</span></div>';}).join('')+'<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo(\'training\')">🧠 Entraînement ciblé</button>':'<div style="color:var(--text3);font-size:.85rem">Joue des parties pour voir ton analyse !</div>')+
+      (weakCats.length?weakCats.map(([cat,s])=>{const pct=Math.round(s.errors/s.sessions*100);const col=pct>=60?'#f87171':pct>=30?'#fbbf24':'#4ade80';return '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem"><span style="font-size:.82rem;width:110px;flex-shrink:0">'+catName(cat)+'</span><div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:4px"></div></div><span style="font-size:.78rem;color:'+col+';width:36px;text-align:right">'+pct+'%</span></div>';}).join('')+'<button class="btn btn-primary w-full" id="prof-btn-training" style="margin-top:.75rem">🧠 Entraînement ciblé</button>':'<div style="color:var(--text3);font-size:.85rem">Joue des parties pour voir ton analyse !</div>')+
       '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.6rem;flex-wrap:wrap">'+
-        '<button class="btn btn-primary" onclick="go(\'screen-home\')">🏠 Accueil</button>'+
-        '<button class="btn btn-ghost" onclick="go(\'screen-play\')">⚔️ Duel</button>'+
-        '<button class="btn btn-ghost" onclick="startSolo(\'examen_blanc\')">📋 Examen</button>'+
-        '<button class="btn btn-ghost-sm" onclick="doLogout()" style="margin-left:auto;color:var(--red)">Déconnexion</button>'+
+        '<button class="btn btn-primary" id="prof-btn-home">🏠 Accueil</button>'+
+        '<button class="btn btn-ghost" id="prof-btn-play">⚔️ Duel</button>'+
+        '<button class="btn btn-ghost" id="prof-btn-exam">📋 Examen</button>'+
+        '<button class="btn btn-ghost-sm" id="prof-btn-logout" style="margin-left:auto;color:var(--red)">Déconnexion</button>'+
       '</div>';
+    // Attach event listeners (CSP blocks inline onclick in dynamically generated HTML)
+    pc.querySelector('#prof-avatar-wrap')?.addEventListener('click', openAvatarModal);
+    pc.querySelector('#prof-pseudo-btn')?.addEventListener('click', openPseudoModal);
+    pc.querySelector('#prof-country-row')?.addEventListener('click', openCountryModal);
+    pc.querySelector('#prof-btn-home')?.addEventListener('click', () => go('screen-home'));
+    pc.querySelector('#prof-btn-play')?.addEventListener('click', () => go('screen-play'));
+    pc.querySelector('#prof-btn-exam')?.addEventListener('click', () => startSolo('examen_blanc'));
+    pc.querySelector('#prof-btn-logout')?.addEventListener('click', doLogout);
+    pc.querySelector('#prof-btn-training')?.addEventListener('click', () => startSolo('training'));
   } catch {
-    pc.innerHTML='<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement du profil</p><button class="btn btn-primary" onclick="go(\'screen-auth\')">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="go(\'screen-home\')">🏠 Accueil</button></div></div>';
+    pc.innerHTML='<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement du profil</p><button class="btn btn-primary" id="prof-err-auth">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" id="prof-err-home">🏠 Accueil</button></div></div>';
+    pc.querySelector('#prof-err-auth')?.addEventListener('click', () => go('screen-auth'));
+    pc.querySelector('#prof-err-home')?.addEventListener('click', () => go('screen-home'));
   }
 }
 
