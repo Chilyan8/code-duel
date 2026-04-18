@@ -26,9 +26,9 @@
     <div class="hero-buttons">
       <button class="btn btn-primary btn-xl" onclick="go('screen-play')">⚔️ Duel</button>
       <button class="btn btn-accent btn-xl" onclick="showSoloScreen()">🎯 Entraînement</button>
-      <button class="btn btn-ghost btn-xl" onclick="go('screen-auth')">👤 Connexion</button>
+      <button class="btn btn-ghost btn-xl" id="home-auth-btn" onclick="go('screen-auth')">👤 Connexion</button>
     </div>
-    <div class="guest-note">Jouer en tant qu'<span onclick="promptGuest()" class="link">invité</span></div>
+    <div id="home-guest-note" class="guest-note">Jouer en tant qu'<span onclick="promptGuest()" class="link">invité</span></div>
   </div>
   <div class="home-footer">
     <button class="btn btn-ghost-sm" onclick="go('screen-leaderboard')">🏆 Classement</button>
@@ -54,7 +54,7 @@
     <div id="auth-register" class="hidden">
       <h2>Crée ton compte 🎮</h2>
       <div class="field"><label>Pseudo (3-20 caractères)</label><input id="reg-pseudo" type="text" placeholder="Choisis un pseudo" autocomplete="username"/></div>
-      <div class="field"><label>Mot de passe (min 4)</label><input id="reg-password" type="password" placeholder="••••••••" autocomplete="new-password"/></div>
+      <div class="field"><label>Mot de passe (min 6)</label><input id="reg-password" type="password" placeholder="••••••••" autocomplete="new-password"/></div>
       <div id="reg-err" class="error-msg hidden"></div>
       <button class="btn btn-primary w-full" onclick="doRegister()">Créer le compte</button>
     </div>
@@ -190,6 +190,7 @@
 <!-- ════════════════════════════ WAITING ══ -->
 <div id="screen-waiting" class="screen">
   <div class="card card-waiting">
+    <button class="back-btn" onclick="leaveWaiting()">← Retour</button>
     <div class="waiting-header">
       <div class="room-code-label">CODE DE LA PARTIE</div>
       <div class="room-code-value" id="display-room-code">------</div>
@@ -275,6 +276,14 @@
     <button class="powerup-btn" id="pu-stress" onclick="usePowerup('stress')"><span>😱</span><span class="pu-label">Stress</span></button>
   </div>
   <div id="coach-bubble" class="coach-bubble hidden"><div class="coach-avatar">🧑‍🏫</div><div class="coach-text" id="coach-text"></div></div>
+  <button id="chat-toggle-btn" class="chat-toggle-btn" onclick="toggleChat()">💬 <span id="chat-badge" class="chat-badge hidden">0</span></button>
+  <div id="chat-panel" class="chat-panel hidden">
+    <div id="chat-messages" class="chat-messages"></div>
+    <div class="chat-input-row">
+      <input id="chat-input" type="text" maxlength="120" placeholder="Message..."/>
+      <button onclick="sendChat()">➤</button>
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════ SOLO RESULTS ══ -->
@@ -304,6 +313,10 @@
     <div id="replay-toggle" class="hidden" style="margin-bottom:1rem">
       <button class="btn btn-ghost-sm" onclick="toggleReplay()">📹 Voir le replay</button>
       <div id="replay-content" class="replay-content hidden"></div>
+    </div>
+    <div id="chat-history" class="hidden" style="margin-bottom:1rem">
+      <div class="chat-history-title">💬 Conversation</div>
+      <div id="chat-history-messages" class="chat-history-messages"></div>
     </div>
     <div class="results-actions">
       <button id="btn-rematch" class="btn btn-primary hidden" onclick="requestRematch()">🔄 Revanche !</button>
@@ -374,14 +387,13 @@
 <!-- ════════════════════════════ AVATAR MODAL ══ -->
 <div id="avatar-modal" class="modal-overlay hidden" onclick="closeAvatarModal(event)">
   <div class="modal-box">
-    <h3 style="margin-bottom:1rem">🖼️ Choisis ton avatar</h3>
-    <div class="avatar-grid" id="emoji-avatars"></div>
-    <div style="margin:1rem 0;text-align:center;color:var(--text2);font-size:.85rem">— ou —</div>
+    <h3 style="margin-bottom:1rem">Photo de profil</h3>
+    <div id="avatar-preview" style="width:90px;height:90px;border-radius:50%;border:3px solid var(--accent);background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;overflow:hidden;font-size:2.2rem;font-weight:900;color:var(--accent2)"></div>
     <label class="upload-label">
-      📁 Importer une photo
+      Importer une photo
       <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" style="display:none"/>
     </label>
-    <button class="btn btn-ghost w-full" style="margin-top:.75rem" onclick="document.getElementById('avatar-modal').classList.add('hidden')">Annuler</button>
+    <button class="btn btn-ghost w-full" style="margin-top:.75rem" onclick="document.getElementById('avatar-modal').classList.add('hidden')">Fermer</button>
   </div>
 </div>
 

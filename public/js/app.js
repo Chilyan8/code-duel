@@ -1,7 +1,7 @@
 /* CODE DUEL — App stable */
 
 const S = {
-  token:  localStorage.getItem('token')  || null,
+  isAuth: false,
   pseudo: localStorage.getItem('pseudo') || null,
   elo:    parseInt(localStorage.getItem('elo') || '1000'),
   avatar: localStorage.getItem('avatar') || null,
@@ -19,7 +19,7 @@ const S = {
   gamePlaying: false,
 };
 
-const socket = io({ auth: { token: S.token } });
+const socket = io();
 
 // ── Audio ──
 let _ac = null;
@@ -45,7 +45,7 @@ function go(id) {
   el.classList.add('active');
   if (id === 'screen-home') {
     updateHomeUI();
-    if (S.token) fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}}).then(r=>r.ok?r.json():null).then(d=>{if(d?.elo!==undefined&&d.elo!==S.elo){S.elo=d.elo;localStorage.setItem('elo',d.elo);updateHomeUI();}}).catch(()=>{});
+    if (S.isAuth) fetch('/api/profile',{credentials:'include'}).then(r=>r.ok?r.json():null).then(d=>{if(d?.elo!==undefined&&d.elo!==S.elo){S.elo=d.elo;localStorage.setItem('elo',String(d.elo));updateHomeUI();}}).catch(()=>{});
   }
   if (id === 'screen-leaderboard') loadLeaderboard();
   if (id === 'screen-profile')     loadProfile();
@@ -75,7 +75,7 @@ async function doLogin() {
   const password=document.getElementById('login-password').value;
   if(!pseudo||!password) return err('login-err','Remplis tous les champs');
   try {
-    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
+    const r=await fetch('/api/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const d=await r.json();
     if(!r.ok) return err('login-err',d.error||'Erreur');
     saveAuth(d); toast('Bienvenue '+pseudo+' ! 🎉'); go('screen-home');
@@ -88,26 +88,32 @@ async function doRegister() {
   const password=document.getElementById('reg-password').value;
   if(!pseudo||!password) return err('reg-err','Remplis tous les champs');
   if(pseudo.length<3) return err('reg-err','Pseudo trop court (min 3)');
-  if(password.length<4) return err('reg-err','Mot de passe trop court (min 4)');
+  if(password.length<6) return err('reg-err','Mot de passe trop court (min 6)');
   try {
-    const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
+    const r=await fetch('/api/auth/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo,password})});
     const d=await r.json();
     if(!r.ok) return err('reg-err',d.error||'Erreur');
     saveAuth(d); toast('Compte créé ! Bienvenue '+pseudo+' 🚗'); go('screen-home');
-  } catch(e) { err('reg-err','Erreur: '+e.message); }
+  } catch { err('reg-err','Erreur réseau'); }
 }
 
 function saveAuth(d) {
-  S.token=d.token; S.pseudo=d.pseudo; S.elo=d.elo||1000;
+  S.isAuth=true; S.pseudo=d.pseudo; S.elo=d.elo||1000;
   if(d.avatar) S.avatar=d.avatar;
-  localStorage.setItem('token',S.token); localStorage.setItem('pseudo',S.pseudo);
-  localStorage.setItem('elo',S.elo); localStorage.setItem('avatar',S.avatar);
-  socket.auth={token:S.token};
+  localStorage.setItem('pseudo',S.pseudo);
+  localStorage.setItem('elo',String(S.elo));
+  if(d.avatar) localStorage.setItem('avatar',d.avatar);
+  // Reconnecte le socket pour qu'il envoie le cookie fraîchement posé
+  socket.disconnect();
+  socket.connect();
 }
 
 function doLogout() {
-  ['token','pseudo','elo','avatar'].forEach(k=>localStorage.removeItem(k));
-  S.token=null; S.pseudo=null; S.elo=0; S.avatar=null;
+  fetch('/api/auth/logout',{method:'POST',credentials:'include'}).catch(()=>{});
+  S.isAuth=false; S.pseudo=null; S.elo=0; S.avatar=null;
+  ['pseudo','elo','avatar'].forEach(k=>localStorage.removeItem(k));
+  socket.disconnect();
+  socket.connect();
   toast('Déconnecté 👋'); go('screen-home');
 }
 
@@ -128,16 +134,26 @@ function updateHomeUI() {
   const el=document.getElementById('home-user');
   const authBtn=document.getElementById('home-auth-btn');
   const guestNote=document.getElementById('home-guest-note');
-  if(S.pseudo&&S.token) {
-    const av=S.avatar&&S.avatar.startsWith('data:')
-      ?'<img src="'+S.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle">'
-      :'<span style="width:20px;height:20px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:#fff;vertical-align:middle">'+esc((S.pseudo[0]||'?').toUpperCase())+'</span>';
-    el.innerHTML=av+' <strong>'+esc(S.pseudo)+'</strong> · <span style="color:var(--accent2)">'+esc(S.elo)+'</span> Elo';
+  if(S.pseudo&&S.isAuth) {
+    // Construire l'avatar sans innerHTML direct sur données utilisateur
+    el.innerHTML='';
+    const avWrap=document.createElement('span');
+    if(S.avatar&&S.avatar.startsWith('data:image/')) {
+      const img=document.createElement('img');
+      img.src=S.avatar;
+      img.style.cssText='width:20px;height:20px;border-radius:50%;object-fit:cover;vertical-align:middle';
+      avWrap.appendChild(img);
+    } else {
+      avWrap.style.cssText='width:20px;height:20px;border-radius:50%;background:var(--accent);display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:900;color:#fff;vertical-align:middle';
+      avWrap.textContent=(S.pseudo[0]||'?').toUpperCase();
+    }
+    el.appendChild(avWrap);
+    el.insertAdjacentHTML('beforeend',' <strong>'+esc(S.pseudo)+'</strong> · <span style="color:var(--accent2)">'+esc(S.elo)+'</span> Elo');
     el.style.display='flex';
     if(authBtn){authBtn.textContent='Déconnexion';authBtn.onclick=doLogout;}
     if(guestNote)guestNote.style.display='none';
   } else {
-    if(S.pseudo&&!S.token){
+    if(S.pseudo&&!S.isAuth){
       el.innerHTML='<strong>'+esc(S.pseudo)+'</strong> <span style="color:var(--text3);font-size:.8rem">(invité)</span>';
       el.style.display='flex';
     } else el.style.display='none';
@@ -150,13 +166,13 @@ function updateHomeUI() {
 async function loadProfile() {
   const pc=document.getElementById('profile-content');
   if(!pc) return;
-  if(!S.token) {
+  if(!S.isAuth) {
     pc.innerHTML='<div style="text-align:center;padding:2rem"><div style="font-size:3rem;margin-bottom:1rem">👤</div><p style="font-weight:700;margin-bottom:.5rem">Connecte-toi pour voir ton profil</p><p style="color:var(--text2);font-size:.9rem;margin-bottom:1.5rem">Tes stats et badges sont sauvegardés avec ton compte.</p><button class="btn btn-primary" onclick="go(\'screen-auth\')">Se connecter</button></div>';
     return;
   }
   pc.innerHTML='<div class="spinner-center"><div class="spinner"></div></div>';
   try {
-    const r=await fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}});
+    const r=await fetch('/api/profile',{credentials:'include'});
     if(r.status===401){doLogout();return;}
     const d=await r.json();
     const wins=d.wins||0,losses=d.losses||0,games=d.total_games||0;
@@ -171,14 +187,14 @@ async function loadProfile() {
     const eloBase={1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[lv.level]||0;
     const eloRange=lv.next?lv.next-eloBase:1;
     const eloProgress=lv.next?Math.min(100,Math.round((d.elo-eloBase)/eloRange*100)):100;
-    const avatar=d.avatar&&d.avatar.startsWith('data:')?d.avatar:null;
+    const avatar=d.avatar&&d.avatar.startsWith('data:image:')?d.avatar:null;
     S.avatar=avatar; localStorage.setItem('avatar',avatar||'');
     const avHtml=avatar?'<img src="'+avatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem;font-weight:900;color:var(--accent2)'>"+esc((d.pseudo[0]||'?').toUpperCase())+"</span>";
     const badges=d.badges||[];
     const catStats=d.category_stats||{};
     const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,4);
     const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation'};
-    const catName=c=>catNames[c]||c;
+    const catName=c=>catNames[c]||esc(c);
     pc.innerHTML=
       '<div style="text-align:center;padding:.5rem 0 1.5rem">'+
         '<div class="profile-avatar-wrap" onclick="openAvatarModal()">'+
@@ -186,8 +202,8 @@ async function loadProfile() {
           '<div class="avatar-edit-btn">✏️</div>'+
         '</div>'+
         '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+esc(d.pseudo)+' <button onclick="openPseudoModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:.1rem .4rem;color:var(--text3);cursor:pointer;font-size:.65rem;vertical-align:middle">✏️</button></div>'+
-        '<div style="color:var(--accent2);font-weight:700">'+lv.name+'</div>'+
-        '<div style="color:var(--text2);font-size:.85rem">'+d.elo+' Elo'+(lv.next?' · encore '+(lv.next-d.elo)+' pts':' · Niveau max 🏆')+'</div>'+
+        '<div style="color:var(--accent2);font-weight:700">'+esc(lv.name)+'</div>'+
+        '<div style="color:var(--text2);font-size:.85rem">'+esc(d.elo)+' Elo'+(lv.next?' · encore '+(lv.next-d.elo)+' pts':' · Niveau max 🏆')+'</div>'+
         '<div style="width:180px;margin:.6rem auto 0">'+
           '<div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">'+
             '<div style="height:100%;width:'+eloProgress+'%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px"></div>'+
@@ -209,7 +225,7 @@ async function loadProfile() {
         '<div class="profile-stat"><div class="ps-num">'+correct+'</div><div class="ps-label">✔️ Bonnes rép.</div></div>'+
       '</div>'+
       '<div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">🎖️ Badges ('+badges.length+')</div>'+
-      (badges.length?'<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">'+badges.map(b=>'<span style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--yellow);padding:.3rem .75rem;border-radius:16px;font-size:.82rem">'+b+'</span>').join('')+'</div>':'<div style="color:var(--text3);font-size:.85rem;margin-bottom:.5rem">Aucun badge encore — joue pour en débloquer ! 💪</div>')+
+      (badges.length?'<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem">'+badges.map(b=>'<span style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--yellow);padding:.3rem .75rem;border-radius:16px;font-size:.82rem">'+esc(b)+'</span>').join('')+'</div>':'<div style="color:var(--text3);font-size:.85rem;margin-bottom:.5rem">Aucun badge encore — joue pour en débloquer ! 💪</div>')+
       '<div style="font-size:.8rem;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 .6rem">📊 Analyse par thème</div>'+
       (weakCats.length?weakCats.map(([cat,s])=>{const pct=Math.round(s.errors/s.sessions*100);const col=pct>=60?'#f87171':pct>=30?'#fbbf24':'#4ade80';return '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem"><span style="font-size:.82rem;width:110px;flex-shrink:0">'+catName(cat)+'</span><div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:4px"></div></div><span style="font-size:.78rem;color:'+col+';width:36px;text-align:right">'+pct+'%</span></div>';}).join('')+'<button class="btn btn-primary w-full" style="margin-top:.75rem" onclick="startSolo(\'training\')">🧠 Entraînement ciblé</button>':'<div style="color:var(--text3);font-size:.85rem">Joue des parties pour voir ton analyse !</div>')+
       '<div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;gap:.6rem;flex-wrap:wrap">'+
@@ -218,8 +234,8 @@ async function loadProfile() {
         '<button class="btn btn-ghost" onclick="startSolo(\'examen_blanc\')">📋 Examen</button>'+
         '<button class="btn btn-ghost-sm" onclick="doLogout()" style="margin-left:auto;color:var(--red)">Déconnexion</button>'+
       '</div>';
-  } catch(e) {
-    pc.innerHTML='<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur: '+e.message+'</p><button class="btn btn-primary" onclick="go(\'screen-auth\')">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="go(\'screen-home\')">🏠 Accueil</button></div></div>';
+  } catch {
+    pc.innerHTML='<div style="text-align:center;padding:2rem"><p style="color:var(--red);margin-bottom:1rem">Erreur de chargement du profil</p><button class="btn btn-primary" onclick="go(\'screen-auth\')">Se connecter</button><div style="margin-top:.75rem"><button class="btn btn-ghost" onclick="go(\'screen-home\')">🏠 Accueil</button></div></div>';
   }
 }
 
@@ -236,12 +252,14 @@ async function savePseudo(){
   if(!pseudo)return;
   clearErr('pseudo-modal-err');
   try{
-    const r=await fetch('/api/profile/pseudo',{method:'PUT',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({pseudo})});
+    const r=await fetch('/api/profile/pseudo',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo})});
     const d=await r.json();
     if(!r.ok)return err('pseudo-modal-err',d.error||'Erreur');
-    S.pseudo=d.pseudo; S.token=d.token;
-    localStorage.setItem('pseudo',d.pseudo); localStorage.setItem('token',d.token);
-    socket.auth={token:d.token};
+    S.pseudo=d.pseudo;
+    localStorage.setItem('pseudo',d.pseudo);
+    // Reconnecte le socket pour utiliser le nouveau cookie (pseudo mis à jour dans le token)
+    socket.disconnect();
+    socket.connect();
     closePseudoModal(); toast('Pseudo mis à jour ! 🎉'); loadProfile(); updateHomeUI();
   }catch{err('pseudo-modal-err','Erreur réseau');}
 }
@@ -250,14 +268,18 @@ async function savePseudo(){
 function openAvatarModal() {
   const prev = document.getElementById('avatar-preview');
   if (prev) {
-    if (S.avatar && S.avatar.startsWith('data:')) prev.innerHTML = '<img src="'+S.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
-    else prev.textContent = ((S.pseudo||'?')[0]||'?').toUpperCase();
+    if (S.avatar && S.avatar.startsWith('data:image/')) {
+      prev.innerHTML = '<img src="'+S.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      prev.textContent = ((S.pseudo||'?')[0]||'?').toUpperCase();
+    }
   }
   document.getElementById('avatar-modal').classList.remove('hidden');
 }
 function closeAvatarModal(e) { if (!e || e.target.id === 'avatar-modal') document.getElementById('avatar-modal').classList.add('hidden'); }
 async function uploadAvatar(event) {
   const file = event.target.files[0]; if (!file) return;
+  if (!file.type.startsWith('image/')) { toast('Fichier invalide'); return; }
   if (file.size > 500000) { toast('Image trop grande (max 500kb)'); return; }
   const reader = new FileReader();
   reader.onload = async e => {
@@ -272,19 +294,28 @@ async function uploadAvatar(event) {
       S.avatar = dataUrl; localStorage.setItem('avatar', dataUrl);
       document.getElementById('avatar-modal').classList.add('hidden');
       const el = document.getElementById('prof-av');
-      if (el) el.innerHTML = '<img src="'+dataUrl+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+      if (el) {
+        el.innerHTML = '';
+        const img2 = document.createElement('img');
+        img2.src = dataUrl;
+        img2.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover';
+        el.appendChild(img2);
+      }
       await saveAvatar(dataUrl); updateHomeUI(); toast('Photo mise à jour !');
     };
     img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-async function saveAvatar(av) { if (!S.token) return; try { await fetch('/api/profile/photo', {method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({photo:av})}); } catch {} }
+async function saveAvatar(av) {
+  if (!S.isAuth) return;
+  try { await fetch('/api/profile/photo', {method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({photo:av})}); } catch {}
+}
 
 // ── Helpers ──
 const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation',international:'🌍 International'};
-function catName(c){return catNames[c]||c;}
-function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',training:'🧠 Entraînement',libre:'📚 Libre'}[m]||m;}
+function catName(c){return catNames[c]||esc(c);}
+function modeName(m){return{normal:'🎯 Normal',blitz:'⚡ Blitz',examen_blanc:'📋 Examen',piege:'😈 Piège',micro:'⚡ Micro',training:'🧠 Entraînement',libre:'📚 Libre'}[m]||esc(m);}
 const COACH={priorites:['Priorité à droite SAUF panneau 🚦','STOP = arrêt TOTAL 🛑','Cédez ≠ arrêt obligatoire 🔺'],panneaux:['Rouge=interdit, Bleu=obligation, Triangle=danger 🪧','Losange jaune=route prioritaire 💛','Rond bleu+chiffre=vitesse MINIMALE 🔵'],vitesse:['Autoroute: 130 sec, 110 pluie ⚡','Ville=50 km/h par défaut 🏙️','Permis probatoire: 110 max autoroute 🔰'],alcool:['0,5 g/L standard · 0,2 g/L jeune 🍺','Seul le TEMPS élimine alcool ☕'],securite:['Gilet AVANT de sortir 🦺','PAS=Protéger,Alerter,Secourir 🚨'],regles:['Ligne continue=jamais franchir ⚡','Ceinture avant ET arrière 🔒']};
 function coachTip(cat){const t=COACH[cat]||['Lis bien la question ! 📖','Prends le temps ⏱️'];return t[Math.floor(Math.random()*t.length)];}
 
@@ -316,21 +347,19 @@ function sendChat() {
 function avatarHtml(av, size, pseudo) {
   const sz = size || 72;
   const letter = esc(((pseudo||S.pseudo||'?')[0]||'?').toUpperCase());
-  if (av && av.startsWith('data:')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  if (av && av.startsWith('data:image/')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
   return '<span style="font-size:'+(sz*.38)+'px;font-weight:900;color:var(--accent2);line-height:1">'+letter+'</span>';
 }
 
 function joinQueue() {
   if (!S.pseudo) { promptGuest(); if (!S.pseudo) return; }
-  if (!S.token) { toast('Connecte-toi pour jouer en classé ! 🔒', 3000); go('screen-auth'); return; }
+  if (!S.isAuth) { toast('Connecte-toi pour jouer en classé ! 🔒', 3000); go('screen-auth'); return; }
   clearInterval(S.queueTimer); clearInterval(S.queueCountdownInterval);
   S.queueSecs = 0;
   go('screen-queue');
-  // Mon avatar + infos
   document.getElementById('queue-my-avatar').innerHTML = avatarHtml(S.avatar);
   document.getElementById('queue-my-pseudo').textContent = S.pseudo;
   document.getElementById('queue-my-elo').textContent = S.elo + ' Elo';
-  // Reset adversaire
   const oppAv = document.getElementById('queue-opp-avatar');
   oppAv.innerHTML = '?'; oppAv.className = 'queue-avatar queue-avatar-unknown';
   document.getElementById('queue-opp-pseudo').textContent = 'Recherche...';
@@ -371,7 +400,7 @@ function renderWaiting(players,maxPlayers){
   for(let i=0;i<maxPlayers;i++){
     const p=players[i];const div=document.createElement('div');
     div.className='waiting-player '+(p?'connected':'empty');
-    if(p){const av=p.avatar&&p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-weight:900;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
+    if(p){const av=p.avatar&&p.avatar.startsWith('data:image:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-weight:900;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
     else{div.innerHTML='<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur '+(i+1)+'</div></div><div class="wp-status">⏳</div>';}
     c.appendChild(div);
   }
@@ -393,7 +422,7 @@ function renderHUD(){
   const max=Math.max(...S.allPlayers.map(p=>p.score),0);
   S.allPlayers.forEach(p=>{
     const isMe=p.pseudo===S.pseudo;
-    const av=p.avatar&&p.avatar.startsWith('data:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
+    const av=p.avatar&&p.avatar.startsWith('data:image:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
     const d=document.createElement('div');
     d.className='hud-player-score'+(isMe?' me':'')+(p.score===max&&max>0&&!isMe?' leading':'');
     d.innerHTML='<div style="display:flex;align-items:center;gap:.2rem;width:24px">'+av+'</div><div><div class="hps-name">'+esc(p.pseudo)+'</div>'+(p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':'')+'</div><div class="hps-score">'+esc(p.score)+'</div>'+(p.streak>=3?'<div style="font-size:.72rem">🔥'+esc(p.streak)+'</div>':'');
@@ -413,8 +442,13 @@ function renderDuelQuestion(data){
   const sb=document.getElementById('situation-box');
   if(data.situation){sb.textContent='📍 '+data.situation;sb.classList.remove('hidden');}else sb.classList.add('hidden');
   const iw=document.getElementById('q-image-wrap');
-  if(data.image_url){iw.innerHTML='<img src="'+data.image_url+'" alt="" style="max-width:100%;max-height:220px;object-fit:contain;border-radius:8px">';iw.classList.remove('hidden');}
-  else{iw.innerHTML='';iw.classList.add('hidden');}
+  if(data.image_url){
+    iw.innerHTML='';
+    const img=document.createElement('img');
+    img.alt=''; img.style.cssText='max-width:100%;max-height:220px;object-fit:contain;border-radius:8px';
+    img.src=data.image_url;
+    iw.appendChild(img); iw.classList.remove('hidden');
+  } else{iw.innerHTML='';iw.classList.add('hidden');}
   const cont=document.getElementById('answers-container');cont.innerHTML='';
   data.answers.forEach(a=>{const btn=document.createElement('button');btn.className='answer-btn';btn.dataset.id=a.id;btn.textContent=a.id.toUpperCase()+') '+a.text;if(data.isMultiple){btn.addEventListener('click',()=>{if(S.answered)return;btn.classList.toggle('selected');const idx=S.selectedAnswers.indexOf(a.id);idx>=0?S.selectedAnswers.splice(idx,1):S.selectedAnswers.push(a.id);const cb=document.getElementById('confirm-btn');if(cb)cb.disabled=S.selectedAnswers.length===0;});}else{btn.addEventListener('click',()=>{if(!S.answered)submitDuelAnswer([a.id]);});}cont.appendChild(btn);});
   let cb=document.getElementById('confirm-btn');
@@ -437,8 +471,8 @@ function showDuelResult(data){
   let html='';
   if(data.timeout)html='<strong>⏰ Temps écoulé !</strong><br>';
   else if(data.isCorrect)html='<strong>✅ Bonne réponse !</strong>'+(data.streak>=3?' <span class="streak-fire">🔥 '+data.streak+'</span>':'')+'<br>';
-  else html='<strong>❌ Mauvaise réponse</strong>'+(data.isTrap&&data.trapMessage?'<br><em>😏 '+data.trapMessage+'</em>':'')+'<br>';
-  if(data.explanation)html+='<span style="color:var(--text2);font-size:.85rem">💡 '+data.explanation+'</span>';
+  else html='<strong>❌ Mauvaise réponse</strong>'+(data.isTrap&&data.trapMessage?'<br><em>😏 '+esc(data.trapMessage)+'</em>':'')+'<br>';
+  if(data.explanation)html+='<span style="color:var(--text2);font-size:.85rem">💡 '+esc(data.explanation)+'</span>';
   fb.className='answer-feedback '+(data.isCorrect?'correct-fb':data.isCorrect===null?'neutral-fb':'wrong-fb');
   fb.innerHTML=html;fb.classList.remove('hidden');
   if(data.isCorrect&&data.streak>=3)showCoach('🔥 '+data.streak+' en série !');
@@ -459,17 +493,25 @@ function showDuelResults(data){
   else banner.textContent='🎖️ Victoire de '+data.winner+' !';
   document.getElementById('podium').innerHTML=data.results.map(r=>{const isMe=r.pseudo===S.pseudo;const elo=r.eloChange?'<div style="font-size:.82rem;font-weight:700;color:'+(r.eloChange>0?'var(--green)':'var(--red)')+';">'+(r.eloChange>0?'+':'')+esc(r.eloChange)+' Elo</div>':'';return '<div class="podium-item rank-'+r.rank+(isMe?' me':'')+'" ><div class="podium-rank">'+(['🥇','🥈','🥉'][r.rank-1]||r.rank+'.')+'</div><div class="podium-pseudo">'+esc(r.pseudo)+(isMe?'<span class="podium-you">toi</span>':'')+'</div><div><div class="podium-score">'+esc(r.score)+'<span style="font-size:.75rem;color:var(--text3)">\/'+esc(r.total)+'</span></div><div class="podium-pct">'+esc(r.percentage)+'%</div></div>'+elo+'</div>';}).join('');
   const myR=data.results.find(r=>r.pseudo===S.pseudo);
-  if(myR?.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',S.elo);}
+  if(myR?.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',String(S.elo));}
   const an=document.getElementById('results-analysis');an.innerHTML='';
   if(myR&&Object.keys(myR.categoryErrors||{}).length){an.innerHTML='<div class="analysis-title">📊 Tes erreurs</div>'+Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>'<div class="category-error"><span>'+catName(cat)+'</span><span style="color:var(--red)">'+n+' erreur'+(n>1?'s':'')+'</span></div>').join('');}
   if(data.replayData?.length){S.replayData=data.replayData;document.getElementById('replay-toggle').classList.remove('hidden');}
+  const chatHistEl=document.getElementById('chat-history');
+  const chatHistMsg=document.getElementById('chat-history-messages');
+  if(data.chatHistory?.length){
+    chatHistMsg.innerHTML=data.chatHistory.map(m=>{const isMe=m.pseudo===S.pseudo;return '<div class="chat-msg '+(isMe?'me':'other')+'">'+(isMe?'':' <span class="chat-sender">'+esc(m.pseudo)+'</span>')+'<span class="chat-text">'+esc(m.message)+'</span></div>';}).join('');
+    chatHistEl.classList.remove('hidden');
+  } else {
+    chatHistEl.classList.add('hidden');
+  }
   const examEl=document.getElementById('exam-results-duel');
-  if(data.examPassed?.length){examEl.innerHTML=data.examPassed.map(p=>'<div class="exam-verdict '+(p.passed?'admis':'recale')+'">'+p.pseudo+' : '+(p.passed?'✅ ADMIS':'❌ RECALÉ')+'</div>').join('');examEl.classList.remove('hidden');}
+  if(data.examPassed?.length){examEl.innerHTML=data.examPassed.map(p=>'<div class="exam-verdict '+(p.passed?'admis':'recale')+'">'+esc(p.pseudo)+' : '+(p.passed?'✅ ADMIS':'❌ RECALÉ')+'</div>').join('');examEl.classList.remove('hidden');}
   const btnR=document.getElementById('btn-rematch');
   if(S.pseudo===data.hostPseudo)btnR.classList.remove('hidden');else btnR.classList.add('hidden');
 }
 
-function toggleReplay(){const rc=document.getElementById('replay-content');rc.classList.toggle('hidden');if(!rc.classList.contains('hidden')&&S.replayData){rc.innerHTML=S.replayData.slice(0,10).map((q,i)=>'<div class="replay-item '+(q.playerAnswers.every(p=>p.isCorrect)?'correct-q':'wrong-q')+'"><div class="replay-q">'+(i+1)+'. '+q.question+'</div>'+q.playerAnswers.map(p=>'<div class="replay-player"><span>'+p.pseudo+'</span><span>'+(p.isCorrect?'✅':'❌')+' '+(p.timeTaken?.toFixed(0)||'?')+'s</span></div>').join('')+'</div>').join('');}}
+function toggleReplay(){const rc=document.getElementById('replay-content');rc.classList.toggle('hidden');if(!rc.classList.contains('hidden')&&S.replayData){rc.innerHTML=S.replayData.slice(0,10).map((q,i)=>'<div class="replay-item '+(q.playerAnswers.every(p=>p.isCorrect)?'correct-q':'wrong-q')+'"><div class="replay-q">'+(i+1)+'. '+esc(q.question)+'</div>'+q.playerAnswers.map(p=>'<div class="replay-player"><span>'+esc(p.pseudo)+'</span><span>'+(p.isCorrect?'✅':'❌')+' '+esc(p.timeTaken?.toFixed(0)||'?')+'s</span></div>').join('')+'</div>').join('');}}
 
 // ── Solo mode ──
 function showSoloScreen(){go('screen-solo');document.getElementById('solo-category-picker').classList.add('hidden');}
@@ -482,8 +524,7 @@ async function startSolo(mode){
   let questions=[];
   const count=mode==='micro'?5:mode==='examen_blanc'?40:10;
   try{
-    const headers=S.token?{Authorization:'Bearer '+S.token}:{};
-    const res=await fetch('/api/training/session?count='+count+'&mode='+mode+'&category='+S.soloCategory,{headers});
+    const res=await fetch('/api/training/session?count='+count+'&mode='+mode+'&category='+S.soloCategory,{credentials:'include'});
     const d=await res.json();questions=d.fullQuestions||[];
     if(d.weakCategories?.length&&mode==='training')toast('Session ciblée : '+d.weakCategories.map(c=>catName(c)).join(', '),3000);
   }catch(e){console.error(e);}
@@ -507,7 +548,13 @@ function renderSoloQ(){
   const sb=document.getElementById('sq-situation-box');
   if(q.situation){sb.textContent='📍 '+q.situation;sb.classList.remove('hidden');}else sb.classList.add('hidden');
   const iw=document.getElementById('sq-image-wrap');
-  if(q.image_url){iw.innerHTML='<img src="'+q.image_url+'" alt="" style="max-width:100%;max-height:220px;object-fit:contain;border-radius:8px">';iw.classList.remove('hidden');}else{iw.innerHTML='';iw.classList.add('hidden');}
+  if(q.image_url){
+    iw.innerHTML='';
+    const img=document.createElement('img');
+    img.alt=''; img.style.cssText='max-width:100%;max-height:220px;object-fit:contain;border-radius:8px';
+    img.src=q.image_url;
+    iw.appendChild(img); iw.classList.remove('hidden');
+  }else{iw.innerHTML='';iw.classList.add('hidden');}
   const cont=document.getElementById('sq-answers');cont.innerHTML='';
   q.answers.forEach(a=>{const btn=document.createElement('button');btn.className='answer-btn';btn.dataset.id=a.id;btn.textContent=a.id.toUpperCase()+') '+a.text;if(q.correct.length>1){btn.addEventListener('click',()=>btn.classList.toggle('selected'));}else{btn.addEventListener('click',()=>submitSoloAnswer([a.id]));}cont.appendChild(btn);});
   let cb=document.getElementById('solo-confirm-btn');
@@ -526,8 +573,8 @@ function submitSoloAnswer(answers){
   const fb=document.getElementById('sq-feedback');
   let html='';
   if(ok)html='<strong>✅ Bonne réponse !</strong>'+(S.soloStreak>=3?' <span class="streak-fire">🔥 '+S.soloStreak+'</span>':'')+'<br>';
-  else html='<strong>❌ Mauvaise réponse</strong>'+(q.is_trap&&q.trap_message?'<br><em>😏 '+q.trap_message+'</em>':'')+'<br>';
-  if(q.explanation&&S.soloMode!=='blitz')html+='<span style="color:var(--text2);font-size:.85rem">💡 '+q.explanation+'</span>';
+  else html='<strong>❌ Mauvaise réponse</strong>'+(q.is_trap&&q.trap_message?'<br><em>😏 '+esc(q.trap_message)+'</em>':'')+'<br>';
+  if(q.explanation&&S.soloMode!=='blitz')html+='<span style="color:var(--text2);font-size:.85rem">💡 '+esc(q.explanation)+'</span>';
   if(q.is_trap)html+='<br><span style="color:var(--yellow);font-size:.78rem">📊 '+Math.floor(Math.random()*40+40)+'% se trompent ici</span>';
   fb.className='answer-feedback '+(ok?'correct-fb':'wrong-fb');fb.innerHTML=html;fb.classList.remove('hidden');
   if(!ok){const c=document.getElementById('sq-coach');c.textContent=coachTip(q.category);c.classList.remove('hidden');}
@@ -541,7 +588,7 @@ function submitSoloAnswer(answers){
 
 function startSoloTimer(secs){clearInterval(S.soloTimer);S.soloSecs=secs;const arc=document.getElementById('solo-timer-arc'),maxD=163.36;function tick(){document.getElementById('solo-timer-text').textContent=S.soloSecs;arc.style.strokeDashoffset=maxD*(1-S.soloSecs/secs);arc.style.stroke=S.soloSecs<=5?'#f87171':S.soloSecs<=10?'#fbbf24':'#4ade80';if(S.soloSecs>0)S.soloSecs--;else{clearInterval(S.soloTimer);soloTimeout();}}tick();S.soloTimer=setInterval(tick,1000);}
 
-function soloTimeout(){const q=S.soloQs[S.soloIdx];S.soloAnswers.push({questionIndex:S.soloIdx,answers:[],isCorrect:false,timeTaken:30,timeout:true});S.soloWrong++;S.soloStreak=0;sfx.wrong();document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{b.disabled=true;if(q.correct.includes(b.dataset.id))b.classList.add('correct');});const fb=document.getElementById('sq-feedback');fb.className='answer-feedback wrong-fb';fb.innerHTML='<strong>⏰ Temps écoulé !</strong>'+(q.explanation?'<br><span style="color:var(--text2);font-size:.85rem">💡 '+q.explanation+'</span>':'');fb.classList.remove('hidden');document.getElementById('sq-correct').textContent='✅ '+S.soloCorrect;document.getElementById('sq-wrong').textContent='❌ '+S.soloWrong;document.getElementById('sq-streak').textContent='';setTimeout(()=>{S.soloIdx++;renderSoloQ();},2000);}
+function soloTimeout(){const q=S.soloQs[S.soloIdx];S.soloAnswers.push({questionIndex:S.soloIdx,answers:[],isCorrect:false,timeTaken:30,timeout:true});S.soloWrong++;S.soloStreak=0;sfx.wrong();document.querySelectorAll('#sq-answers .answer-btn').forEach(b=>{b.disabled=true;if(q.correct.includes(b.dataset.id))b.classList.add('correct');});const fb=document.getElementById('sq-feedback');fb.className='answer-feedback wrong-fb';fb.innerHTML='<strong>⏰ Temps écoulé !</strong>'+(q.explanation?'<br><span style="color:var(--text2);font-size:.85rem">💡 '+esc(q.explanation)+'</span>':'');fb.classList.remove('hidden');document.getElementById('sq-correct').textContent='✅ '+S.soloCorrect;document.getElementById('sq-wrong').textContent='❌ '+S.soloWrong;document.getElementById('sq-streak').textContent='';setTimeout(()=>{S.soloIdx++;renderSoloQ();},2000);}
 
 async function endSolo(){
   clearInterval(S.soloTimer);
@@ -557,11 +604,11 @@ async function endSolo(){
   catEl.innerHTML=Object.keys(catErrors).length?'<div class="analysis-title">📊 Erreurs par thème</div>'+Object.entries(catErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>'<div class="category-error"><span>'+catName(cat)+'</span><span style="color:var(--red)">'+n+' erreur'+(n>1?'s':'')+'</span></div>').join(''):'<div style="text-align:center;color:var(--green);padding:.75rem">🌟 Aucune erreur !</div>';
   const weakCat=Object.keys(catErrors)[0];
   const advEl=document.getElementById('solo-coach-advice');
-  if(weakCat&&COACH[weakCat]){advEl.innerHTML='<div class="coach-advice-title">🧑‍🏫 Conseils sur '+catName(weakCat)+'</div>'+COACH[weakCat].map(t=>'<div class="coach-advice-tip">'+t+'</div>').join('');}else advEl.style.display='none';
+  if(weakCat&&COACH[weakCat]){advEl.innerHTML='<div class="coach-advice-title">🧑‍🏫 Conseils sur '+catName(weakCat)+'</div>'+COACH[weakCat].map(t=>'<div class="coach-advice-tip">'+esc(t)+'</div>').join('');}else advEl.style.display='none';
   const wrongs=S.soloAnswers.filter(a=>!a.isCorrect).slice(0,5);
   const replayEl=document.getElementById('solo-replay');
-  if(wrongs.length){replayEl.innerHTML='<div class="analysis-title">📹 Questions manquées</div>'+wrongs.map(a=>{const q=S.soloQs[a.questionIndex];return '<div class="replay-item wrong-q"><div class="replay-q">'+q.question+'</div><div style="color:var(--green);font-size:.8rem">✅ '+q.correct.join(', ')+' — '+(q.explanation||'').slice(0,80)+'...</div></div>';}).join('');}else replayEl.innerHTML='';
-  if(S.token){try{await fetch('/api/training/complete',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({answers:S.soloAnswers.map(a=>a.answers),questions:S.soloQs,mode:S.soloMode})});}catch{}}
+  if(wrongs.length){replayEl.innerHTML='<div class="analysis-title">📹 Questions manquées</div>'+wrongs.map(a=>{const q=S.soloQs[a.questionIndex];return '<div class="replay-item wrong-q"><div class="replay-q">'+esc(q.question)+'</div><div style="color:var(--green);font-size:.8rem">✅ '+esc(q.correct.join(', '))+' — '+esc((q.explanation||'').slice(0,80))+'...</div></div>';}).join('');}else replayEl.innerHTML='';
+  if(S.isAuth){try{await fetch('/api/training/complete',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({answers:S.soloAnswers.map(a=>a.answers),questions:S.soloQs,mode:S.soloMode})});}catch{}}
 }
 
 // ── Leaderboard ──
@@ -591,7 +638,7 @@ async function loadLeaderboard() {
 
 // ── Session time ──
 let _ss = Date.now();
-setInterval(async()=>{if(!S.token)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await fetch('/api/profile/session-time',{method:'POST',headers:{Authorization:'Bearer '+S.token,'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},30000);
+setInterval(async()=>{if(!S.isAuth)return;const s=Math.round((Date.now()-_ss)/1000);_ss=Date.now();if(s<5)return;try{await fetch('/api/profile/session-time',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({seconds:s})});}catch{}},30000);
 
 // ── Socket events ──
 socket.on('game_created',({roomCode,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting([{pseudo:S.pseudo,ready:false,avatar:S.avatar}],options.maxPlayers);});
@@ -602,17 +649,17 @@ socket.on('new_question',data=>{S.allPlayers.forEach(p=>p.answered=false);render
 socket.on('scores_update',({players})=>{S.allPlayers=players;renderHUD();});
 socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showDuelResult(data);renderHUD();});
 socket.on('powerup_result',({type,removed,bonusSeconds})=>{if(type==='fifty50'&&removed){removed.forEach(id=>document.querySelector('.answer-btn[data-id="'+id+'"]')?.classList.add('removed'));toast('⚡ 50/50 !');}else if(type==='timeBonus'&&bonusSeconds){S.timerSecs+=bonusSeconds;toast('⏱️ +'+bonusSeconds+'s !');}else if(type==='stress')toast('😱 Stress envoyé !');});
-socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){S.timerSecs=Math.max(3,S.timerSecs-penaltySeconds);toast('😱 '+from+' t\'a stressé ! -'+penaltySeconds+'s',3000);}});
+socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){S.timerSecs=Math.max(3,S.timerSecs-penaltySeconds);toast('😱 '+esc(from)+' t\'a stressé ! -'+penaltySeconds+'s',3000);}});
 socket.on('game_end',data=>{
   const myR=data.results?.find(r=>r.pseudo===S.pseudo);
   if(myR?.forfeited){
-    if(myR.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',S.elo);}
+    if(myR.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',String(S.elo));}
     S.gamePlaying=false; S.roomCode=null;
     return;
   }
   showDuelResults(data);
 });
-socket.on('player_disconnected',({pseudo})=>toast('💔 '+pseudo+' a quitté...',3000));
+socket.on('player_disconnected',({pseudo})=>toast('💔 '+esc(pseudo)+' a quitté...',3000));
 socket.on('rematch_started',({roomCode,options,players})=>{S.roomCode=roomCode;S.isHost=players[0]?.pseudo===S.pseudo;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);toast('🔄 Revanche ! Cliquez sur Prêt !');});
 socket.on('queue_joined',({position,total,eloRange})=>{
   document.getElementById('queue-position').textContent='#'+position+(total>1?' / '+total+' joueurs':' — seul dans la file');
@@ -627,25 +674,22 @@ socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
   S.roomCode=roomCode; S.isHost=isHost;
   S.gameOptions={maxPlayers:2,questionCount:totalQuestions,timeLimit:30,category:'all',mode:'normal'};
   S.gameMode='normal';
-  // Mettre à jour l'avatar adversaire dans le VS
   const oppAv=document.getElementById('queue-opp-avatar');
   oppAv.innerHTML=avatarHtml(opponent.avatar);
   oppAv.className='queue-avatar queue-avatar-found';
-  document.getElementById('queue-opp-pseudo').textContent=esc(opponent.pseudo);
+  document.getElementById('queue-opp-pseudo').textContent=opponent.pseudo;
   document.getElementById('queue-opp-pseudo').style.color='';
-  document.getElementById('queue-opp-elo').textContent=esc(opponent.elo)+' Elo';
+  document.getElementById('queue-opp-elo').textContent=opponent.elo+' Elo';
   document.getElementById('queue-opp-elo').style.color='';
-  // Cacher spinner, montrer compte à rebours
   document.getElementById('queue-searching-row').classList.add('hidden');
   document.getElementById('queue-elo-range').classList.add('hidden');
   document.getElementById('btn-leave-queue').classList.add('hidden');
   document.getElementById('queue-matched-extra').classList.remove('hidden');
-  // Diff Elo
   const diff=opponent.elo-S.elo;
   const diffEl=document.getElementById('queue-elo-diff');
-  if(diff>50)diffEl.innerHTML='⚠️ Adversaire plus fort (+'+diff+' Elo) — bonne chance 💪';
-  else if(diff<-50)diffEl.innerHTML='🎯 Tu es le favori ('+diff+' Elo) — reste concentré !';
-  else diffEl.innerHTML='⚖️ Niveau équilibré — que le meilleur gagne !';
+  if(diff>50)diffEl.textContent='⚠️ Adversaire plus fort (+'+diff+' Elo) — bonne chance 💪';
+  else if(diff<-50)diffEl.textContent='🎯 Tu es le favori ('+diff+' Elo) — reste concentré !';
+  else diffEl.textContent='⚖️ Niveau équilibré — que le meilleur gagne !';
   sfx.start();
   let count=3;
   document.getElementById('queue-countdown').textContent=count;
@@ -675,12 +719,24 @@ socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded',()=>{
-  if(S.token){socket.auth={token:S.token};if(S.pseudo)updateHomeUI();}
+  // Vérifier si une session cookie est encore valide et restaurer l'état
+  fetch('/api/profile',{credentials:'include'})
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{
+      if(d){
+        S.isAuth=true; S.pseudo=d.pseudo; S.elo=d.elo;
+        if(d.avatar) S.avatar=d.avatar;
+        localStorage.setItem('pseudo',d.pseudo);
+        localStorage.setItem('elo',String(d.elo));
+        if(d.avatar) localStorage.setItem('avatar',d.avatar);
+        updateHomeUI();
+      }
+    }).catch(()=>{});
+
   document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
   document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});
   document.getElementById('join-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
   document.getElementById('new-pseudo-input').addEventListener('keydown',e=>{if(e.key==='Enter')savePseudo();});
   document.getElementById('chat-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
-  if(S.token){fetch('/api/profile',{headers:{Authorization:'Bearer '+S.token}}).then(r=>r.json()).then(d=>{if(d.avatar){S.avatar=d.avatar;localStorage.setItem('avatar',d.avatar);updateHomeUI();}}).catch(()=>{});}
 });

@@ -5,35 +5,88 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 
 const db = require('./db');
 const allQuestions = require('./data/questions.json');
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: '*', methods: ['GET', 'POST'] } });
 
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'codeRoute_secret_2024_change_me';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌  JWT_SECRET non défini — arrêt pour sécurité.');
+  process.exit(1);
+}
 
-app.use(cors());
-app.use(express.json());
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGINS || 'http://localhost:' + PORT;
+
+const io = new Server(httpServer, {
+  cors: { origin: ALLOWED_ORIGIN, credentials: true, methods: ['GET', 'POST'] },
+});
+
+// ── Cookie options ─────────────────────────────────────────────────────────────
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+};
+
+// ── Middleware ─────────────────────────────────────────────────────────────────
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
+app.use(express.json({ limit: '600kb' }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Rate limiters ──────────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  message: { error: 'Trop de tentatives, réessaie dans 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', apiLimiter);
+
+// ── Auth middleware ────────────────────────────────────────────────────────────
+function authMiddleware(req, res, next) {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: 'Non authentifié' });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.clearCookie('token');
+    res.status(401).json({ error: 'Session expirée, reconnecte-toi' });
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 const activeGames = new Map();
 const matchmakingQueue = [];
 const QUEUE_ELO_START  = 200;
 const QUEUE_ELO_STEP   = 100;
 const QUEUE_ELO_EVERY  = 10;
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function generateRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
 function pickQuestions(options) {
-  let pool = allQuestions.filter(q => q.category !== 'international'); // No international
+  let pool = allQuestions.filter(q => q.category !== 'international');
   if (options.mode === 'piege') pool = pool.filter(q => q.is_trap);
   else if (options.mode === 'micro') pool = pool.sort(() => Math.random() - 0.5).slice(0, 5);
   else if (options.category && options.category !== 'all') {
@@ -41,7 +94,6 @@ function pickQuestions(options) {
     if (filtered.length >= 5) pool = filtered;
   }
   if (options.weakCategories?.length) {
-    // Prioritize weak categories
     const weak = pool.filter(q => options.weakCategories.includes(q.category));
     const other = pool.filter(q => !options.weakCategories.includes(q.category));
     pool = [...weak.sort(() => Math.random() - 0.5), ...other.sort(() => Math.random() - 0.5)];
@@ -77,7 +129,7 @@ function checkBadges(user, gameResult) {
   return badges.filter(b => !((user.badges || []).includes(b)));
 }
 
-// ── Matchmaking queue ─────────────────────────────────────────────────────────
+// ── Matchmaking queue ──────────────────────────────────────────────────────────
 function queueEloRange(entry) {
   const secs = (Date.now() - entry.joinedAt) / 1000;
   return QUEUE_ELO_START + Math.floor(secs / QUEUE_ELO_EVERY) * QUEUE_ELO_STEP;
@@ -135,41 +187,63 @@ function tryQueueMatch() {
 
 setInterval(() => { if (matchmakingQueue.length >= 2) tryQueueMatch(); }, 3000);
 
-function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Token manquant' });
-  try { req.user = jwt.verify(token, JWT_SECRET); next(); }
-  catch { res.status(401).json({ error: 'Token invalide' }); }
-}
+// ── Socket.io auth middleware ──────────────────────────────────────────────────
+io.use((socket, next) => {
+  const cookieHeader = socket.handshake.headers.cookie || '';
+  const match = cookieHeader.match(/(?:^|;\s*)token=([^;]+)/);
+  if (match) {
+    try {
+      socket.connectedUser = jwt.verify(decodeURIComponent(match[1]), JWT_SECRET);
+    } catch {}
+  }
+  next();
+});
 
-// ── REST API ──────────────────────────────────────────────────────────────────
-app.post('/api/auth/register', async (req, res) => {
+// ── REST API ───────────────────────────────────────────────────────────────────
+app.post('/api/auth/register', authLimiter, async (req, res) => {
   try {
-    const { pseudo, password } = req.body;
+    const pseudo = String(req.body?.pseudo || '').trim();
+    const password = String(req.body?.password || '');
     if (!pseudo || !password) return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     if (pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
     if (!/^[\w\- .éèêëàâùûüîïôçæœ]+$/i.test(pseudo)) return res.status(400).json({ error: 'Pseudo : lettres, chiffres, tirets et espaces uniquement' });
-    if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4)' });
+    if (password.length < 6) return res.status(400).json({ error: 'Mot de passe trop court (min 6)' });
+    if (password.length > 128) return res.status(400).json({ error: 'Mot de passe trop long' });
     const exists = await db.getUser(pseudo);
     if (exists) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(password, 12);
     const result = await db.createUser(pseudo, hash);
-    const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '365d' });
-    res.json({ token, pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
-  } catch (e) { console.error('register error:', e); res.status(500).json({ error: 'Erreur serveur: ' + e.message }); }
+    const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, COOKIE_OPTS);
+    res.json({ pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
+  } catch (e) {
+    console.error('register error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authLimiter, async (req, res) => {
   try {
-    const { pseudo, password } = req.body;
+    const pseudo = String(req.body?.pseudo || '').trim();
+    const password = String(req.body?.password || '');
+    if (!pseudo || !password) return res.status(400).json({ error: 'Pseudo et mot de passe requis' });
     const user = await db.getUser(pseudo);
     if (!user) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
     const id = user._id?.toString() || user.id;
-    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '365d' });
-    res.json({ token, pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
-  } catch (e) { console.error('login error:', e); res.status(500).json({ error: 'Erreur serveur' }); }
+    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, COOKIE_OPTS);
+    res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
+  } catch (e) {
+    console.error('login error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ success: true });
 });
 
 app.get('/api/leaderboard', async (req, res) => {
@@ -180,32 +254,34 @@ app.get('/api/leaderboard', async (req, res) => {
 app.get('/api/profile', authMiddleware, async (req, res) => {
   const user = await db.getUserById(req.user.id);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo) });
+  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, total_seconds: user.total_seconds || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo), avatar: user.avatar || null });
 });
 
 app.put('/api/profile/pseudo', authMiddleware, async (req, res) => {
   try {
-    const { pseudo } = req.body;
+    const pseudo = String(req.body?.pseudo || '').trim();
     if (!pseudo || pseudo.length < 3 || pseudo.length > 20) return res.status(400).json({ error: 'Pseudo : 3-20 caractères' });
     if (!/^[\w\- .éèêëàâùûüîïôçæœ]+$/i.test(pseudo)) return res.status(400).json({ error: 'Caractères invalides' });
     const exists = await db.getUser(pseudo);
     if (exists && String(exists.id) !== String(req.user.id)) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
     await db.updateUser(req.user.id, {}, { pseudo });
-    const token = jwt.sign({ id: req.user.id, pseudo }, JWT_SECRET, { expiresIn: '365d' });
-    res.json({ token, pseudo });
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    const token = jwt.sign({ id: req.user.id, pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, COOKIE_OPTS);
+    res.json({ pseudo });
+  } catch(e) {
+    console.error('update pseudo error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
-// ── Training session (solo) ───────────────────────────────────────────────────
+// ── Training session (solo) ────────────────────────────────────────────────────
 app.get('/api/training/session', async (req, res) => {
-  // Works with or without auth
   let user = null;
-  const token = req.headers.authorization?.split(' ')[1];
+  const token = req.cookies?.token;
   if (token) {
     try { const decoded = jwt.verify(token, JWT_SECRET); user = await db.getUserById(decoded.id); } catch {}
   }
   const catStats = user?.category_stats || {};
-  // Find weakest categories
   const weakCategories = Object.entries(catStats)
     .filter(([, s]) => s.sessions > 0)
     .sort((a, b) => (b[1].errors / b[1].sessions) - (a[1].errors / a[1].sessions))
@@ -213,15 +289,17 @@ app.get('/api/training/session', async (req, res) => {
     .map(([cat]) => cat);
 
   const mode = req.query.mode || 'training';
-  const count = parseInt(req.query.count || '10');
+  const count = Math.min(parseInt(req.query.count || '10'), 40);
   const questions = pickQuestions({ questionCount: count, weakCategories, mode, category: req.query.category || 'all' });
-  res.json({ questions: questions.map(q => ({ ...q, correct: undefined, explanation: undefined })), weakCategories, totalQuestions: questions.length, fullQuestions: questions });
+  // Ne pas exposer les réponses dans la réponse initiale
+  const safeQuestions = questions.map(q => ({ id: q.id, category: q.category, question: q.question, answers: q.answers, isMultiple: q.correct.length > 1, is_trap: q.is_trap, trap_message: q.trap_message, situation: q.situation || null, image_url: q.image_url || null, video_url: q.video_url || null }));
+  res.json({ questions: safeQuestions, fullQuestions: questions, weakCategories, totalQuestions: questions.length });
 });
 
 app.post('/api/training/complete', authMiddleware, async (req, res) => {
   try {
     const { answers, questions, mode } = req.body;
-    // Calculate results
+    if (!Array.isArray(answers) || !Array.isArray(questions)) return res.status(400).json({ error: 'Données invalides' });
     let correct = 0, maxStreak = 0, currentStreak = 0;
     const categoryErrors = {};
     const detailedResults = [];
@@ -237,48 +315,49 @@ app.post('/api/training/complete', authMiddleware, async (req, res) => {
     const percentage = Math.round((correct / questions.length) * 100);
     const user = await db.getUserById(req.user.id);
 
-    // Update stats
     await db.updateUser(req.user.id, { total_correct: correct, total_questions: questions.length });
     await db.updateCategoryStats(req.user.id, categoryErrors);
 
-    // Check badges
     const newBadges = checkBadges(user || {}, { score: correct, total: questions.length, percentage, maxStreak, mode, allCorrectInCategory: null });
     for (const badge of newBadges) await db.addBadge(req.user.id, badge);
 
-    // Update level
     const updatedUser = await db.getUserById(req.user.id);
     const level = getLevel(updatedUser?.elo || 1000);
 
     res.json({ correct, total: questions.length, percentage, categoryErrors, maxStreak, detailedResults, newBadges, level,
       passed: mode === 'examen_blanc' ? percentage >= 87 : null });
-  } catch (e) { console.error('training complete error:', e); res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.error('training complete error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
-
-// ── Profile photo ─────────────────────────────────────────────────────────────
+// ── Profile photo ──────────────────────────────────────────────────────────────
 app.post('/api/profile/photo', authMiddleware, async (req, res) => {
   try {
-    const { photo } = req.body; // base64 data URL
+    const { photo } = req.body;
     if (!photo) return res.status(400).json({ error: 'Photo manquante' });
+    if (typeof photo !== 'string' || !photo.startsWith('data:image/')) return res.status(400).json({ error: 'Format invalide' });
     if (photo.length > 500000) return res.status(400).json({ error: 'Image trop grande (max 500kb)' });
     await db.updateUser(req.user.id, {}, { avatar: photo });
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    console.error('photo error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 app.post('/api/profile/session-time', authMiddleware, async (req, res) => {
   try {
-    const { seconds } = req.body;
+    const seconds = Number(req.body?.seconds);
     if (seconds > 0 && seconds < 86400) await db.updateUser(req.user.id, { total_seconds: Math.round(seconds) });
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
-// ── Socket.io ─────────────────────────────────────────────────────────────────
+// ── Socket.io ──────────────────────────────────────────────────────────────────
 io.on('connection', (socket) => {
-  const token = socket.handshake.auth?.token;
-  let connectedUser = null;
-  if (token) { try { connectedUser = jwt.verify(token, JWT_SECRET); } catch {} }
+  const connectedUser = socket.connectedUser || null;
 
   socket.on('create_game', ({ pseudo, options, avatar }) => {
     if (!pseudo) return socket.emit('error', 'Pseudo requis');
@@ -383,6 +462,30 @@ io.on('connection', (socket) => {
       });
       socket.emit('powerup_result', { type });
     }
+  });
+
+  socket.on('leave_waiting', () => {
+    const game = activeGames.get(socket.roomCode);
+    if (!game || game.status !== 'waiting') return;
+    const player = game.players.find(p => p.socketId === socket.id);
+    if (!player) return;
+    game.players = game.players.filter(p => p.socketId !== socket.id);
+    socket.leave(game.roomCode);
+    socket.roomCode = null;
+    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
+    if (game.players.length === 0) activeGames.delete(game.roomCode);
+  });
+
+  socket.on('chat_message', ({ message }) => {
+    const game = activeGames.get(socket.roomCode);
+    if (!game || game.status !== 'playing') return;
+    const player = game.players.find(p => p.socketId === socket.id);
+    if (!player) return;
+    const text = String(message || '').trim().slice(0, 120);
+    if (!text) return;
+    if (!game.chatHistory) game.chatHistory = [];
+    game.chatHistory.push({ pseudo: player.pseudo, message: text });
+    io.to(game.roomCode).emit('chat_message', { pseudo: player.pseudo, message: text });
   });
 
   socket.on('join_queue', ({ pseudo, elo, avatar }) => {
@@ -502,13 +605,10 @@ async function endGame(game) {
   game.status = 'finished';
   clearTimeout(game.questionTimer);
 
-  // allPlayers inclut ceux qui ont FF ou se sont déconnectés
   const forfeiters = game.forfeiters || [];
   const allPlayers = [...game.players, ...forfeiters];
-
   const ranked = [...game.players].sort((a, b) => b.score - a.score);
 
-  // Si quelqu'un a FF et qu'il reste 1 joueur → ce joueur gagne par forfait
   let winner = null;
   if (forfeiters.length > 0 && game.players.length === 1) {
     winner = game.players[0].pseudo;
@@ -567,19 +667,24 @@ async function endGame(game) {
       rank: i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length,
       percentage: Math.round((p.score / game.questions.length) * 100),
       categoryErrors: catErrors, eloChange: eloChanges[p.pseudo] || 0,
-      maxStreak: p.maxStreak,
-      levelInfo: null, // will be fetched client side
+      maxStreak: p.maxStreak, levelInfo: null,
     };
   });
+  const forfeitResults = forfeiters.map((p, i) => ({
+    rank: results.length + i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length,
+    percentage: Math.round((p.score / game.questions.length) * 100),
+    categoryErrors: {}, eloChange: eloChanges[p.pseudo] || 0,
+    maxStreak: p.maxStreak || 0, levelInfo: null, forfeited: true,
+  }));
+  const allResults = [...results, ...forfeitResults];
 
-  // Build replay data
   const replayData = game.questions.map((q, i) => ({
     question: q.question, category: q.category, correct: q.correct, explanation: q.explanation, isTrap: q.is_trap,
     playerAnswers: game.players.map(p => ({ pseudo: p.pseudo, answers: p.answers[i]?.answers || [], isCorrect: p.answers[i]?.isCorrect, timeTaken: p.answers[i]?.timeTaken }))
   }));
 
   db.updateGame(game.roomCode, { status: 'finished', winner_pseudo: winner, player1_score: ranked[0]?.score || 0, player2_score: ranked[1]?.score || 0, finished_at: new Date().toISOString() }).catch(() => {});
-  io.to(game.roomCode).emit('game_end', { winner, isDraw: !winner, results, mode: game.options.mode, hostPseudo: game.hostPseudo, newBadges: newBadgesAll, replayData,
+  io.to(game.roomCode).emit('game_end', { winner, isDraw: !winner, results: allResults, mode: game.options.mode, hostPseudo: game.hostPseudo, newBadges: newBadgesAll, replayData, chatHistory: game.chatHistory || [],
     examPassed: game.options.mode === 'examen_blanc' ? ranked.map(p => ({ pseudo: p.pseudo, passed: Math.round(p.score/game.questions.length*100) >= 87 })) : null });
   setTimeout(() => activeGames.delete(game.roomCode), 120000);
 }
