@@ -188,8 +188,9 @@ async function loadProfile() {
     const eloRange=lv.next?lv.next-eloBase:1;
     const eloProgress=lv.next?Math.min(100,Math.round((d.elo-eloBase)/eloRange*100)):100;
     const avatar=d.avatar&&d.avatar.startsWith('data:image:')?d.avatar:null;
-    S.avatar=avatar; localStorage.setItem('avatar',avatar||'');
-    const avHtml=avatar?'<img src="'+avatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem;font-weight:900;color:var(--accent2)'>"+esc((d.pseudo[0]||'?').toUpperCase())+"</span>";
+    if(avatar){S.avatar=avatar;localStorage.setItem('avatar',avatar);}
+    const displayAvatar=avatar||S.avatar||null;
+    const avHtml=displayAvatar?'<img src="'+displayAvatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem;font-weight:900;color:var(--accent2)'>"+esc((d.pseudo[0]||'?').toUpperCase())+"</span>";
     const badges=d.badges||[];
     const catStats=d.category_stats||{};
     const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,4);
