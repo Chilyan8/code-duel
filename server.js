@@ -33,7 +33,7 @@ const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+  maxAge: 24 * 60 * 60 * 1000, // 24h
 };
 
 // ── Middleware ─────────────────────────────────────────────────────────────────
@@ -61,11 +61,19 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 
 // ── Auth middleware ────────────────────────────────────────────────────────────
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ error: 'Non authentifié' });
   try {
-    req.user = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    try {
+      const user = await db.getUserById(decoded.id);
+      if (user && (user.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
+        res.clearCookie('token');
+        return res.status(401).json({ error: 'Session expirée, reconnecte-toi' });
+      }
+    } catch { /* erreur DB — on laisse passer */ }
+    req.user = decoded;
     next();
   } catch {
     res.clearCookie('token');
@@ -213,7 +221,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
     if (exists) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
     const hash = await bcrypt.hash(password, 12);
     const result = await db.createUser(pseudo, hash);
-    const token = jwt.sign({ id: result.id, pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: result.id, pseudo, tokenVersion: 0 }, JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, COOKIE_OPTS);
     res.json({ pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
   } catch (e) {
@@ -232,7 +240,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) return res.status(401).json({ error: 'Pseudo ou mot de passe incorrect' });
     const id = user._id?.toString() || user.id;
-    const token = jwt.sign({ id, pseudo: user.pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id, pseudo: user.pseudo, tokenVersion: user.tokenVersion || 0 }, JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, COOKIE_OPTS);
     res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
   } catch (e) {
@@ -241,7 +249,14 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
   }
 });
 
-app.post('/api/auth/logout', (req, res) => {
+app.post('/api/auth/logout', async (req, res) => {
+  const token = req.cookies?.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      await db.updateUser(decoded.id, { tokenVersion: 1 });
+    } catch { /* token déjà invalide */ }
+  }
   res.clearCookie('token');
   res.json({ success: true });
 });
@@ -265,7 +280,7 @@ app.put('/api/profile/pseudo', authMiddleware, async (req, res) => {
     const exists = await db.getUser(pseudo);
     if (exists && String(exists.id) !== String(req.user.id)) return res.status(409).json({ error: 'Ce pseudo est déjà pris' });
     await db.updateUser(req.user.id, {}, { pseudo });
-    const token = jwt.sign({ id: req.user.id, pseudo }, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: req.user.id, pseudo, tokenVersion: req.user.tokenVersion || 0 }, JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, COOKIE_OPTS);
     res.json({ pseudo });
   } catch(e) {

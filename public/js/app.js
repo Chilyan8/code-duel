@@ -288,7 +288,7 @@ async function uploadAvatar(event) {
     img.onload = async () => {
       const canvas = document.createElement('canvas'); canvas.width = canvas.height = 150;
       const ctx = canvas.getContext('2d');
-      const ratio = Math.min(150/img.width, 150/img.height);
+      const ratio = Math.max(150/img.width, 150/img.height);
       const w = img.width*ratio, h = img.height*ratio;
       ctx.drawImage(img, (150-w)/2, (150-h)/2, w, h);
       const dataUrl = canvas.toDataURL('image/jpeg', .8);
