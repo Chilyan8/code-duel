@@ -3198,5 +3198,185 @@
     "is_trap": false,
     "trap_message": null,
     "situation": "Route nationale, capot qui s'ouvre à 80 km/h."
+  },
+  {
+    "id": 101,
+    "category": "regles",
+    "question": "Vous voyez ces tirets blancs au centre de la chaussée. Que vous autorisent-ils ?",
+    "image_url": "/images/ligne_discontinue.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Interdiction absolue de franchir" },
+      { "id": "b", "text": "Dépassement autorisé si la manœuvre est sûre et sans danger" },
+      { "id": "c", "text": "Voie réservée aux bus" },
+      { "id": "d", "text": "Zone de travaux" }
+    ],
+    "correct": ["b"],
+    "explanation": "Ligne discontinue (tirets) = franchissement AUTORISÉ si la manœuvre est sans danger. Contrairement à la ligne continue qui l'interdit absolument.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route bidirectionnelle, centre de voie."
+  },
+  {
+    "id": 102,
+    "category": "regles",
+    "question": "Double ligne axiale : la ligne CONTINUE est de votre côté gauche. Pouvez-vous dépasser ?",
+    "image_url": "/images/double_ligne.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Oui, si la visibilité est bonne" },
+      { "id": "b", "text": "Oui, pour dépasser un cycliste uniquement" },
+      { "id": "c", "text": "Non — la ligne continue de votre côté interdit tout franchissement" },
+      { "id": "d", "text": "Oui, à faible vitesse" }
+    ],
+    "correct": ["c"],
+    "explanation": "Double ligne (continue + discontinue) : c'est la ligne la plus proche de VOUS qui s'applique. Continue à gauche = vous ne pouvez pas franchir. Discontinue à gauche = vous pouvez.",
+    "is_trap": true,
+    "trap_message": "C'est la ligne de VOTRE côté qui compte, pas celle d'en face ! 🧩",
+    "situation": "Route nationale, double ligne axiale."
+  },
+  {
+    "id": 103,
+    "category": "regles",
+    "question": "Vous êtes dans une voie avec cette flèche gauche peinte au sol. Que devez-vous faire ?",
+    "image_url": "/images/fleche_gauche.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Recommandé de tourner à gauche mais pas obligatoire" },
+      { "id": "b", "text": "Tourner à gauche obligatoirement" },
+      { "id": "c", "text": "Priorité à gauche" },
+      { "id": "d", "text": "Voie de dépassement" }
+    ],
+    "correct": ["b"],
+    "explanation": "Une flèche de sélection peinte au sol indique la direction OBLIGATOIRE depuis cette voie. Flèche gauche = vous devez tourner à gauche, sans exception.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Intersection en ville, voie avec flèche directionnelle."
+  },
+  {
+    "id": 104,
+    "category": "priorites",
+    "question": "À l'entrée d'un giratoire, vous voyez ce panneau. Qui a la priorité ?",
+    "image_url": "/images/panneau_giratoire.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Vous — priorité à celui qui entre" },
+      { "id": "b", "text": "Les véhicules déjà engagés dans le giratoire" },
+      { "id": "c", "text": "Priorité au plus grand véhicule" },
+      { "id": "d", "text": "Priorité à droite s'applique" }
+    ],
+    "correct": ["b"],
+    "explanation": "Depuis 1983, dans les giratoires signalisés, les véhicules DÉJÀ dans le rond-point sont prioritaires. Le panneau AB25 (cédez le passage) à l'entrée vous le confirme.",
+    "is_trap": true,
+    "trap_message": "En France, c'est l'INVERSE de l'ancienne règle ! On cède à ceux qui sont déjà dedans 🔄",
+    "situation": "Entrée d'un carrefour giratoire avec panneau."
+  },
+  {
+    "id": 105,
+    "category": "priorites",
+    "question": "Ce panneau losange jaune barré apparaît sur votre route. Que signifie-t-il ?",
+    "image_url": "/images/fin_route_prioritaire.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Vous devenez encore plus prioritaire" },
+      { "id": "b", "text": "Fin de la route prioritaire — la priorité à droite reprend" },
+      { "id": "c", "text": "Cédez le passage aux piétons" },
+      { "id": "d", "text": "Zone de danger" }
+    ],
+    "correct": ["b"],
+    "explanation": "Le losange jaune barré (AB5) = FIN de route prioritaire. Vous n'êtes plus prioritaire aux intersections suivantes. La règle de priorité à droite reprend.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route nationale, après une longue section prioritaire."
+  },
+  {
+    "id": 106,
+    "category": "priorites",
+    "question": "En zone de rencontre, quelle est la vitesse maximale et qui est prioritaire ?",
+    "image_url": "/images/zone_rencontre.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "30 km/h, voitures prioritaires" },
+      { "id": "b", "text": "20 km/h, piétons prioritaires sur toute la chaussée" },
+      { "id": "c", "text": "20 km/h, priorité à droite habituelle" },
+      { "id": "d", "text": "50 km/h, piétons sur les passages uniquement" }
+    ],
+    "correct": ["b"],
+    "explanation": "Zone de rencontre = 20 km/h maximum. Les piétons sont prioritaires SUR TOUTE LA CHAUSSÉE, pas seulement aux passages. Les vélos ont aussi des droits élargis.",
+    "is_trap": true,
+    "trap_message": "20 km/h (pas 30 !) et les piétons sont partout prioritaires, pas seulement aux passages 🚶",
+    "situation": "Entrée d'une zone de rencontre en centre-ville."
+  },
+  {
+    "id": 107,
+    "category": "regles",
+    "question": "Une ligne jaune continue longe le trottoir. Que vous interdit-elle ?",
+    "image_url": "/images/ligne_jaune.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Rouler près du bord" },
+      { "id": "b", "text": "Arrêt et stationnement interdits en permanence" },
+      { "id": "c", "text": "Stationnement interdit seulement certains jours" },
+      { "id": "d", "text": "Zone payante uniquement" }
+    ],
+    "correct": ["b"],
+    "explanation": "Ligne jaune CONTINUE au sol = ARRÊT et STATIONNEMENT interdits en permanence (jour et nuit, 7j/7). La ligne discontinue jaune interdit seulement le stationnement.",
+    "is_trap": true,
+    "trap_message": "Continue = arrêt ET stationnement interdits TOUJOURS. Discontinue = stationnement interdit seulement 🟡",
+    "situation": "Bord de chaussée en ville, ligne jaune au sol."
+  },
+  {
+    "id": 108,
+    "category": "regles",
+    "question": "Vous voyez la mention 'BUS' peinte sur votre voie. Qui a le droit d'y circuler ?",
+    "image_url": "/images/voie_bus.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Uniquement les bus" },
+      { "id": "b", "text": "Bus, taxis, vélos, et véhicules d'urgence — sauf voitures particulières" },
+      { "id": "c", "text": "Tout le monde en dehors des heures de pointe" },
+      { "id": "d", "text": "Bus et voitures avec plus de 3 personnes" }
+    ],
+    "correct": ["b"],
+    "explanation": "Les voies bus sont réservées aux bus, taxis en service, vélos (sauf mention contraire) et véhicules d'urgence. Les voitures particulières n'y ont pas accès, même aux heures creuses.",
+    "is_trap": true,
+    "trap_message": "Voie BUS ≠ interdit à tout le monde ! Vélos et taxis y ont leur place 🚲🚕",
+    "situation": "Voie de bus en agglomération."
+  },
+  {
+    "id": 109,
+    "category": "regles",
+    "question": "Ces deux lignes blanches transversales rapprochées en approche d'intersection signifient :",
+    "image_url": "/images/marquage_cedez.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Ligne d'arrêt au STOP" },
+      { "id": "b", "text": "Limite de cédez le passage — ralentir et céder si nécessaire" },
+      { "id": "c", "text": "Passage piéton" },
+      { "id": "d", "text": "Début de zone 30" }
+    ],
+    "correct": ["b"],
+    "explanation": "Les deux lignes discontinues transversales au sol = CÉDEZ LE PASSAGE. Vous devez vous arrêter avant ces lignes si un véhicule prioritaire arrive. Différent du STOP qui impose un arrêt total.",
+    "is_trap": true,
+    "trap_message": "Ce n'est PAS un STOP ! Vous pouvez passer si c'est libre, sans arrêt obligatoire 🔺",
+    "situation": "Intersection secondaire, marquage au sol triangulaire."
+  },
+  {
+    "id": 110,
+    "category": "regles",
+    "question": "La ligne blanche en bord de chaussée (ligne de rive) délimite :",
+    "image_url": "/images/ligne_rive.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "L'interdiction de dépasser" },
+      { "id": "b", "text": "La limite de la chaussée et le début de l'accotement" },
+      { "id": "c", "text": "Une voie réservée aux cyclistes" },
+      { "id": "d", "text": "La limite de vitesse change ici" }
+    ],
+    "correct": ["b"],
+    "explanation": "La ligne de rive (T3) délimite la chaussée de l'accotement. Circuler à cheval sur cette ligne est autorisé pour croiser, mais l'accotement n'est pas une voie de circulation normale.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": "Route à deux voies, bord droit de la chaussée."
   }
 ]
