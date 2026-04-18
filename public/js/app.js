@@ -834,7 +834,7 @@ socket.on('scores_update',({players})=>{
   renderHUD();
 });
 socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;me._lastCorrect=data.isCorrect;}showDuelResult(data);renderHUD();});
-socket.on('answers_revealed',({correctAnswers, playerAnswers})=>{
+socket.on('answers_revealed',({playerAnswers})=>{
   const existing = document.getElementById('answers-revealed-panel');
   if (existing) existing.remove();
   const fb = document.getElementById('answer-feedback');
@@ -842,19 +842,15 @@ socket.on('answers_revealed',({correctAnswers, playerAnswers})=>{
   const panel = document.createElement('div');
   panel.id = 'answers-revealed-panel';
   panel.className = 'answers-revealed';
-  const qData = S.currentQ;
   panel.innerHTML = '<div class="ar-title">📊 Réponses de tout le monde</div>' +
     playerAnswers.map(p => {
       const avSrc = p.avatar && p.avatar.startsWith('data:image/');
       const avContent = avSrc ? '<img src="'+p.avatar+'" alt="">' : '<span>'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
       const flag = countryFlag(p.country);
-      const answerTexts = (p.answers || []).map(id => {
-        const ans = qData?.answers?.find(a => a.id === id);
-        return ans ? id.toUpperCase()+') '+ans.text : id.toUpperCase();
-      });
-      const isNone = !p.answers || p.answers.length === 0;
+      const texts = p.answerTexts || [];
+      const isNone = texts.length === 0;
       const cls = isNone ? 'none' : (p.isCorrect ? 'correct' : 'wrong');
-      const label = isNone ? '⏰ Pas répondu' : (p.isCorrect ? '✅ ' : '❌ ') + answerTexts.join(', ');
+      const label = isNone ? '⏰ Pas répondu' : (p.isCorrect ? '✅ ' : '❌ ') + texts.join(', ');
       return '<div class="ar-player"><div class="ar-avatar">'+avContent+'</div><div class="ar-pseudo">'+(flag?flag+' ':'')+esc(p.pseudo)+'</div><div class="ar-answer '+cls+'">'+esc(label)+'</div></div>';
     }).join('');
   fb.after(panel);

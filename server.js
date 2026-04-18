@@ -224,7 +224,8 @@ function tryQueueMatch() {
 
   let roomCode;
   do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
-  const gameOptions = { maxPlayers: 2, questionCount: 40, timeLimit: 30, category: 'all', mode: 'normal', country: p1.country || null };
+  const sharedCountry = (p1.country && p1.country === p2.country) ? p1.country : null;
+  const gameOptions = { maxPlayers: 2, questionCount: 40, timeLimit: 30, category: 'all', mode: 'normal', country: sharedCountry };
   const questions = pickQuestions(gameOptions);
   const pl1 = makePlayer(p1.socketId, p1.pseudo, p1.userId); pl1.avatar = p1.avatar; pl1.country = p1.country || null;
   const pl2 = makePlayer(p2.socketId, p2.pseudo, p2.userId); pl2.avatar = p2.avatar; pl2.country = p2.country || null;
@@ -500,7 +501,7 @@ io.on('connection', (socket) => {
     const player = game.players.find(p => p.socketId === socket.id);
     if (!player || player.answered) return;
     player.answered = true;
-    const q = game.questions[game.currentQuestion];
+    const q = player.questions[game.currentQuestion];
     const isCorrect = [...(answers || [])].sort().join(',') === [...q.correct].sort().join(',');
     if (isCorrect) { player.score++; player.streak++; player.maxStreak = Math.max(player.maxStreak || 0, player.streak); }
     else { player.streak = 0; }
@@ -520,10 +521,10 @@ io.on('connection', (socket) => {
       clearTimeout(game.questionTimer);
       if (showFeedback) {
         io.to(game.roomCode).emit('answers_revealed', {
-          correctAnswers: q.correct,
           playerAnswers: game.players.map(p => {
+            const pq = p.questions[game.currentQuestion];
             const last = p.answers[p.answers.length - 1];
-            return { pseudo: p.pseudo, answers: last?.answers || [], isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
+            return { pseudo: p.pseudo, answerTexts: resolveAnswerTexts(pq, last?.answers), isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
           })
         });
       }
@@ -538,7 +539,7 @@ io.on('connection', (socket) => {
     const player = game.players.find(p => p.socketId === socket.id);
     if (!player || !player.powerups[type]) return;
     player.powerups[type]--;
-    const q = game.questions[game.currentQuestion];
+    const q = player.questions[game.currentQuestion];
     if (type === 'fifty50') {
       const wrong = q.answers.filter(a => !q.correct.includes(a.id)).sort(() => Math.random() - 0.5).slice(0, 2);
       socket.emit('powerup_result', { type, removed: wrong.map(a => a.id) });
@@ -612,14 +613,14 @@ io.on('connection', (socket) => {
     if (!me || me.pseudo !== game.hostPseudo) return;
     let newCode;
     do { newCode = generateRoomCode(); } while (activeGames.has(newCode));
-    const questions = pickQuestions(game.options);
-    const newGame = { roomCode: newCode, options: game.options, questions, players: game.players.map(p => makePlayer(p.socketId, p.pseudo, p.userId)), hostPseudo: game.hostPseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
+    const rematchPlayers = game.players.map(p => { const np = makePlayer(p.socketId, p.pseudo, p.userId); np.avatar = p.avatar; np.country = p.country || null; return np; });
+    const newGame = { roomCode: newCode, options: game.options, players: rematchPlayers, hostPseudo: game.hostPseudo, currentQuestion: 0, status: 'waiting', questionTimer: null, totalQuestions: game.options.questionCount || 40 };
     activeGames.set(newCode, newGame);
     game.players.forEach(p => {
       const sock = io.sockets.sockets.get(p.socketId);
       if (sock) { sock.leave(game.roomCode); sock.join(newCode); sock.roomCode = newCode; }
     });
-    io.to(newCode).emit('rematch_started', { roomCode: newCode, options: game.options, players: newGame.players.map(p => ({ pseudo: p.pseudo, ready: false })), totalQuestions: questions.length });
+    io.to(newCode).emit('rematch_started', { roomCode: newCode, options: game.options, players: newGame.players.map(p => ({ pseudo: p.pseudo, ready: false })), totalQuestions: newGame.totalQuestions });
     activeGames.delete(game.roomCode);
     db.createGame(newCode, newGame.hostPseudo).catch(() => {});
   });
@@ -651,39 +652,57 @@ function makePlayer(socketId, pseudo, userId) {
 }
 
 function startGame(game) {
+  // Each player gets their own question pool based on their country
+  game.players.forEach(p => {
+    const opts = { ...game.options, country: p.country || null };
+    p.questions = pickQuestions(opts);
+  });
+  const minLen = Math.min(...game.players.map(p => p.questions.length));
+  game.totalQuestions = Math.min(minLen, game.options.questionCount || 40);
+  game.players.forEach(p => { p.questions = p.questions.slice(0, game.totalQuestions); });
+
   game.status = 'playing';
   game.players.forEach(p => p.ready = true);
   db.updateGame(game.roomCode, { status: 'playing' }).catch(() => {});
-  io.to(game.roomCode).emit('game_start', { totalQuestions: game.questions.length, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0, avatar: p.avatar, country: p.country || null })), options: game.options });
+  io.to(game.roomCode).emit('game_start', { totalQuestions: game.totalQuestions, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0, avatar: p.avatar, country: p.country || null })), options: game.options });
   sendQuestion(game);
 }
 
+function resolveAnswerTexts(q, answerIds) {
+  return (answerIds || []).map(aid => {
+    const a = q.answers.find(x => x.id === aid);
+    return a ? aid.toUpperCase() + ') ' + a.text : aid.toUpperCase();
+  });
+}
+
 function sendQuestion(game) {
-  if (game.currentQuestion >= game.questions.length) return endGame(game);
-  game.players.forEach(p => p.answered = false);
-  const q = game.questions[game.currentQuestion];
-  io.to(game.roomCode).emit('new_question', {
-    index: game.currentQuestion, total: game.questions.length,
-    id: q.id, category: q.category, question: q.question, answers: q.answers,
-    isMultiple: q.correct.length > 1, isTrap: q.is_trap,
-    timeLimit: game.options.timeLimit, mode: game.options.mode,
-    image_url: q.image_url || null, video_url: q.video_url || null, situation: q.situation || null,
+  if (game.currentQuestion >= game.totalQuestions) return endGame(game);
+  game.players.forEach(p => {
+    p.answered = false;
+    const q = p.questions[game.currentQuestion];
+    io.sockets.sockets.get(p.socketId)?.emit('new_question', {
+      index: game.currentQuestion, total: game.totalQuestions,
+      id: q.id, category: q.category, question: q.question, answers: q.answers,
+      isMultiple: q.correct.length > 1, isTrap: q.is_trap,
+      timeLimit: game.options.timeLimit, mode: game.options.mode,
+      image_url: q.image_url || null, video_url: q.video_url || null, situation: q.situation || null,
+    });
   });
   game.questionTimer = setTimeout(() => {
     const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
     game.players.filter(p => !p.answered).forEach(p => {
+      const q = p.questions[game.currentQuestion];
       p.answered = true; p.streak = 0;
       p.answers.push({ questionId: q.id, isCorrect: false, timeTaken: game.options.timeLimit, answers: [], category: q.category });
-      const sock = io.sockets.sockets.get(p.socketId);
-      sock?.emit('answer_result', { isCorrect: showFeedback ? false : null, correctAnswers: showFeedback ? q.correct : [], explanation: showFeedback ? q.explanation : '', isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: !showFeedback });
+      io.sockets.sockets.get(p.socketId)?.emit('answer_result', { isCorrect: showFeedback ? false : null, correctAnswers: showFeedback ? q.correct : [], explanation: showFeedback ? q.explanation : '', isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: !showFeedback });
     });
     io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar, country: p.country || null })) });
     if (showFeedback) {
       io.to(game.roomCode).emit('answers_revealed', {
-        correctAnswers: q.correct,
         playerAnswers: game.players.map(p => {
+          const q = p.questions[game.currentQuestion];
           const last = p.answers[p.answers.length - 1];
-          return { pseudo: p.pseudo, answers: last?.answers || [], isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
+          return { pseudo: p.pseudo, answerTexts: resolveAnswerTexts(q, last?.answers), isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
         })
       });
     }
@@ -694,7 +713,7 @@ function sendQuestion(game) {
 
 function nextQuestion(game) {
   game.currentQuestion++;
-  if (game.currentQuestion >= game.questions.length) endGame(game);
+  if (game.currentQuestion >= game.totalQuestions) endGame(game);
   else sendQuestion(game);
 }
 
@@ -745,12 +764,12 @@ async function endGame(game) {
   for (const p of game.players) {
     if (p.userId) {
       try {
-        await db.updateUser(p.userId, { total_correct: p.score, total_questions: game.questions.length });
+        await db.updateUser(p.userId, { total_correct: p.score, total_questions: game.totalQuestions });
         const catErrors = {};
         p.answers.filter(a => !a.isCorrect).forEach(a => { catErrors[a.category] = (catErrors[a.category] || 0) + 1; });
         await db.updateCategoryStats(p.userId, catErrors);
         const user = await db.getUserById(p.userId);
-        const newBadges = checkBadges(user || {}, { score: p.score, total: game.questions.length, percentage: Math.round(p.score/game.questions.length*100), maxStreak: p.maxStreak, mode: game.options.mode });
+        const newBadges = checkBadges(user || {}, { score: p.score, total: game.totalQuestions, percentage: Math.round(p.score/game.totalQuestions*100), maxStreak: p.maxStreak, mode: game.options.mode });
         for (const b of newBadges) await db.addBadge(p.userId, b);
         if (newBadges.length) newBadgesAll[p.pseudo] = newBadges;
       } catch {}
@@ -761,28 +780,30 @@ async function endGame(game) {
     const catErrors = {};
     p.answers.filter(a => !a.isCorrect).forEach(a => { catErrors[a.category] = (catErrors[a.category] || 0) + 1; });
     return {
-      rank: i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length,
-      percentage: Math.round((p.score / game.questions.length) * 100),
+      rank: i + 1, pseudo: p.pseudo, score: p.score, total: game.totalQuestions,
+      percentage: Math.round((p.score / game.totalQuestions) * 100),
       categoryErrors: catErrors, eloChange: eloChanges[p.pseudo] || 0,
       maxStreak: p.maxStreak, levelInfo: null,
     };
   });
   const forfeitResults = forfeiters.map((p, i) => ({
-    rank: results.length + i + 1, pseudo: p.pseudo, score: p.score, total: game.questions.length,
-    percentage: Math.round((p.score / game.questions.length) * 100),
+    rank: results.length + i + 1, pseudo: p.pseudo, score: p.score, total: game.totalQuestions,
+    percentage: Math.round((p.score / game.totalQuestions) * 100),
     categoryErrors: {}, eloChange: eloChanges[p.pseudo] || 0,
     maxStreak: p.maxStreak || 0, levelInfo: null, forfeited: true,
   }));
   const allResults = [...results, ...forfeitResults];
 
-  const replayData = game.questions.map((q, i) => ({
-    question: q.question, category: q.category, correct: q.correct, explanation: q.explanation, isTrap: q.is_trap,
-    playerAnswers: game.players.map(p => ({ pseudo: p.pseudo, answers: p.answers[i]?.answers || [], isCorrect: p.answers[i]?.isCorrect, timeTaken: p.answers[i]?.timeTaken }))
+  const replayData = Array.from({ length: game.totalQuestions }, (_, i) => ({
+    playerData: game.players.map(p => {
+      const q = p.questions[i];
+      return { pseudo: p.pseudo, question: q?.question, category: q?.category, correct: q?.correct, explanation: q?.explanation, isTrap: q?.is_trap, answers: p.answers[i]?.answers || [], isCorrect: p.answers[i]?.isCorrect, timeTaken: p.answers[i]?.timeTaken };
+    })
   }));
 
   db.updateGame(game.roomCode, { status: 'finished', winner_pseudo: winner, player1_score: ranked[0]?.score || 0, player2_score: ranked[1]?.score || 0, finished_at: new Date().toISOString() }).catch(() => {});
   io.to(game.roomCode).emit('game_end', { winner, isDraw: !winner, results: allResults, mode: game.options.mode, hostPseudo: game.hostPseudo, newBadges: newBadgesAll, replayData, chatHistory: game.chatHistory || [],
-    examPassed: game.options.mode === 'examen_blanc' ? ranked.map(p => ({ pseudo: p.pseudo, passed: Math.round(p.score/game.questions.length*100) >= 87 })) : null });
+    examPassed: game.options.mode === 'examen_blanc' ? ranked.map(p => ({ pseudo: p.pseudo, passed: Math.round(p.score/game.totalQuestions*100) >= 87 })) : null });
   setTimeout(() => activeGames.delete(game.roomCode), 120000);
 }
 
