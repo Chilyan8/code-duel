@@ -148,17 +148,31 @@ function updateHomeUI() {
       avWrap.textContent=(S.pseudo[0]||'?').toUpperCase();
     }
     el.appendChild(avWrap);
-    el.insertAdjacentHTML('beforeend',' <strong>'+esc(S.pseudo)+'</strong> · <span style="color:var(--accent2)">'+esc(S.elo)+'</span> Elo');
+    const sep = document.createTextNode(' ');
+    const strong = document.createElement('strong');
+    strong.textContent = S.pseudo;
+    const dot = document.createTextNode(' · ');
+    const eloSpan = document.createElement('span');
+    eloSpan.style.color = 'var(--accent2)';
+    eloSpan.textContent = S.elo;
+    const eloLabel = document.createTextNode(' Elo');
+    el.append(sep, strong, dot, eloSpan, eloLabel);
     el.style.display='flex';
-    if(authBtn){authBtn.textContent='Déconnexion';authBtn.onclick=doLogout;}
-    if(guestNote)guestNote.style.display='none';
+    if(authBtn) authBtn.textContent='Déconnexion';
+    if(guestNote) guestNote.style.display='none';
   } else {
+    el.innerHTML='';
     if(S.pseudo&&!S.isAuth){
-      el.innerHTML='<strong>'+esc(S.pseudo)+'</strong> <span style="color:var(--text3);font-size:.8rem">(invité)</span>';
+      const strong=document.createElement('strong');
+      strong.textContent=S.pseudo;
+      const badge=document.createElement('span');
+      badge.style.cssText='color:var(--text3);font-size:.8rem';
+      badge.textContent=' (invité)';
+      el.append(strong, badge);
       el.style.display='flex';
     } else el.style.display='none';
-    if(authBtn){authBtn.textContent='Connexion';authBtn.onclick=()=>go('screen-auth');}
-    if(guestNote)guestNote.style.display='';
+    if(authBtn) authBtn.textContent='Connexion';
+    if(guestNote) guestNote.style.display='';
   }
 }
 
@@ -386,7 +400,7 @@ function leaveQueue() {
 // ── Play screen ──
 function showCreateForm(){if(!S.pseudo){promptGuest();return;}document.getElementById('create-form').classList.toggle('hidden');document.getElementById('join-form').classList.add('hidden');}
 function showJoinForm(){if(!S.pseudo){promptGuest();return;}document.getElementById('join-form').classList.toggle('hidden');document.getElementById('create-form').classList.add('hidden');}
-function selectOpt(type,val,el){el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');S.selectedOptions[type]=val;}
+function selectOpt(type,val,el){el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');S.selectedOptions[type]=isNaN(val)||val===''?val:Number(val);}
 function selectMode(mode,el){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');S.selectedOptions.mode=mode;}
 function openCreateGame(){if(!S.pseudo){promptGuest();return;}clearErr('play-err');socket.emit('create_game',{pseudo:S.pseudo,avatar:S.avatar,options:{maxPlayers:S.selectedOptions.players,questionCount:S.selectedOptions.questions,timeLimit:S.selectedOptions.time,category:S.selectedOptions.category,mode:S.selectedOptions.mode}});}
 function doJoinGame(){const code=document.getElementById('join-code').value.trim().toUpperCase();if(code.length<4)return err('join-err','Code invalide');clearErr('join-err');socket.emit('join_game',{roomCode:code,pseudo:S.pseudo,avatar:S.avatar});}
@@ -719,25 +733,105 @@ socket.on('chat_message',({pseudo,message})=>{
 socket.on('error',msg=>{err('play-err',msg);err('join-err',msg);toast('❌ '+msg,3000);});
 
 // ── Init ──
-document.addEventListener('DOMContentLoaded',()=>{
-  // Vérifier si une session cookie est encore valide et restaurer l'état
-  fetch('/api/profile',{credentials:'include'})
-    .then(r=>r.ok?r.json():null)
-    .then(d=>{
-      if(d){
+document.addEventListener('DOMContentLoaded', () => {
+  // Restauration session cookie
+  fetch('/api/profile', {credentials:'include'})
+    .then(r => r.ok ? r.json() : null)
+    .then(d => {
+      if (d) {
         S.isAuth=true; S.pseudo=d.pseudo; S.elo=d.elo;
-        if(d.avatar) S.avatar=d.avatar;
-        localStorage.setItem('pseudo',d.pseudo);
-        localStorage.setItem('elo',String(d.elo));
-        if(d.avatar) localStorage.setItem('avatar',d.avatar);
+        if (d.avatar) S.avatar=d.avatar;
+        localStorage.setItem('pseudo', d.pseudo);
+        localStorage.setItem('elo', String(d.elo));
+        if (d.avatar) localStorage.setItem('avatar', d.avatar);
         updateHomeUI();
       }
-    }).catch(()=>{});
+    }).catch(() => {});
 
-  document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
-  document.getElementById('reg-password').addEventListener('keydown',e=>{if(e.key==='Enter')doRegister();});
-  document.getElementById('join-code').addEventListener('keydown',e=>{if(e.key==='Enter')doJoinGame();});
-  document.getElementById('join-code').addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase();});
-  document.getElementById('new-pseudo-input').addEventListener('keydown',e=>{if(e.key==='Enter')savePseudo();});
-  document.getElementById('chat-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+  // ── Navigation ──
+  document.getElementById('auth-back').addEventListener('click', () => go('screen-home'));
+  document.getElementById('solo-back').addEventListener('click', () => go('screen-home'));
+  document.getElementById('play-back').addEventListener('click', () => go('screen-home'));
+  document.getElementById('waiting-back').addEventListener('click', leaveWaiting);
+  document.getElementById('profile-back').addEventListener('click', () => go('screen-home'));
+  document.getElementById('lb-back').addEventListener('click', () => go('screen-home'));
+  document.getElementById('btn-duel').addEventListener('click', () => go('screen-play'));
+  document.getElementById('btn-solo-mode').addEventListener('click', showSoloScreen);
+  document.getElementById('home-auth-btn').addEventListener('click', () => { if (S.isAuth) doLogout(); else go('screen-auth'); });
+  document.getElementById('guest-link').addEventListener('click', promptGuest);
+  document.getElementById('btn-leaderboard-nav').addEventListener('click', () => go('screen-leaderboard'));
+  document.getElementById('btn-profile-nav').addEventListener('click', openProfile);
+
+  // ── Auth ──
+  document.getElementById('tab-login').addEventListener('click', () => switchAuthTab('login'));
+  document.getElementById('tab-register').addEventListener('click', () => switchAuthTab('register'));
+  document.getElementById('btn-do-login').addEventListener('click', doLogin);
+  document.getElementById('btn-do-register').addEventListener('click', doRegister);
+  document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('reg-password').addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+
+  // ── Solo ──
+  document.getElementById('btn-solo-libre-toggle').addEventListener('click', () => {
+    document.getElementById('solo-category-picker').classList.toggle('hidden');
+  });
+  document.getElementById('btn-start-libre').addEventListener('click', () => startSolo('libre'));
+  document.getElementById('btn-replay-solo').addEventListener('click', () => startSolo(S.soloMode));
+  document.getElementById('btn-other-mode').addEventListener('click', showSoloScreen);
+  document.getElementById('btn-solo-results-home').addEventListener('click', () => go('screen-home'));
+  document.querySelectorAll('[data-solo-mode]').forEach(card => {
+    card.addEventListener('click', () => startSolo(card.dataset.soloMode));
+  });
+  document.querySelectorAll('[data-cat]').forEach(pill => {
+    pill.addEventListener('click', () => selectSoloCat(pill.dataset.cat, pill));
+  });
+
+  // ── Play / Create / Join ──
+  document.getElementById('btn-ranked-queue').addEventListener('click', joinQueue);
+  document.getElementById('btn-show-create').addEventListener('click', showCreateForm);
+  document.getElementById('btn-show-join').addEventListener('click', showJoinForm);
+  document.getElementById('btn-open-create').addEventListener('click', openCreateGame);
+  document.getElementById('btn-do-join').addEventListener('click', doJoinGame);
+  document.getElementById('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') doJoinGame(); });
+  document.getElementById('join-code').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase(); });
+  document.querySelectorAll('[data-opt-type]').forEach(pill => {
+    pill.addEventListener('click', () => selectOpt(pill.dataset.optType, pill.dataset.optVal, pill));
+  });
+  document.querySelectorAll('[data-mode]').forEach(card => {
+    card.addEventListener('click', () => selectMode(card.dataset.mode, card));
+  });
+
+  // ── Waiting room ──
+  document.getElementById('btn-copy-code').addEventListener('click', copyRoomCode);
+  document.getElementById('btn-ready').addEventListener('click', sendReady);
+  document.getElementById('btn-force-start').addEventListener('click', forceStart);
+
+  // ── In-game ──
+  document.getElementById('solo-game-back').addEventListener('click', () => { if (confirm('Quitter la session ?')) go('screen-home'); });
+  document.getElementById('game-back').addEventListener('click', () => { if (confirm('Quitter la partie ?')) go('screen-home'); });
+  document.getElementById('pu-fifty50').addEventListener('click', () => usePowerup('fifty50'));
+  document.getElementById('pu-timeBonus').addEventListener('click', () => usePowerup('timeBonus'));
+  document.getElementById('pu-stress').addEventListener('click', () => usePowerup('stress'));
+  document.getElementById('chat-toggle-btn').addEventListener('click', toggleChat);
+  document.getElementById('btn-send-chat').addEventListener('click', sendChat);
+  document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+  // ── Duel results ──
+  document.getElementById('btn-toggle-replay').addEventListener('click', toggleReplay);
+  document.getElementById('btn-rematch').addEventListener('click', requestRematch);
+  document.getElementById('btn-new-game').addEventListener('click', () => go('screen-play'));
+  document.getElementById('btn-duel-results-home').addEventListener('click', () => go('screen-home'));
+
+  // ── Queue ──
+  document.getElementById('btn-leave-queue').addEventListener('click', leaveQueue);
+
+  // ── Avatar modal ──
+  document.getElementById('avatar-modal').addEventListener('click', closeAvatarModal);
+  document.getElementById('avatar-upload').addEventListener('change', uploadAvatar);
+  document.getElementById('btn-close-avatar-modal').addEventListener('click', () => document.getElementById('avatar-modal').classList.add('hidden'));
+
+  // ── Pseudo modal ──
+  document.getElementById('pseudo-modal').addEventListener('click', e => { if (e.target.id === 'pseudo-modal') closePseudoModal(); });
+  document.getElementById('btn-save-pseudo').addEventListener('click', savePseudo);
+  document.getElementById('btn-cancel-pseudo').addEventListener('click', closePseudoModal);
+  document.getElementById('new-pseudo-input').addEventListener('keydown', e => { if (e.key === 'Enter') savePseudo(); });
 });

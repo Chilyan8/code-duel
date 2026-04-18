@@ -6,7 +6,7 @@
   <title>🚗 Code Duel</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>"/>
   <link rel="stylesheet" href="/css/style.css"/>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 
@@ -24,39 +24,39 @@
       <div class="stat-pill">🏆 7 modes de jeu</div>
     </div>
     <div class="hero-buttons">
-      <button class="btn btn-primary btn-xl" onclick="go('screen-play')">⚔️ Duel</button>
-      <button class="btn btn-accent btn-xl" onclick="showSoloScreen()">🎯 Entraînement</button>
-      <button class="btn btn-ghost btn-xl" id="home-auth-btn" onclick="go('screen-auth')">👤 Connexion</button>
+      <button class="btn btn-primary btn-xl" id="btn-duel">⚔️ Duel</button>
+      <button class="btn btn-accent btn-xl" id="btn-solo-mode">🎯 Entraînement</button>
+      <button class="btn btn-ghost btn-xl" id="home-auth-btn">👤 Connexion</button>
     </div>
-    <div id="home-guest-note" class="guest-note">Jouer en tant qu'<span onclick="promptGuest()" class="link">invité</span></div>
+    <div id="home-guest-note" class="guest-note">Jouer en tant qu'<span id="guest-link" class="link">invité</span></div>
   </div>
   <div class="home-footer">
-    <button class="btn btn-ghost-sm" onclick="go('screen-leaderboard')">🏆 Classement</button>
-    <button class="btn btn-ghost-sm" onclick="openProfile()">👤 Mon profil</button>
+    <button class="btn btn-ghost-sm" id="btn-leaderboard-nav">🏆 Classement</button>
+    <button class="btn btn-ghost-sm" id="btn-profile-nav">👤 Mon profil</button>
   </div>
 </div>
 
 <!-- ════════════════════════════ AUTH ══ -->
 <div id="screen-auth" class="screen">
   <div class="card card-auth">
-    <button class="back-btn" onclick="go('screen-home')">← Retour</button>
+    <button class="back-btn" id="auth-back">← Retour</button>
     <div class="auth-tabs">
-      <button class="tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Connexion</button>
-      <button class="tab-btn" id="tab-register" onclick="switchAuthTab('register')">Créer un compte</button>
+      <button class="tab-btn active" id="tab-login">Connexion</button>
+      <button class="tab-btn" id="tab-register">Créer un compte</button>
     </div>
     <div id="auth-login">
       <h2>Bon retour ! 👋</h2>
       <div class="field"><label>Pseudo</label><input id="login-pseudo" type="text" placeholder="Ton pseudo" autocomplete="username"/></div>
       <div class="field"><label>Mot de passe</label><input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
       <div id="login-err" class="error-msg hidden"></div>
-      <button class="btn btn-primary w-full" onclick="doLogin()">Se connecter</button>
+      <button class="btn btn-primary w-full" id="btn-do-login">Se connecter</button>
     </div>
     <div id="auth-register" class="hidden">
       <h2>Crée ton compte 🎮</h2>
       <div class="field"><label>Pseudo (3-20 caractères)</label><input id="reg-pseudo" type="text" placeholder="Choisis un pseudo" autocomplete="username"/></div>
       <div class="field"><label>Mot de passe (min 6)</label><input id="reg-password" type="password" placeholder="••••••••" autocomplete="new-password"/></div>
       <div id="reg-err" class="error-msg hidden"></div>
-      <button class="btn btn-primary w-full" onclick="doRegister()">Créer le compte</button>
+      <button class="btn btn-primary w-full" id="btn-do-register">Créer le compte</button>
     </div>
   </div>
 </div>
@@ -64,30 +64,30 @@
 <!-- ════════════════════════════ SOLO ══ -->
 <div id="screen-solo" class="screen">
   <div class="card card-play">
-    <button class="back-btn" onclick="go('screen-home')">← Retour</button>
+    <button class="back-btn" id="solo-back">← Retour</button>
     <h2>🎯 Entraînement Solo</h2>
     <div class="solo-modes">
-      <div class="solo-mode-card" onclick="startSolo('training')">
+      <div class="solo-mode-card" data-solo-mode="training">
         <div class="sm-icon">🧠</div><div class="sm-title">Failles Perso.</div>
         <div class="sm-desc">Sessions ciblées sur tes erreurs fréquentes</div>
         <div class="sm-tag">Recommandé</div>
       </div>
-      <div class="solo-mode-card" onclick="startSolo('micro')">
+      <div class="solo-mode-card" data-solo-mode="micro">
         <div class="sm-icon">⚡</div><div class="sm-title">Micro-Learning</div>
         <div class="sm-desc">5 questions en 15s — parfait dans les transports</div>
         <div class="sm-tag">1 minute</div>
       </div>
-      <div class="solo-mode-card" onclick="startSolo('examen_blanc')">
+      <div class="solo-mode-card" data-solo-mode="examen_blanc">
         <div class="sm-icon">📋</div><div class="sm-title">Examen Blanc</div>
         <div class="sm-desc">40 questions, conditions officielles, admis/recalé</div>
         <div class="sm-tag">Officiel</div>
       </div>
-      <div class="solo-mode-card" onclick="startSolo('piege')">
+      <div class="solo-mode-card" data-solo-mode="piege">
         <div class="sm-icon">😈</div><div class="sm-title">Pièges Ultimes</div>
         <div class="sm-desc">Que des questions pièges ! Stats incluses</div>
         <div class="sm-tag">Viral</div>
       </div>
-      <div class="solo-mode-card" onclick="document.getElementById('solo-category-picker').classList.toggle('hidden')">
+      <div class="solo-mode-card" id="btn-solo-libre-toggle">
         <div class="sm-icon">📚</div><div class="sm-title">Thème Libre</div>
         <div class="sm-desc">Choisis ta catégorie et entraîne-toi</div>
         <div class="sm-tag">Personnalisé</div>
@@ -96,15 +96,15 @@
     <div id="solo-category-picker" class="hidden" style="margin-top:1rem">
       <div class="option-label">🎯 Catégorie</div>
       <div class="option-pills" style="margin-top:.5rem">
-        <button class="pill active" onclick="selectSoloCat('all',this)">Toutes</button>
-        <button class="pill" onclick="selectSoloCat('panneaux',this)">🪧 Panneaux</button>
-        <button class="pill" onclick="selectSoloCat('priorites',this)">🚦 Priorités</button>
-        <button class="pill" onclick="selectSoloCat('vitesse',this)">⚡ Vitesses</button>
-        <button class="pill" onclick="selectSoloCat('alcool',this)">🍺 Alcool</button>
-        <button class="pill" onclick="selectSoloCat('securite',this)">🛡️ Sécurité</button>
-        <button class="pill" onclick="selectSoloCat('regles',this)">📋 Règles</button>
+        <button class="pill active" data-cat="all">Toutes</button>
+        <button class="pill" data-cat="panneaux">🪧 Panneaux</button>
+        <button class="pill" data-cat="priorites">🚦 Priorités</button>
+        <button class="pill" data-cat="vitesse">⚡ Vitesses</button>
+        <button class="pill" data-cat="alcool">🍺 Alcool</button>
+        <button class="pill" data-cat="securite">🛡️ Sécurité</button>
+        <button class="pill" data-cat="regles">📋 Règles</button>
       </div>
-      <button class="btn btn-primary w-full" onclick="startSolo('libre')">Commencer ▶️</button>
+      <button class="btn btn-primary w-full" id="btn-start-libre">Commencer ▶️</button>
     </div>
   </div>
 </div>
@@ -112,17 +112,17 @@
 <!-- ════════════════════════════ PLAY (DUEL) ══ -->
 <div id="screen-play" class="screen">
   <div class="card card-play">
-    <button class="back-btn" onclick="go('screen-home')">← Retour</button>
+    <button class="back-btn" id="play-back">← Retour</button>
     <h2>Prêt pour le duel ? ⚔️</h2>
     <div class="play-options">
-      <div class="option-card option-card-ranked" onclick="joinQueue()">
+      <div class="option-card option-card-ranked" id="btn-ranked-queue">
         <div class="option-icon">⚡</div><div class="option-title">Classé 1v1</div><div class="option-desc">File d'attente · Elo en jeu</div>
         <div style="position:absolute;top:.5rem;right:.5rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:10px">RANKED</div>
       </div>
-      <div class="option-card" onclick="showCreateForm()">
+      <div class="option-card" id="btn-show-create">
         <div class="option-icon">🏠</div><div class="option-title">Créer</div><div class="option-desc">Configure et partage le code</div>
       </div>
-      <div class="option-card" onclick="showJoinForm()">
+      <div class="option-card" id="btn-show-join">
         <div class="option-icon">🔗</div><div class="option-title">Rejoindre</div><div class="option-desc">Entre le code de ton ami</div>
       </div>
     </div>
@@ -131,57 +131,57 @@
       <div class="option-group">
         <div class="option-label">👥 Joueurs</div>
         <div class="option-pills">
-          <button class="pill active" onclick="selectOpt('players',2,this)">1v1</button>
-          <button class="pill" onclick="selectOpt('players',3,this)">3</button>
-          <button class="pill" onclick="selectOpt('players',4,this)">4</button>
-          <button class="pill" onclick="selectOpt('players',5,this)">5</button>
-          <button class="pill" onclick="selectOpt('players',6,this)">6</button>
-          <button class="pill" onclick="selectOpt('players',8,this)">8</button>
-          <button class="pill" onclick="selectOpt('players',10,this)">10</button>
+          <button class="pill active" data-opt-type="players" data-opt-val="2">1v1</button>
+          <button class="pill" data-opt-type="players" data-opt-val="3">3</button>
+          <button class="pill" data-opt-type="players" data-opt-val="4">4</button>
+          <button class="pill" data-opt-type="players" data-opt-val="5">5</button>
+          <button class="pill" data-opt-type="players" data-opt-val="6">6</button>
+          <button class="pill" data-opt-type="players" data-opt-val="8">8</button>
+          <button class="pill" data-opt-type="players" data-opt-val="10">10</button>
         </div>
       </div>
       <div class="option-group">
         <div class="option-label">❓ Questions</div>
         <div class="option-pills">
-          <button class="pill" onclick="selectOpt('questions',10,this)">10</button>
-          <button class="pill" onclick="selectOpt('questions',20,this)">20</button>
-          <button class="pill active" onclick="selectOpt('questions',40,this)">40 (officiel)</button>
+          <button class="pill" data-opt-type="questions" data-opt-val="10">10</button>
+          <button class="pill" data-opt-type="questions" data-opt-val="20">20</button>
+          <button class="pill active" data-opt-type="questions" data-opt-val="40">40 (officiel)</button>
         </div>
       </div>
       <div class="option-group">
         <div class="option-label">⏱️ Temps</div>
         <div class="option-pills">
-          <button class="pill" onclick="selectOpt('time',15,this)">15s ⚡</button>
-          <button class="pill active" onclick="selectOpt('time',30,this)">30s</button>
-          <button class="pill" onclick="selectOpt('time',45,this)">45s 🐢</button>
+          <button class="pill" data-opt-type="time" data-opt-val="15">15s ⚡</button>
+          <button class="pill active" data-opt-type="time" data-opt-val="30">30s</button>
+          <button class="pill" data-opt-type="time" data-opt-val="45">45s 🐢</button>
         </div>
       </div>
       <div class="option-group">
         <div class="option-label">🎯 Catégorie</div>
         <div class="option-pills">
-          <button class="pill active" onclick="selectOpt('category','all',this)">Toutes</button>
-          <button class="pill" onclick="selectOpt('category','panneaux',this)">🪧 Panneaux</button>
-          <button class="pill" onclick="selectOpt('category','priorites',this)">🚦 Priorités</button>
-          <button class="pill" onclick="selectOpt('category','vitesse',this)">⚡ Vitesses</button>
-          <button class="pill" onclick="selectOpt('category','securite',this)">🛡️ Sécurité</button>
+          <button class="pill active" data-opt-type="category" data-opt-val="all">Toutes</button>
+          <button class="pill" data-opt-type="category" data-opt-val="panneaux">🪧 Panneaux</button>
+          <button class="pill" data-opt-type="category" data-opt-val="priorites">🚦 Priorités</button>
+          <button class="pill" data-opt-type="category" data-opt-val="vitesse">⚡ Vitesses</button>
+          <button class="pill" data-opt-type="category" data-opt-val="securite">🛡️ Sécurité</button>
         </div>
       </div>
       <div class="option-group">
         <div class="option-label">🎮 Mode</div>
         <div class="modes-grid">
-          <div class="mode-card active" onclick="selectMode('normal',this)"><div class="mode-icon">🎯</div><div class="mode-name">Normal</div><div class="mode-desc">Feedback après chaque réponse</div></div>
-          <div class="mode-card" onclick="selectMode('blitz',this)"><div class="mode-icon">⚡</div><div class="mode-name">Blitz</div><div class="mode-desc">20s, ultra rapide</div></div>
-          <div class="mode-card" onclick="selectMode('examen_blanc',this)"><div class="mode-icon">📋</div><div class="mode-name">Examen</div><div class="mode-desc">Résultats à la fin</div></div>
-          <div class="mode-card" onclick="selectMode('piege',this)"><div class="mode-icon">😈</div><div class="mode-name">Piège</div><div class="mode-desc">Que des pièges !</div></div>
-          <div class="mode-card" onclick="selectMode('micro',this)"><div class="mode-icon">⚡</div><div class="mode-name">Micro</div><div class="mode-desc">5 questions rapides</div></div>
+          <div class="mode-card active" data-mode="normal"><div class="mode-icon">🎯</div><div class="mode-name">Normal</div><div class="mode-desc">Feedback après chaque réponse</div></div>
+          <div class="mode-card" data-mode="blitz"><div class="mode-icon">⚡</div><div class="mode-name">Blitz</div><div class="mode-desc">20s, ultra rapide</div></div>
+          <div class="mode-card" data-mode="examen_blanc"><div class="mode-icon">📋</div><div class="mode-name">Examen</div><div class="mode-desc">Résultats à la fin</div></div>
+          <div class="mode-card" data-mode="piege"><div class="mode-icon">😈</div><div class="mode-name">Piège</div><div class="mode-desc">Que des pièges !</div></div>
+          <div class="mode-card" data-mode="micro"><div class="mode-icon">⚡</div><div class="mode-name">Micro</div><div class="mode-desc">5 questions rapides</div></div>
         </div>
       </div>
       <div id="play-err" class="error-msg hidden"></div>
-      <button class="btn btn-primary w-full" onclick="openCreateGame()">🚀 Créer la partie</button>
+      <button class="btn btn-primary w-full" id="btn-open-create">🚀 Créer la partie</button>
     </div>
     <div id="join-form" class="join-form hidden">
       <input id="join-code" type="text" maxlength="6" placeholder="CODE (ex: ABC123)" class="code-input"/>
-      <button class="btn btn-primary" onclick="doJoinGame()">Rejoindre ⚔️</button>
+      <button class="btn btn-primary" id="btn-do-join">Rejoindre ⚔️</button>
       <div id="join-err" class="error-msg hidden" style="margin-top:.5rem"></div>
     </div>
   </div>
@@ -190,25 +190,25 @@
 <!-- ════════════════════════════ WAITING ══ -->
 <div id="screen-waiting" class="screen">
   <div class="card card-waiting">
-    <button class="back-btn" onclick="leaveWaiting()">← Retour</button>
+    <button class="back-btn" id="waiting-back">← Retour</button>
     <div class="waiting-header">
       <div class="room-code-label">CODE DE LA PARTIE</div>
       <div class="room-code-value" id="display-room-code">------</div>
-      <button class="copy-btn" onclick="copyRoomCode()">📋 Copier</button>
+      <button class="copy-btn" id="btn-copy-code">📋 Copier</button>
     </div>
     <div class="game-options-display" id="options-display"></div>
     <div class="players-waiting" id="players-waiting"></div>
     <div id="waiting-msg" class="waiting-msg"><div class="spinner"></div> En attente...</div>
     <div class="waiting-actions">
-      <button id="btn-ready" class="btn btn-primary btn-xl hidden" onclick="sendReady()">✅ Je suis prêt !</button>
-      <button id="btn-force-start" class="btn btn-ghost hidden" onclick="forceStart()">▶️ Lancer maintenant</button>
+      <button id="btn-ready" class="btn btn-primary btn-xl hidden">✅ Je suis prêt !</button>
+      <button id="btn-force-start" class="btn btn-ghost hidden">▶️ Lancer maintenant</button>
     </div>
   </div>
 </div>
 
 <!-- ════════════════════════════ SOLO GAME ══ -->
 <div id="screen-solo-game" class="screen">
-  <button class="back-to-menu" onclick="if(confirm('Quitter la session ?')) go('screen-home')">🏠 Menu</button>
+  <button class="back-to-menu" id="solo-game-back">🏠 Menu</button>
   <div class="game-hud">
     <div class="hud-center">
       <div class="question-counter" id="sq-counter">1/10</div>
@@ -245,7 +245,7 @@
 
 <!-- ════════════════════════════ DUEL GAME ══ -->
 <div id="screen-game" class="screen">
-  <button class="back-to-menu" onclick="if(confirm('Quitter la partie ?')) go('screen-home')">🏠 Menu</button>
+  <button class="back-to-menu" id="game-back">🏠 Menu</button>
   <div class="game-hud">
     <div class="hud-center">
       <div class="question-counter" id="q-counter">1/40</div>
@@ -271,17 +271,17 @@
     <div id="answer-feedback" class="answer-feedback hidden"></div>
   </div>
   <div class="powerups-bar">
-    <button class="powerup-btn" id="pu-fifty50" onclick="usePowerup('fifty50')"><span>⚡</span><span class="pu-label">50/50</span></button>
-    <button class="powerup-btn" id="pu-timeBonus" onclick="usePowerup('timeBonus')"><span>⏱️</span><span class="pu-label">+15s</span></button>
-    <button class="powerup-btn" id="pu-stress" onclick="usePowerup('stress')"><span>😱</span><span class="pu-label">Stress</span></button>
+    <button class="powerup-btn" id="pu-fifty50"><span>⚡</span><span class="pu-label">50/50</span></button>
+    <button class="powerup-btn" id="pu-timeBonus"><span>⏱️</span><span class="pu-label">+15s</span></button>
+    <button class="powerup-btn" id="pu-stress"><span>😱</span><span class="pu-label">Stress</span></button>
   </div>
   <div id="coach-bubble" class="coach-bubble hidden"><div class="coach-avatar">🧑‍🏫</div><div class="coach-text" id="coach-text"></div></div>
-  <button id="chat-toggle-btn" class="chat-toggle-btn" onclick="toggleChat()">💬 <span id="chat-badge" class="chat-badge hidden">0</span></button>
+  <button id="chat-toggle-btn" class="chat-toggle-btn">💬 <span id="chat-badge" class="chat-badge hidden">0</span></button>
   <div id="chat-panel" class="chat-panel hidden">
     <div id="chat-messages" class="chat-messages"></div>
     <div class="chat-input-row">
       <input id="chat-input" type="text" maxlength="120" placeholder="Message..."/>
-      <button onclick="sendChat()">➤</button>
+      <button id="btn-send-chat">➤</button>
     </div>
   </div>
 </div>
@@ -296,9 +296,9 @@
     <div id="solo-replay" class="replay-section"></div>
     <div id="solo-coach-advice" class="coach-advice-box"></div>
     <div class="results-actions">
-      <button class="btn btn-primary" onclick="startSolo(S.soloMode)">🔄 Rejouer</button>
-      <button class="btn btn-accent" onclick="showSoloScreen()">🎯 Autre mode</button>
-      <button class="btn btn-ghost" onclick="go('screen-home')">🏠 Accueil</button>
+      <button class="btn btn-primary" id="btn-replay-solo">🔄 Rejouer</button>
+      <button class="btn btn-accent" id="btn-other-mode">🎯 Autre mode</button>
+      <button class="btn btn-ghost" id="btn-solo-results-home">🏠 Accueil</button>
     </div>
   </div>
 </div>
@@ -311,7 +311,7 @@
     <div id="exam-results-duel" class="hidden"></div>
     <div id="results-analysis" class="results-analysis"></div>
     <div id="replay-toggle" class="hidden" style="margin-bottom:1rem">
-      <button class="btn btn-ghost-sm" onclick="toggleReplay()">📹 Voir le replay</button>
+      <button class="btn btn-ghost-sm" id="btn-toggle-replay">📹 Voir le replay</button>
       <div id="replay-content" class="replay-content hidden"></div>
     </div>
     <div id="chat-history" class="hidden" style="margin-bottom:1rem">
@@ -319,9 +319,9 @@
       <div id="chat-history-messages" class="chat-history-messages"></div>
     </div>
     <div class="results-actions">
-      <button id="btn-rematch" class="btn btn-primary hidden" onclick="requestRematch()">🔄 Revanche !</button>
-      <button class="btn btn-ghost" onclick="go('screen-play')">⚔️ Nouvelle partie</button>
-      <button class="btn btn-ghost" onclick="go('screen-home')">🏠 Accueil</button>
+      <button id="btn-rematch" class="btn btn-primary hidden">🔄 Revanche !</button>
+      <button class="btn btn-ghost" id="btn-new-game">⚔️ Nouvelle partie</button>
+      <button class="btn btn-ghost" id="btn-duel-results-home">🏠 Accueil</button>
     </div>
   </div>
 </div>
@@ -329,7 +329,7 @@
 <!-- ════════════════════════════ PROFILE ══ -->
 <div id="screen-profile" class="screen screen-profile-full">
   <div class="card card-profile">
-    <button class="back-btn" onclick="go('screen-home')">← Retour</button>
+    <button class="back-btn" id="profile-back">← Retour</button>
     <div id="profile-content"><div class="spinner-center"><div class="spinner"></div></div></div>
   </div>
 </div>
@@ -337,7 +337,7 @@
 <!-- ════════════════════════════ LEADERBOARD ══ -->
 <div id="screen-leaderboard" class="screen">
   <div class="card card-leaderboard">
-    <button class="back-btn" onclick="go('screen-home')">← Retour</button>
+    <button class="back-btn" id="lb-back">← Retour</button>
     <h2>🏆 Classement</h2>
     <div id="leaderboard-list" class="lb-list"></div>
   </div>
@@ -347,8 +347,6 @@
 <div id="screen-queue" class="screen">
   <div class="card card-play" style="text-align:center;max-width:460px">
     <div style="font-size:.72rem;color:var(--accent2);font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.75rem">⚡ 1v1 CLASSÉ</div>
-
-    <!-- VS -->
     <div class="queue-vs-layout">
       <div class="queue-player-card">
         <div class="queue-avatar" id="queue-my-avatar"></div>
@@ -362,8 +360,6 @@
         <div class="queue-elo-tag" id="queue-opp-elo" style="color:var(--text3)">??? Elo</div>
       </div>
     </div>
-
-    <!-- Statut recherche -->
     <div id="queue-searching-row" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.65rem 1.25rem;margin-bottom:.65rem">
       <div class="spinner"></div>
       <div style="text-align:left">
@@ -372,33 +368,30 @@
       </div>
     </div>
     <div id="queue-elo-range" style="font-size:.78rem;color:var(--text3);margin-bottom:1rem">Fourchette Elo : ±200</div>
-
-    <!-- Infos quand adversaire trouvé -->
     <div id="queue-matched-extra" class="hidden" style="margin-bottom:1rem">
       <div id="queue-elo-diff" style="font-size:.88rem;margin-bottom:.75rem;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px"></div>
       <div style="font-size:.85rem;color:var(--text2);margin-bottom:.3rem">La partie commence dans</div>
       <div id="queue-countdown" style="font-size:3.5rem;font-weight:900;color:var(--accent2);line-height:1.1">3</div>
     </div>
-
-    <button id="btn-leave-queue" class="btn btn-ghost w-full" style="margin-top:0" onclick="leaveQueue()">✖ Annuler</button>
+    <button id="btn-leave-queue" class="btn btn-ghost w-full" style="margin-top:0">✖ Annuler</button>
   </div>
 </div>
 
 <!-- ════════════════════════════ AVATAR MODAL ══ -->
-<div id="avatar-modal" class="modal-overlay hidden" onclick="closeAvatarModal(event)">
+<div id="avatar-modal" class="modal-overlay hidden">
   <div class="modal-box">
     <h3 style="margin-bottom:1rem">Photo de profil</h3>
     <div id="avatar-preview" style="width:90px;height:90px;border-radius:50%;border:3px solid var(--accent);background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;overflow:hidden;font-size:2.2rem;font-weight:900;color:var(--accent2)"></div>
     <label class="upload-label">
       Importer une photo
-      <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(event)" style="display:none"/>
+      <input type="file" id="avatar-upload" accept="image/*" style="display:none"/>
     </label>
-    <button class="btn btn-ghost w-full" style="margin-top:.75rem" onclick="document.getElementById('avatar-modal').classList.add('hidden')">Fermer</button>
+    <button class="btn btn-ghost w-full" style="margin-top:.75rem" id="btn-close-avatar-modal">Fermer</button>
   </div>
 </div>
 
 <!-- ════════════════════════════ PSEUDO MODAL ══ -->
-<div id="pseudo-modal" class="modal-overlay hidden" onclick="if(event.target.id==='pseudo-modal')closePseudoModal()">
+<div id="pseudo-modal" class="modal-overlay hidden">
   <div class="modal-box">
     <h3 style="margin-bottom:1rem">✏️ Changer de pseudo</h3>
     <div class="field">
@@ -407,8 +400,8 @@
     </div>
     <div id="pseudo-modal-err" class="error-msg hidden"></div>
     <div style="display:flex;gap:.65rem;margin-top:1rem">
-      <button class="btn btn-primary" onclick="savePseudo()">✅ Sauvegarder</button>
-      <button class="btn btn-ghost" onclick="closePseudoModal()">Annuler</button>
+      <button class="btn btn-primary" id="btn-save-pseudo">✅ Sauvegarder</button>
+      <button class="btn btn-ghost" id="btn-cancel-pseudo">Annuler</button>
     </div>
   </div>
 </div>
