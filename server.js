@@ -138,7 +138,13 @@ function generateRoomCode() {
 }
 
 function pickQuestions(options) {
-  let pool = allQuestions.filter(q => q.category !== 'international');
+  const country = options.country || null;
+  let pool = allQuestions.filter(q => {
+    if (q.category === 'international') return false;
+    if (!country) return true;
+    if (!q.country) return true;
+    return q.country === country;
+  });
   if (options.mode === 'piege') pool = pool.filter(q => q.is_trap);
   else if (options.mode === 'micro') pool = pool.sort(() => Math.random() - 0.5).slice(0, 5);
   else if (options.category && options.category !== 'all') {
@@ -218,10 +224,10 @@ function tryQueueMatch() {
 
   let roomCode;
   do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
-  const gameOptions = { maxPlayers: 2, questionCount: 40, timeLimit: 30, category: 'all', mode: 'normal' };
+  const gameOptions = { maxPlayers: 2, questionCount: 40, timeLimit: 30, category: 'all', mode: 'normal', country: p1.country || null };
   const questions = pickQuestions(gameOptions);
-  const pl1 = makePlayer(p1.socketId, p1.pseudo, p1.userId); pl1.avatar = p1.avatar;
-  const pl2 = makePlayer(p2.socketId, p2.pseudo, p2.userId); pl2.avatar = p2.avatar;
+  const pl1 = makePlayer(p1.socketId, p1.pseudo, p1.userId); pl1.avatar = p1.avatar; pl1.country = p1.country || null;
+  const pl2 = makePlayer(p2.socketId, p2.pseudo, p2.userId); pl2.avatar = p2.avatar; pl2.country = p2.country || null;
   const game = { roomCode, options: gameOptions, questions, players: [pl1, pl2], hostPseudo: p1.pseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
   activeGames.set(roomCode, game);
 
@@ -231,8 +237,8 @@ function tryQueueMatch() {
   if (s2) { s2.join(roomCode); s2.roomCode = roomCode; }
   db.createGame(roomCode, p1.pseudo).catch(() => {});
 
-  s1?.emit('queue_matched', { roomCode, isHost: true,  opponent: { pseudo: p2.pseudo, elo: p2.elo, avatar: p2.avatar }, totalQuestions: questions.length });
-  s2?.emit('queue_matched', { roomCode, isHost: false, opponent: { pseudo: p1.pseudo, elo: p1.elo, avatar: p1.avatar }, totalQuestions: questions.length });
+  s1?.emit('queue_matched', { roomCode, isHost: true,  opponent: { pseudo: p2.pseudo, elo: p2.elo, avatar: p2.avatar, country: p2.country || null }, totalQuestions: questions.length });
+  s2?.emit('queue_matched', { roomCode, isHost: false, opponent: { pseudo: p1.pseudo, elo: p1.elo, avatar: p1.avatar, country: p1.country || null }, totalQuestions: questions.length });
 
   setTimeout(() => { const g = activeGames.get(roomCode); if (g?.status === 'waiting') startGame(g); }, 3500);
 }
@@ -267,7 +273,7 @@ app.post('/api/auth/register', authLimiter, async (req, res) => {
     const result = await db.createUser(pseudo, hash);
     const token = jwt.sign({ id: result.id, pseudo, tokenVersion: 0 }, JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, COOKIE_OPTS);
-    res.json({ pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000) });
+    res.json({ pseudo, elo: 1000, wins: 0, losses: 0, total_games: 0, level: getLevel(1000), country: null });
   } catch (e) {
     console.error('register error:', e);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -286,7 +292,7 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
     const id = user._id?.toString() || user.id;
     const token = jwt.sign({ id, pseudo: user.pseudo, tokenVersion: user.tokenVersion || 0 }, JWT_SECRET, { expiresIn: '24h' });
     res.cookie('token', token, COOKIE_OPTS);
-    res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {} });
+    res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins, losses: user.losses, total_games: user.total_games, level: getLevel(user.elo), badges: user.badges || [], category_stats: user.category_stats || {}, country: user.country || null });
   } catch (e) {
     console.error('login error:', e);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -313,7 +319,7 @@ app.get('/api/leaderboard', async (req, res) => {
 app.get('/api/profile', authMiddleware, async (req, res) => {
   const user = await db.getUserById(req.user.id);
   if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, total_seconds: user.total_seconds || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo), avatar: user.avatar || null });
+  res.json({ pseudo: user.pseudo, elo: user.elo, wins: user.wins || 0, losses: user.losses || 0, total_games: user.total_games || 0, total_correct: user.total_correct || 0, total_questions: user.total_questions || 0, total_seconds: user.total_seconds || 0, category_stats: user.category_stats || {}, badges: user.badges || [], level: getLevel(user.elo), avatar: user.avatar || null, country: user.country || null });
 });
 
 app.put('/api/profile/pseudo', authMiddleware, async (req, res) => {
@@ -329,6 +335,18 @@ app.put('/api/profile/pseudo', authMiddleware, async (req, res) => {
     res.json({ pseudo });
   } catch(e) {
     console.error('update pseudo error:', e);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+app.put('/api/profile/country', authMiddleware, async (req, res) => {
+  try {
+    const country = req.body?.country;
+    if (!['france', 'belgique'].includes(country)) return res.status(400).json({ error: 'Pays invalide' });
+    await db.updateUser(req.user.id, {}, { country });
+    res.json({ country });
+  } catch(e) {
+    console.error('country error:', e);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -349,8 +367,7 @@ app.get('/api/training/session', async (req, res) => {
 
   const mode = req.query.mode || 'training';
   const count = Math.min(parseInt(req.query.count || '10'), 40);
-  const questions = pickQuestions({ questionCount: count, weakCategories, mode, category: req.query.category || 'all' });
-  // Ne pas exposer les réponses dans la réponse initiale
+  const questions = pickQuestions({ questionCount: count, weakCategories, mode, category: req.query.category || 'all', country: user?.country || null });
   const safeQuestions = questions.map(q => ({ id: q.id, category: q.category, question: q.question, answers: q.answers, isMultiple: q.correct.length > 1, is_trap: q.is_trap, trap_message: q.trap_message, situation: q.situation || null, image_url: q.image_url || null, video_url: q.video_url || null }));
   res.json({ questions: safeQuestions, fullQuestions: questions, weakCategories, totalQuestions: questions.length });
 });
@@ -418,7 +435,7 @@ app.post('/api/profile/session-time', authMiddleware, async (req, res) => {
 io.on('connection', (socket) => {
   const connectedUser = socket.connectedUser || null;
 
-  socket.on('create_game', ({ pseudo, options, avatar }) => {
+  socket.on('create_game', ({ pseudo, options, avatar, country }) => {
     if (!pseudo) return socket.emit('error', 'Pseudo requis');
     const gameOptions = {
       maxPlayers: Math.min(options?.maxPlayers || 2, 10),
@@ -426,12 +443,14 @@ io.on('connection', (socket) => {
       timeLimit: options?.mode === 'micro' ? 15 : options?.mode === 'blitz' ? 20 : (options?.timeLimit || 30),
       category: options?.category || 'all',
       mode: options?.mode || 'normal',
+      country: options?.country || country || null,
     };
     let roomCode;
     do { roomCode = generateRoomCode(); } while (activeGames.has(roomCode));
     const questions = pickQuestions(gameOptions);
     const player = makePlayer(socket.id, pseudo, connectedUser?.id || null);
     if (avatar) player.avatar = avatar;
+    player.country = country || null;
     const gameState = { roomCode, options: gameOptions, questions, players: [player], hostPseudo: pseudo, currentQuestion: 0, status: 'waiting', questionTimer: null };
     activeGames.set(roomCode, gameState);
     socket.join(roomCode);
@@ -440,7 +459,7 @@ io.on('connection', (socket) => {
     socket.emit('game_created', { roomCode, options: gameOptions, totalQuestions: questions.length, isHost: true, avatar: player.avatar });
   });
 
-  socket.on('join_game', ({ roomCode, pseudo, avatar }) => {
+  socket.on('join_game', ({ roomCode, pseudo, avatar, country }) => {
     const code = roomCode?.toUpperCase();
     const game = activeGames.get(code);
     if (!game) return socket.emit('error', 'Partie introuvable. Vérifie le code.');
@@ -449,11 +468,12 @@ io.on('connection', (socket) => {
     if (game.players.find(p => p.pseudo === pseudo)) return socket.emit('error', 'Ce pseudo est déjà utilisé dans cette partie !');
     const player = makePlayer(socket.id, pseudo, connectedUser?.id || null);
     if (avatar) player.avatar = avatar;
+    player.country = country || null;
     game.players.push(player);
     socket.join(code);
     socket.roomCode = code;
     socket.emit('game_joined', { roomCode: code, players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready })), options: game.options, totalQuestions: game.questions.length, isHost: false });
-    io.to(code).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
+    io.to(code).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar, country: p.country || null })), maxPlayers: game.options.maxPlayers });
   });
 
   socket.on('player_ready', () => {
@@ -461,7 +481,7 @@ io.on('connection', (socket) => {
     if (!game) return;
     const player = game.players.find(p => p.socketId === socket.id);
     if (player) player.ready = true;
-    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
+    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar, country: p.country || null })), maxPlayers: game.options.maxPlayers });
     if (game.players.length >= 2 && game.players.every(p => p.ready)) startGame(game);
   });
 
@@ -495,9 +515,18 @@ io.on('connection', (socket) => {
       streak: player.streak, score: player.score, hidden: !showFeedback,
       trapStats: q.is_trap ? `${Math.floor(Math.random() * 40 + 40)}% des joueurs se trompent ici` : null,
     });
-    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar })) });
+    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar, country: p.country || null })) });
     if (game.players.every(p => p.answered)) {
       clearTimeout(game.questionTimer);
+      if (showFeedback) {
+        io.to(game.roomCode).emit('answers_revealed', {
+          correctAnswers: q.correct,
+          playerAnswers: game.players.map(p => {
+            const last = p.answers[p.answers.length - 1];
+            return { pseudo: p.pseudo, answers: last?.answers || [], isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
+          })
+        });
+      }
       const delay = game.options.mode === 'blitz' ? 1000 : game.options.mode === 'micro' ? 1500 : 3000;
       setTimeout(() => nextQuestion(game), delay);
     }
@@ -531,7 +560,7 @@ io.on('connection', (socket) => {
     game.players = game.players.filter(p => p.socketId !== socket.id);
     socket.leave(game.roomCode);
     socket.roomCode = null;
-    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
+    io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar, country: p.country || null })), maxPlayers: game.options.maxPlayers });
     if (game.players.length === 0) activeGames.delete(game.roomCode);
   });
 
@@ -547,11 +576,11 @@ io.on('connection', (socket) => {
     io.to(game.roomCode).emit('chat_message', { pseudo: player.pseudo, message: text });
   });
 
-  socket.on('join_queue', ({ pseudo, elo, avatar }) => {
+  socket.on('join_queue', ({ pseudo, elo, avatar, country }) => {
     if (!pseudo) return socket.emit('error', 'Pseudo requis');
     if (matchmakingQueue.find(p => p.socketId === socket.id)) return;
     if (socket.roomCode && activeGames.has(socket.roomCode)) return socket.emit('error', 'Tu es déjà dans une partie !');
-    const entry = { socketId: socket.id, pseudo, elo: elo || 1000, userId: connectedUser?.id || null, avatar: avatar || null, joinedAt: Date.now() };
+    const entry = { socketId: socket.id, pseudo, elo: elo || 1000, userId: connectedUser?.id || null, avatar: avatar || null, country: country || null, joinedAt: Date.now() };
     matchmakingQueue.push(entry);
     socket.emit('queue_joined', { position: matchmakingQueue.length, total: matchmakingQueue.length, eloRange: QUEUE_ELO_START });
     tryQueueMatch();
@@ -611,21 +640,21 @@ io.on('connection', (socket) => {
       if (game.players.length < 2) { clearTimeout(game.questionTimer); setTimeout(() => endGame(game), 1500); }
     } else {
       game.players = game.players.filter(p => p.socketId !== socket.id);
-      io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar })), maxPlayers: game.options.maxPlayers });
+      io.to(game.roomCode).emit('player_list_update', { players: game.players.map(p => ({ pseudo: p.pseudo, ready: p.ready, avatar: p.avatar, country: p.country || null })), maxPlayers: game.options.maxPlayers });
       if (game.players.length === 0) activeGames.delete(game.roomCode);
     }
   });
 });
 
 function makePlayer(socketId, pseudo, userId) {
-  return { socketId, pseudo, userId: userId || null, avatar: null, score: 0, streak: 0, maxStreak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
+  return { socketId, pseudo, userId: userId || null, avatar: null, country: null, score: 0, streak: 0, maxStreak: 0, answers: [], powerups: { fifty50: 1, timeBonus: 1, stress: 1 }, ready: false, answered: false };
 }
 
 function startGame(game) {
   game.status = 'playing';
   game.players.forEach(p => p.ready = true);
   db.updateGame(game.roomCode, { status: 'playing' }).catch(() => {});
-  io.to(game.roomCode).emit('game_start', { totalQuestions: game.questions.length, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0, avatar: p.avatar })), options: game.options });
+  io.to(game.roomCode).emit('game_start', { totalQuestions: game.questions.length, players: game.players.map(p => ({ pseudo: p.pseudo, score: 0, avatar: p.avatar, country: p.country || null })), options: game.options });
   sendQuestion(game);
 }
 
@@ -641,14 +670,23 @@ function sendQuestion(game) {
     image_url: q.image_url || null, video_url: q.video_url || null, situation: q.situation || null,
   });
   game.questionTimer = setTimeout(() => {
+    const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
     game.players.filter(p => !p.answered).forEach(p => {
       p.answered = true; p.streak = 0;
       p.answers.push({ questionId: q.id, isCorrect: false, timeTaken: game.options.timeLimit, answers: [], category: q.category });
       const sock = io.sockets.sockets.get(p.socketId);
-      const showFeedback = !['examen_blanc', 'blitz'].includes(game.options.mode);
       sock?.emit('answer_result', { isCorrect: showFeedback ? false : null, correctAnswers: showFeedback ? q.correct : [], explanation: showFeedback ? q.explanation : '', isTrap: q.is_trap, trapMessage: q.trap_message, streak: 0, score: p.score, timeout: true, hidden: !showFeedback });
     });
-    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar })) });
+    io.to(game.roomCode).emit('scores_update', { players: game.players.map(p => ({ pseudo: p.pseudo, score: p.score, streak: p.streak, answered: p.answered, avatar: p.avatar, country: p.country || null })) });
+    if (showFeedback) {
+      io.to(game.roomCode).emit('answers_revealed', {
+        correctAnswers: q.correct,
+        playerAnswers: game.players.map(p => {
+          const last = p.answers[p.answers.length - 1];
+          return { pseudo: p.pseudo, answers: last?.answers || [], isCorrect: last?.isCorrect, avatar: p.avatar, country: p.country || null };
+        })
+      });
+    }
     const delay = game.options.mode === 'blitz' ? 800 : game.options.mode === 'micro' ? 1000 : 2500;
     setTimeout(() => nextQuestion(game), delay);
   }, game.options.timeLimit * 1000);

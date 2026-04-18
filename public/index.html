@@ -13,14 +13,14 @@
 <!-- ════════════════════════════ HOME ══ -->
 <div id="screen-home" class="screen active">
   <div class="hero">
-    <div class="hero-badge">🇫🇷 CODE DE LA ROUTE</div>
+    <div class="hero-badge">🇫🇷🇧🇪 CODE DE LA ROUTE</div>
     <h1 class="hero-title">CODE<span class="accent"> DUEL</span></h1>
     <p class="hero-subtitle">Révise, affronte tes amis, progresse !</p>
     <div id="home-user" class="home-user-chip" style="display:none"></div>
     <div class="hero-stats">
       <div class="stat-pill">⚔️ Jusqu'à 10 joueurs</div>
-      <div class="stat-pill">🎯 85+ questions</div>
-      <div class="stat-pill">🌍 Mode international</div>
+      <div class="stat-pill">🎯 125+ questions</div>
+      <div class="stat-pill">🇫🇷🇧🇪 France & Belgique</div>
       <div class="stat-pill">🏆 7 modes de jeu</div>
     </div>
     <div class="hero-buttons">
@@ -352,12 +352,14 @@
         <div class="queue-avatar" id="queue-my-avatar"></div>
         <div class="queue-pseudo" id="queue-my-pseudo"></div>
         <div class="queue-elo-tag" id="queue-my-elo"></div>
+        <div class="queue-country-flag" id="queue-my-flag"></div>
       </div>
       <div class="queue-vs-circle">VS</div>
       <div class="queue-player-card">
         <div class="queue-avatar queue-avatar-unknown" id="queue-opp-avatar">?</div>
         <div class="queue-pseudo" id="queue-opp-pseudo" style="color:var(--text3)">Recherche...</div>
         <div class="queue-elo-tag" id="queue-opp-elo" style="color:var(--text3)">??? Elo</div>
+        <div class="queue-country-flag" id="queue-opp-flag"></div>
       </div>
     </div>
     <div id="queue-searching-row" style="display:flex;align-items:center;justify-content:center;gap:.75rem;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.65rem 1.25rem;margin-bottom:.65rem">
@@ -369,6 +371,7 @@
     </div>
     <div id="queue-elo-range" style="font-size:.78rem;color:var(--text3);margin-bottom:1rem">Fourchette Elo : ±200</div>
     <div id="queue-matched-extra" class="hidden" style="margin-bottom:1rem">
+      <div id="queue-elo-prediction" class="elo-prediction" style="margin-bottom:.65rem"></div>
       <div id="queue-elo-diff" style="font-size:.88rem;margin-bottom:.75rem;padding:.5rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:10px"></div>
       <div style="font-size:.85rem;color:var(--text2);margin-bottom:.3rem">La partie commence dans</div>
       <div id="queue-countdown" style="font-size:3.5rem;font-weight:900;color:var(--accent2);line-height:1.1">3</div>
@@ -405,6 +408,30 @@
     </div>
   </div>
 </div>
+
+<!-- ════════════════════════════ COUNTRY MODAL ══ -->
+<div id="country-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3 style="margin-bottom:.5rem">🌍 Choisir ton pays</h3>
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:1.25rem">Les questions seront adaptées à ton pays.</p>
+    <div class="country-options">
+      <div class="country-option" data-country="france" id="country-opt-france">
+        <div class="country-flag">🇫🇷</div>
+        <div class="country-name">France</div>
+        <div class="country-desc">Code de la route français</div>
+      </div>
+      <div class="country-option" data-country="belgique" id="country-opt-belgique">
+        <div class="country-flag">🇧🇪</div>
+        <div class="country-name">Belgique</div>
+        <div class="country-desc">Règlement belge</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost w-full" style="margin-top:.75rem" id="btn-close-country-modal">Fermer</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════ PLAYER TOOLTIP ══ -->
+<div id="player-tooltip" class="player-tooltip hidden"></div>
 
 <div id="toast" class="toast hidden"></div>
 <script src="/js/app.js"></script>

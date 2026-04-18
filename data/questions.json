@@ -3378,5 +3378,290 @@
     "is_trap": false,
     "trap_message": null,
     "situation": "Route à deux voies, bord droit de la chaussée."
+  },
+  {
+    "id": 111,
+    "category": "vitesse",
+    "country": "belgique",
+    "question": "En Belgique, quelle est la vitesse maximale sur une route ordinaire hors agglomération ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "80 km/h" },
+      { "id": "b", "text": "90 km/h" },
+      { "id": "c", "text": "100 km/h" },
+      { "id": "d", "text": "110 km/h" }
+    ],
+    "correct": ["b"],
+    "explanation": "En Belgique, la vitesse maximale sur les routes ordinaires hors agglomération est de 90 km/h — contrairement à la France où elle est de 80 km/h depuis 2018.",
+    "is_trap": true,
+    "trap_message": "Attention ! En Belgique c'est 90 km/h, pas 80 km/h comme en France !",
+    "situation": null
+  },
+  {
+    "id": 112,
+    "category": "vitesse",
+    "country": "belgique",
+    "question": "En Belgique, quelle est la vitesse maximale autorisée sur autoroute par temps sec ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "110 km/h" },
+      { "id": "b", "text": "120 km/h" },
+      { "id": "c", "text": "130 km/h" },
+      { "id": "d", "text": "140 km/h" }
+    ],
+    "correct": ["b"],
+    "explanation": "En Belgique, la vitesse maximale sur autoroute est de 120 km/h par temps sec — contrairement à la France (130 km/h).",
+    "is_trap": true,
+    "trap_message": "En Belgique l'autoroute est limitée à 120 km/h, pas 130 km/h comme en France !",
+    "situation": null
+  },
+  {
+    "id": 113,
+    "category": "panneaux",
+    "country": "belgique",
+    "question": "Que signifie ce panneau belge C1 ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Belgian_road_sign_C1.svg/240px-Belgian_road_sign_C1.svg.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Sens interdit à tous les véhicules" },
+      { "id": "b", "text": "Accès interdit aux camions uniquement" },
+      { "id": "c", "text": "Arrêt obligatoire" },
+      { "id": "d", "text": "Voie à sens unique" }
+    ],
+    "correct": ["a"],
+    "explanation": "Le panneau C1 belge = SENS INTERDIT. Aucun véhicule ne peut entrer dans ce sens. Équivalent du panneau B1 français.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 114,
+    "category": "panneaux",
+    "country": "belgique",
+    "question": "Que signifie ce panneau belge B5 ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Belgian_road_sign_B5.svg/240px-Belgian_road_sign_B5.svg.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Cédez le passage" },
+      { "id": "b", "text": "Danger — intersection" },
+      { "id": "c", "text": "Arrêt obligatoire — STOP" },
+      { "id": "d", "text": "Route prioritaire" }
+    ],
+    "correct": ["c"],
+    "explanation": "Le panneau B5 belge = STOP. Vous devez marquer un arrêt total avant de continuer.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 115,
+    "category": "panneaux",
+    "country": "belgique",
+    "question": "Que signifie ce panneau belge B7 (triangle pointe en bas) ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Belgian_road_sign_B7.svg/240px-Belgian_road_sign_B7.svg.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Route prioritaire" },
+      { "id": "b", "text": "Cédez le passage" },
+      { "id": "c", "text": "Arrêt obligatoire" },
+      { "id": "d", "text": "Fin de priorité" }
+    ],
+    "correct": ["b"],
+    "explanation": "Le panneau B7 belge = CÉDEZ LE PASSAGE. Vous devez laisser passer les véhicules sur la voie prioritaire. Équivalent du panneau AB3a français.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 116,
+    "category": "panneaux",
+    "country": "belgique",
+    "question": "Que signifie ce panneau belge F1 (flèche blanche sur fond bleu) ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Belgian_road_sign_F1.svg/240px-Belgian_road_sign_F1.svg.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Chaussée à sens unique" },
+      { "id": "b", "text": "Voie réservée aux bus" },
+      { "id": "c", "text": "Autoroute" },
+      { "id": "d", "text": "Passage autorisé" }
+    ],
+    "correct": ["a"],
+    "explanation": "Le panneau F1 belge = CHAUSSÉE À SENS UNIQUE. Tous les véhicules circulent dans la même direction.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 117,
+    "category": "priorites",
+    "country": "belgique",
+    "question": "En Belgique, à une intersection sans panneau ni marquage, qui est prioritaire ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Le véhicule venant de gauche" },
+      { "id": "b", "text": "Le véhicule venant de droite" },
+      { "id": "c", "text": "Le plus grand véhicule" },
+      { "id": "d", "text": "Celui qui est arrivé en premier" }
+    ],
+    "correct": ["b"],
+    "explanation": "En Belgique comme en France, la règle de priorité à droite s'applique par défaut à toute intersection sans signalisation particulière.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 118,
+    "category": "alcool",
+    "country": "belgique",
+    "question": "Quel est le taux d'alcoolémie maximal autorisé pour conduire en Belgique (conducteur ordinaire) ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "0,2 g/L" },
+      { "id": "b", "text": "0,3 g/L" },
+      { "id": "c", "text": "0,5 g/L" },
+      { "id": "d", "text": "0,8 g/L" }
+    ],
+    "correct": ["c"],
+    "explanation": "En Belgique, le taux d'alcoolémie maximal autorisé est de 0,5 g/L de sang (identique à la France).",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 119,
+    "category": "alcool",
+    "country": "belgique",
+    "question": "En Belgique, quel taux s'applique aux nouveaux conducteurs (permis de moins de 2 ans) ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "0,5 g/L" },
+      { "id": "b", "text": "0,2 g/L" },
+      { "id": "c", "text": "0,0 g/L" },
+      { "id": "d", "text": "0,3 g/L" }
+    ],
+    "correct": ["b"],
+    "explanation": "En Belgique, les nouveaux conducteurs (permis de moins de 2 ans) sont soumis à un taux réduit de 0,2 g/L.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 120,
+    "category": "vitesse",
+    "country": "belgique",
+    "question": "En Belgique, dans une agglomération, quelle est la vitesse maximale par défaut ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "30 km/h" },
+      { "id": "b", "text": "40 km/h" },
+      { "id": "c", "text": "50 km/h" },
+      { "id": "d", "text": "60 km/h" }
+    ],
+    "correct": ["c"],
+    "explanation": "En Belgique, la vitesse maximale en agglomération est de 50 km/h par défaut, sauf indication contraire (zones 30, etc.).",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 121,
+    "category": "securite",
+    "country": "belgique",
+    "question": "En Belgique, le port de la ceinture de sécurité est-il obligatoire à l'arrière du véhicule ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Non, uniquement à l'avant" },
+      { "id": "b", "text": "Oui, uniquement sur autoroute" },
+      { "id": "c", "text": "Oui, pour les adultes uniquement" },
+      { "id": "d", "text": "Oui, pour tous les occupants du véhicule" }
+    ],
+    "correct": ["d"],
+    "explanation": "En Belgique, le port de la ceinture de sécurité est obligatoire pour TOUS les occupants du véhicule, à l'avant comme à l'arrière.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 122,
+    "category": "regles",
+    "country": "belgique",
+    "question": "En Belgique, combien de gilets réfléchissants doit-on avoir dans son véhicule ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Aucun, ce n'est pas obligatoire" },
+      { "id": "b", "text": "Un gilet par occupant du véhicule" },
+      { "id": "c", "text": "Au moins un gilet par véhicule" },
+      { "id": "d", "text": "Seulement en cas de camping" }
+    ],
+    "correct": ["c"],
+    "explanation": "En Belgique, il est obligatoire d'avoir au moins UN gilet réfléchissant dans le véhicule. Il doit être porté lors de toute sortie du véhicule sur route.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 123,
+    "category": "regles",
+    "country": "belgique",
+    "question": "En Belgique, le triangle de signalisation est-il obligatoire dans votre véhicule ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Non, il n'est pas obligatoire" },
+      { "id": "b", "text": "Oui, il est obligatoire" },
+      { "id": "c", "text": "Seulement recommandé" },
+      { "id": "d", "text": "Obligatoire uniquement sur autoroute" }
+    ],
+    "correct": ["b"],
+    "explanation": "En Belgique, le triangle de présignalisation est obligatoire dans tout véhicule à moteur. Il doit être placé à au moins 30 m derrière le véhicule immobilisé.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 124,
+    "category": "priorites",
+    "country": "belgique",
+    "question": "En Belgique, comment est signalée la fin d'une route prioritaire ?",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Belgian_road_sign_B4.svg/240px-Belgian_road_sign_B4.svg.png",
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Un losange jaune barré d'une bande diagonale noire" },
+      { "id": "b", "text": "Un panneau triangulaire rouge" },
+      { "id": "c", "text": "Un panneau circulaire bleu" },
+      { "id": "d", "text": "Un panneau carré blanc avec une croix" }
+    ],
+    "correct": ["a"],
+    "explanation": "En Belgique (et en France), la fin de route prioritaire est signalée par un losange jaune barré par une bande diagonale noire (panneau B4).",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
+  },
+  {
+    "id": 125,
+    "category": "securite",
+    "country": "belgique",
+    "question": "En Belgique, que devez-vous faire lorsqu'un véhicule de secours (gyrophare + sirène) s'approche ?",
+    "image_url": null,
+    "video_url": null,
+    "answers": [
+      { "id": "a", "text": "Continuer normalement, ils doivent s'adapter" },
+      { "id": "b", "text": "S'arrêter immédiatement où que vous soyez" },
+      { "id": "c", "text": "Vous ranger à droite et laisser le passage libre" },
+      { "id": "d", "text": "Accélérer pour dégager la route rapidement" }
+    ],
+    "correct": ["c"],
+    "explanation": "En Belgique, vous devez vous ranger sur le côté droit, ralentir et laisser le passage aux véhicules d'urgence.",
+    "is_trap": false,
+    "trap_message": null,
+    "situation": null
   }
 ]

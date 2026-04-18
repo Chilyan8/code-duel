@@ -54,13 +54,13 @@ const db = {
         elo: 1000, wins: 0, losses: 0, draws: 0,
         total_games: 0, total_correct: 0, total_questions: 0,
         total_seconds: 0, avatar: null, tokenVersion: 0,
-        category_stats: {}, badges: [], level: 1,
+        category_stats: {}, badges: [], level: 1, country: null,
         created_at: new Date().toISOString()
       });
       return { id: ref.id };
     }
     const id = store._nextId++;
-    store.users.push({ id, pseudo, password_hash: passwordHash, elo: 1000, wins: 0, losses: 0, total_games: 0, total_correct: 0, total_questions: 0, total_seconds: 0, avatar: null, tokenVersion: 0, category_stats: {}, badges: [], level: 1 });
+    store.users.push({ id, pseudo, password_hash: passwordHash, elo: 1000, wins: 0, losses: 0, total_games: 0, total_correct: 0, total_questions: 0, total_seconds: 0, avatar: null, tokenVersion: 0, category_stats: {}, badges: [], level: 1, country: null });
     return { id };
   },
 
@@ -123,9 +123,9 @@ const db = {
     try {
       if (useFirebase) {
         const snap = await firestore.collection('users').orderBy('elo', 'desc').limit(limit).get();
-        return snap.docs.map(d => { const data = d.data(); return { pseudo: data.pseudo, elo: data.elo, wins: data.wins || 0, losses: data.losses || 0, total_games: data.total_games || 0, level: data.level || 1, badges: data.badges || [] }; });
+        return snap.docs.map(d => { const data = d.data(); return { pseudo: data.pseudo, elo: data.elo, wins: data.wins || 0, losses: data.losses || 0, total_games: data.total_games || 0, level: data.level || 1, badges: data.badges || [], avatar: data.avatar || null, country: data.country || null, category_stats: data.category_stats || {} }; });
       }
-      return [...store.users].sort((a, b) => b.elo - a.elo).slice(0, limit).map(u => ({ pseudo: u.pseudo, elo: u.elo, wins: u.wins || 0, losses: u.losses || 0, total_games: u.total_games || 0, level: u.level || 1 }));
+      return [...store.users].sort((a, b) => b.elo - a.elo).slice(0, limit).map(u => ({ pseudo: u.pseudo, elo: u.elo, wins: u.wins || 0, losses: u.losses || 0, total_games: u.total_games || 0, level: u.level || 1, avatar: u.avatar || null, country: u.country || null, category_stats: u.category_stats || {} }));
     } catch (e) { console.error('getLeaderboard:', e.message); return []; }
   },
 

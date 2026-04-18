@@ -5,6 +5,7 @@ const S = {
   pseudo: localStorage.getItem('pseudo') || null,
   elo:    parseInt(localStorage.getItem('elo') || '1000'),
   avatar: localStorage.getItem('avatar') || null,
+  country: localStorage.getItem('country') || null,
   roomCode: null, isHost: false, gameOptions: {},
   selectedOptions: { players:2, questions:40, time:30, category:'all', mode:'normal' },
   currentQ: null, selectedAnswers: [], answered: false,
@@ -18,6 +19,29 @@ const S = {
   queueTimer: null, queueSecs: 0, queueCountdownInterval: null,
   gamePlaying: false,
 };
+
+function countryFlag(country) {
+  if (country === 'france') return '🇫🇷';
+  if (country === 'belgique') return '🇧🇪';
+  return '';
+}
+function countryName(country) {
+  if (country === 'france') return 'France';
+  if (country === 'belgique') return 'Belgique';
+  return 'Non défini';
+}
+
+function floatElo(delta, anchorEl) {
+  if (!delta || !anchorEl) return;
+  const rect = anchorEl.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'elo-float ' + (delta > 0 ? 'pos' : 'neg');
+  el.textContent = (delta > 0 ? '+' : '') + delta + ' Elo';
+  el.style.left = rect.left + rect.width/2 + 'px';
+  el.style.top = rect.top + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1600);
+}
 
 const socket = io();
 
@@ -108,18 +132,18 @@ async function doRegister() {
 function saveAuth(d) {
   S.isAuth=true; S.pseudo=d.pseudo; S.elo=d.elo||1000;
   if(d.avatar) S.avatar=d.avatar;
+  if(d.country !== undefined) { S.country=d.country; if(d.country) localStorage.setItem('country',d.country); else localStorage.removeItem('country'); }
   localStorage.setItem('pseudo',S.pseudo);
   localStorage.setItem('elo',String(S.elo));
   if(d.avatar) localStorage.setItem('avatar',d.avatar);
-  // Reconnecte le socket pour qu'il envoie le cookie fraîchement posé
   socket.disconnect();
   socket.connect();
 }
 
 function doLogout() {
   apiFetch('/api/auth/logout',{method:'POST'}).catch(()=>{});
-  S.isAuth=false; S.pseudo=null; S.elo=0; S.avatar=null;
-  ['pseudo','elo','avatar'].forEach(k=>localStorage.removeItem(k));
+  S.isAuth=false; S.pseudo=null; S.elo=0; S.avatar=null; S.country=null;
+  ['pseudo','elo','avatar','country'].forEach(k=>localStorage.removeItem(k));
   socket.disconnect();
   socket.connect();
   toast('Déconnecté 👋'); go('screen-home');
@@ -164,7 +188,14 @@ function updateHomeUI() {
     eloSpan.style.color = 'var(--accent2)';
     eloSpan.textContent = S.elo;
     const eloLabel = document.createTextNode(' Elo');
-    el.append(sep, strong, dot, eloSpan, eloLabel);
+    const flag = countryFlag(S.country);
+    if (flag) {
+      const flagSpan = document.createElement('span');
+      flagSpan.textContent = ' ' + flag;
+      el.append(sep, strong, dot, eloSpan, eloLabel, flagSpan);
+    } else {
+      el.append(sep, strong, dot, eloSpan, eloLabel);
+    }
     el.style.display='flex';
     if(authBtn) authBtn.textContent='Déconnexion';
     if(guestNote) guestNote.style.display='none';
@@ -209,8 +240,9 @@ async function loadProfile() {
     const eloBase={1:0,2:1000,3:1020,4:1080,5:1150,6:1250}[lv.level]||0;
     const eloRange=lv.next?lv.next-eloBase:1;
     const eloProgress=lv.next?Math.min(100,Math.round((d.elo-eloBase)/eloRange*100)):100;
-    const avatar=d.avatar&&d.avatar.startsWith('data:image:')?d.avatar:null;
+    const avatar=d.avatar&&d.avatar.startsWith('data:image/')?d.avatar:null;
     if(avatar){S.avatar=avatar;localStorage.setItem('avatar',avatar);}
+    if(d.country !== undefined) { S.country=d.country; if(d.country) localStorage.setItem('country',d.country); else localStorage.removeItem('country'); }
     const displayAvatar=avatar||S.avatar||null;
     const avHtml=displayAvatar?'<img src="'+displayAvatar+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">':"<span style='font-size:2.5rem;font-weight:900;color:var(--accent2)'>"+esc((d.pseudo[0]||'?').toUpperCase())+"</span>";
     const badges=d.badges||[];
@@ -218,11 +250,13 @@ async function loadProfile() {
     const weakCats=Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(b[1].errors/b[1].sessions)-(a[1].errors/a[1].sessions)).slice(0,4);
     const catNames={priorites:'🚦 Priorités',panneaux:'🪧 Panneaux',vitesse:'⚡ Vitesses',alcool:'🍺 Alcool',regles:'📋 Règles',securite:'🛡️ Sécurité',vehicule:'🔧 Véhicule',permis:'📄 Permis',situation:'🚗 Situation'};
     const catName=c=>catNames[c]||esc(c);
+    const flag = countryFlag(d.country);
     pc.innerHTML=
       '<div style="text-align:center;padding:.5rem 0 1.5rem">'+
-        '<div class="profile-avatar-wrap" onclick="openAvatarModal()">'+
+        '<div class="profile-avatar-wrap avatar-wrap-rel" onclick="openAvatarModal()">'+
           '<div class="profile-avatar-img" id="prof-av">'+avHtml+'</div>'+
           '<div class="avatar-edit-btn">✏️</div>'+
+          (flag ? '<div class="country-badge" style="font-size:1.2rem;bottom:22px;right:-2px">'+flag+'</div>' : '')+
         '</div>'+
         '<div style="font-size:1.3rem;font-weight:800;margin:.4rem 0 .2rem">'+esc(d.pseudo)+' <button onclick="openPseudoModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:.1rem .4rem;color:var(--text3);cursor:pointer;font-size:.65rem;vertical-align:middle">✏️</button></div>'+
         '<div style="color:var(--accent2);font-weight:700">'+esc(lv.name)+'</div>'+
@@ -238,6 +272,14 @@ async function loadProfile() {
         '<span style="font-size:1.5rem">⏱️</span>'+
         '<div><div style="font-weight:700">'+timeStr+'</div><div style="color:var(--text2);font-size:.78rem">passées sur le site</div></div>'+
         '<div style="margin-left:auto;text-align:right"><div style="font-weight:700">'+games+'</div><div style="color:var(--text2);font-size:.78rem">parties jouées</div></div>'+
+      '</div>'+
+      '<div class="profile-country-row" onclick="openCountryModal()">'+
+        '<div class="pcr-flag">'+(flag || '🌍')+'</div>'+
+        '<div class="pcr-info">'+
+          '<div class="pcr-label">🌍 Mon pays</div>'+
+          '<div class="pcr-val">'+(d.country ? countryName(d.country) : 'Non défini')+'</div>'+
+        '</div>'+
+        '<div class="pcr-change">Changer ›</div>'+
       '</div>'+
       '<div class="profile-stats-grid">'+
         '<div class="profile-stat"><div class="ps-num">'+wins+'</div><div class="ps-label">✅ Victoires</div></div>'+
@@ -285,6 +327,31 @@ async function savePseudo(){
     socket.connect();
     closePseudoModal(); toast('Pseudo mis à jour ! 🎉'); loadProfile(); updateHomeUI();
   }catch{err('pseudo-modal-err','Erreur réseau');}
+}
+
+// ── Country ──
+function openCountryModal() {
+  const modal = document.getElementById('country-modal');
+  document.querySelectorAll('.country-option').forEach(o => {
+    o.classList.toggle('selected', o.dataset.country === S.country);
+  });
+  modal.classList.remove('hidden');
+}
+function closeCountryModal() { document.getElementById('country-modal').classList.add('hidden'); }
+async function selectCountry(country) {
+  if (!S.isAuth) { toast('Connecte-toi pour définir ton pays !', 2500); return; }
+  document.querySelectorAll('.country-option').forEach(o => o.classList.toggle('selected', o.dataset.country === country));
+  try {
+    const r = await apiFetch('/api/profile/country', {method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({country})});
+    const d = await r.json();
+    if (!r.ok) { toast('Erreur : ' + (d.error || 'inconnue')); return; }
+    S.country = country;
+    localStorage.setItem('country', country);
+    closeCountryModal();
+    toast('Pays mis à jour ! ' + countryFlag(country) + ' ' + countryName(country));
+    loadProfile();
+    updateHomeUI();
+  } catch { toast('Erreur réseau'); }
 }
 
 // ── Avatar ──
@@ -370,7 +437,7 @@ function sendChat() {
 function avatarHtml(av, size, pseudo) {
   const sz = size || 72;
   const letter = esc(((pseudo||S.pseudo||'?')[0]||'?').toUpperCase());
-  if (av && av.startsWith('data:image/')) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+  if (av && (av.startsWith('data:image/')||av.startsWith('data:image:'))) return '<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
   return '<span style="font-size:'+(sz*.38)+'px;font-weight:900;color:var(--accent2);line-height:1">'+letter+'</span>';
 }
 
@@ -383,6 +450,8 @@ function joinQueue() {
   document.getElementById('queue-my-avatar').innerHTML = avatarHtml(S.avatar);
   document.getElementById('queue-my-pseudo').textContent = S.pseudo;
   document.getElementById('queue-my-elo').textContent = S.elo + ' Elo';
+  const myFlagEl = document.getElementById('queue-my-flag');
+  if (myFlagEl) myFlagEl.textContent = countryFlag(S.country) || '';
   const oppAv = document.getElementById('queue-opp-avatar');
   oppAv.innerHTML = '?'; oppAv.className = 'queue-avatar queue-avatar-unknown';
   document.getElementById('queue-opp-pseudo').textContent = 'Recherche...';
@@ -396,7 +465,7 @@ function joinQueue() {
     S.queueSecs++;
     document.getElementById('queue-wait-time').textContent = S.queueSecs;
   }, 1000);
-  socket.emit('join_queue', { pseudo: S.pseudo, elo: S.elo, avatar: S.avatar });
+  socket.emit('join_queue', { pseudo: S.pseudo, elo: S.elo, avatar: S.avatar, country: S.country });
 }
 
 function leaveQueue() {
@@ -410,8 +479,8 @@ function showCreateForm(){if(!S.pseudo){promptGuest();return;}document.getElemen
 function showJoinForm(){if(!S.pseudo){promptGuest();return;}document.getElementById('join-form').classList.toggle('hidden');document.getElementById('create-form').classList.add('hidden');}
 function selectOpt(type,val,el){el.closest('.option-pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');S.selectedOptions[type]=isNaN(val)||val===''?val:Number(val);}
 function selectMode(mode,el){document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');S.selectedOptions.mode=mode;}
-function openCreateGame(){if(!S.pseudo){promptGuest();return;}clearErr('play-err');socket.emit('create_game',{pseudo:S.pseudo,avatar:S.avatar,options:{maxPlayers:S.selectedOptions.players,questionCount:S.selectedOptions.questions,timeLimit:S.selectedOptions.time,category:S.selectedOptions.category,mode:S.selectedOptions.mode}});}
-function doJoinGame(){const code=document.getElementById('join-code').value.trim().toUpperCase();if(code.length<4)return err('join-err','Code invalide');clearErr('join-err');socket.emit('join_game',{roomCode:code,pseudo:S.pseudo,avatar:S.avatar});}
+function openCreateGame(){if(!S.pseudo){promptGuest();return;}clearErr('play-err');socket.emit('create_game',{pseudo:S.pseudo,avatar:S.avatar,country:S.country,options:{maxPlayers:S.selectedOptions.players,questionCount:S.selectedOptions.questions,timeLimit:S.selectedOptions.time,category:S.selectedOptions.category,mode:S.selectedOptions.mode,country:S.country}});}
+function doJoinGame(){const code=document.getElementById('join-code').value.trim().toUpperCase();if(code.length<4)return err('join-err','Code invalide');clearErr('join-err');socket.emit('join_game',{roomCode:code,pseudo:S.pseudo,avatar:S.avatar,country:S.country});}
 function copyRoomCode(){navigator.clipboard.writeText(document.getElementById('display-room-code').textContent).then(()=>toast('Code copié ! 📋'));}
 function sendReady(){const btn=document.getElementById('btn-ready');btn.disabled=true;btn.textContent='⏳ En attente...';socket.emit('player_ready');}
 function forceStart(){socket.emit('force_start');}
@@ -423,7 +492,7 @@ function renderWaiting(players,maxPlayers){
   for(let i=0;i<maxPlayers;i++){
     const p=players[i];const div=document.createElement('div');
     div.className='waiting-player '+(p?'connected':'empty');
-    if(p){const av=p.avatar&&p.avatar.startsWith('data:image:')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-weight:900;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
+    if(p){const av=p.avatar&&p.avatar.startsWith('data:image/')?'<img src="'+p.avatar+'" class="wp-avatar-img">':'<span style="font-weight:900;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';const flag=countryFlag(p.country);div.innerHTML='<div class="wp-avatar connected">'+av+'</div><div><div class="wp-name">'+esc(p.pseudo)+(flag?' <span class="wp-country">'+flag+'</span>':'')+(p.pseudo===S.pseudo?' <small style="color:var(--accent2)">(toi)</small>':'')+'</div><div class="wp-tag">'+(i===0?'👑 Hôte':'Joueur '+(i+1))+'</div></div><div class="wp-status">'+(p.ready?'✅':'⏳')+'</div>';}
     else{div.innerHTML='<div class="wp-avatar">?</div><div><div class="wp-name" style="color:var(--text3)">En attente...</div><div class="wp-tag">Joueur '+(i+1)+'</div></div><div class="wp-status">⏳</div>';}
     c.appendChild(div);
   }
@@ -445,10 +514,19 @@ function renderHUD(){
   const max=Math.max(...S.allPlayers.map(p=>p.score),0);
   S.allPlayers.forEach(p=>{
     const isMe=p.pseudo===S.pseudo;
-    const av=p.avatar&&p.avatar.startsWith('data:image:')?'<img src="'+p.avatar+'" style="width:20px;height:20px;border-radius:50%;object-fit:cover">':'<span style="font-size:.75rem;font-weight:700;color:var(--accent2)">'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
+    const avSrc=p.avatar&&p.avatar.startsWith('data:image/');
+    const avContent=avSrc?'<img src="'+p.avatar+'" alt="">':'<span>'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
+    const flag=countryFlag(p.country);
     const d=document.createElement('div');
-    d.className='hud-player-score'+(isMe?' me':'')+(p.score===max&&max>0&&!isMe?' leading':'');
-    d.innerHTML='<div style="display:flex;align-items:center;gap:.2rem;width:24px">'+av+'</div><div><div class="hps-name">'+esc(p.pseudo)+'</div>'+(p.answered?'<div style="font-size:.6rem;color:var(--green)">✓</div>':'')+'</div><div class="hps-score">'+esc(p.score)+'</div>'+(p.streak>=3?'<div style="font-size:.72rem">🔥'+esc(p.streak)+'</div>':'');
+    const isLeading=p.score===max&&max>0;
+    d.className='hud-player-score'+(isMe?' me':'')+(isLeading&&!isMe?' leading':'')+(p.answered&&!isMe?'':'')+' '+((p._lastCorrect===true&&p.answered)?' answered-ok':(p._lastCorrect===false&&p.answered)?' answered-wrong':'');
+    d.innerHTML=
+      '<div class="hps-avatar">'+avContent+'</div>'+
+      '<div class="hps-info">'+
+        '<div class="hps-name">'+(flag?flag+' ':'')+esc(p.pseudo)+'</div>'+
+        '<div class="hps-score">'+esc(p.score)+(p.answered?'<span style="font-size:.6rem;color:var(--green);margin-left:.2rem">✓</span>':'')+'</div>'+
+        (p.streak>=3?'<div class="hps-streak">🔥'+esc(p.streak)+'</div>':'')
+      +'</div>';
     c.appendChild(d);
   });
 }
@@ -514,9 +592,20 @@ function showDuelResults(data){
   if(data.isDraw)banner.textContent='🤝 Match nul !';
   else if(data.winner===S.pseudo){banner.textContent='🏆 VICTOIRE !';sfx.win();}
   else banner.textContent='🎖️ Victoire de '+data.winner+' !';
-  document.getElementById('podium').innerHTML=data.results.map(r=>{const isMe=r.pseudo===S.pseudo;const elo=r.eloChange?'<div style="font-size:.82rem;font-weight:700;color:'+(r.eloChange>0?'var(--green)':'var(--red)')+';">'+(r.eloChange>0?'+':'')+esc(r.eloChange)+' Elo</div>':'';return '<div class="podium-item rank-'+r.rank+(isMe?' me':'')+'" ><div class="podium-rank">'+(['🥇','🥈','🥉'][r.rank-1]||r.rank+'.')+'</div><div class="podium-pseudo">'+esc(r.pseudo)+(isMe?'<span class="podium-you">toi</span>':'')+'</div><div><div class="podium-score">'+esc(r.score)+'<span style="font-size:.75rem;color:var(--text3)">\/'+esc(r.total)+'</span></div><div class="podium-pct">'+esc(r.percentage)+'%</div></div>'+elo+'</div>';}).join('');
+  document.getElementById('podium').innerHTML=data.results.map(r=>{
+    const isMe=r.pseudo===S.pseudo;
+    const pData=S.allPlayers.find(p=>p.pseudo===r.pseudo);
+    const av=pData?.avatar&&pData.avatar.startsWith('data:image/')?'<img src="'+pData.avatar+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--border)">':'<div style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem;color:var(--accent2)">'+esc((r.pseudo[0]||'?').toUpperCase())+'</div>';
+    const flag=countryFlag(pData?.country);
+    const elo=r.eloChange?'<div style="font-size:.82rem;font-weight:700;color:'+(r.eloChange>0?'var(--green)':'var(--red)')+';">'+(r.eloChange>0?'+':'')+esc(r.eloChange)+' Elo</div>':'';
+    return '<div class="podium-item rank-'+r.rank+(isMe?' me':'')+'" ><div class="podium-rank">'+(['🥇','🥈','🥉'][r.rank-1]||r.rank+'.')+'</div>'+av+'<div class="podium-pseudo">'+esc(r.pseudo)+(flag?' '+flag:'')+(isMe?'<span class="podium-you">toi</span>':'')+'</div><div><div class="podium-score">'+esc(r.score)+'<span style="font-size:.75rem;color:var(--text3)">\/'+esc(r.total)+'</span></div><div class="podium-pct">'+esc(r.percentage)+'%</div></div>'+elo+'</div>';
+  }).join('');
   const myR=data.results.find(r=>r.pseudo===S.pseudo);
-  if(myR?.eloChange){S.elo+=myR.eloChange;localStorage.setItem('elo',String(S.elo));}
+  if(myR?.eloChange){
+    S.elo+=myR.eloChange;
+    localStorage.setItem('elo',String(S.elo));
+    setTimeout(()=>floatElo(myR.eloChange, document.getElementById('victory-banner')),600);
+  }
   const an=document.getElementById('results-analysis');an.innerHTML='';
   if(myR&&Object.keys(myR.categoryErrors||{}).length){an.innerHTML='<div class="analysis-title">📊 Tes erreurs</div>'+Object.entries(myR.categoryErrors).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>'<div class="category-error"><span>'+catName(cat)+'</span><span style="color:var(--red)">'+n+' erreur'+(n>1?'s':'')+'</span></div>').join('');}
   if(data.replayData?.length){S.replayData=data.replayData;document.getElementById('replay-toggle').classList.remove('hidden');}
@@ -647,17 +736,73 @@ async function loadLeaderboard() {
     if (!res.ok) throw new Error('Erreur ' + res.status);
     const data = await res.json();
     if (!data || !data.length) {
-      el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text2)">Aucun joueur pour le moment 🤷<br><small style="color:var(--text3)">Cree un compte pour apparaitre ici !</small></div>';
+      el.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text2)">Aucun joueur pour le moment 🤷<br><small style="color:var(--text3)">Crée un compte pour apparaître ici !</small></div>';
       return;
     }
-    el.innerHTML = data.map((p, i) => {
+    el.innerHTML = '';
+    data.forEach((p, i) => {
       const re = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      return '<div class="lb-item"><div class="lb-rank">'+re+'</div><div style="flex:1"><div class="lb-pseudo">'+esc(p.pseudo)+'</div><div style="font-size:.72rem;color:var(--text3)">'+esc(p.levelInfo?.name||'')+'</div></div><div style="font-weight:700;color:var(--accent2)">'+esc(p.elo)+' Elo</div><div style="font-size:.78rem;color:var(--text3);margin-left:.5rem">'+esc(p.wins||0)+'V '+esc(p.losses||0)+'D</div></div>';
-    }).join('');
+      const flag = countryFlag(p.country);
+      const avInner = (p.avatar && p.avatar.startsWith('data:image/'))
+        ? '<img src="'+p.avatar+'" alt="">'
+        : '<span style="font-weight:900;color:var(--accent2);font-size:.9rem">'+ esc((p.pseudo[0]||'?').toUpperCase()) +'</span>';
+      const isMe = p.pseudo === S.pseudo;
+      const winRate = p.total_games > 0 ? Math.round((p.wins||0)/p.total_games*100) : 0;
+      const div = document.createElement('div');
+      div.className = 'lb-item' + (isMe ? ' me-lb' : '');
+      div.innerHTML =
+        '<div style="font-size:1.2rem;font-weight:700;width:2rem;text-align:center;flex-shrink:0">'+re+'</div>'+
+        '<div class="lb-avatar">'+avInner+'</div>'+
+        '<div class="lb-info">'+
+          '<div class="lb-name-row"><span class="lb-pseudo">'+esc(p.pseudo)+'</span>'+(flag?'<span class="lb-flag">'+flag+'</span>':'')+(isMe?'<span style="font-size:.6rem;background:var(--accent);color:#fff;padding:.1rem .35rem;border-radius:5px">toi</span>':'')+'</div>'+
+          '<div class="lb-sublabel">'+esc(p.levelInfo?.name||'')+'</div>'+
+        '</div>'+
+        '<div class="lb-right">'+
+          '<div class="lb-elo-val">'+esc(p.elo)+'</div>'+
+          '<div class="lb-record">'+esc(p.wins||0)+'V · '+esc(p.losses||0)+'D</div>'+
+        '</div>';
+      const catStats = p.category_stats || {};
+      const catNamesMap = {priorites:'Priorités',panneaux:'Panneaux',vitesse:'Vitesses',alcool:'Alcool',regles:'Règles',securite:'Sécurité'};
+      const bestCat = Object.entries(catStats).filter(([,s])=>s.sessions>0).sort((a,b)=>(a[1].errors/a[1].sessions)-(b[1].errors/b[1].sessions))[0];
+      div.addEventListener('mouseenter', e => showPlayerTooltip(e, { pseudo:p.pseudo, elo:p.elo, winRate, wins:p.wins||0, losses:p.losses||0, total_games:p.total_games||0, bestCat: bestCat ? catNamesMap[bestCat[0]]||bestCat[0] : null, flag }));
+      div.addEventListener('mouseleave', hidePlayerTooltip);
+      div.addEventListener('mousemove', movePlayerTooltip);
+      el.appendChild(div);
+    });
+    setupTooltip();
   } catch(e) {
-    el.innerHTML = '<div style="text-align:center;padding:1.5rem"><p style="color:var(--red);margin-bottom:1rem">'+(e.message==='timeout'?'Delai depasse':'Erreur de connexion')+'</p><button class="btn btn-ghost" onclick="loadLeaderboard()">Reessayer</button></div>';
+    el.innerHTML = '<div style="text-align:center;padding:1.5rem"><p style="color:var(--red);margin-bottom:1rem">'+(e.message==='timeout'?'Délai dépassé':'Erreur de connexion')+'</p><button class="btn btn-ghost" onclick="loadLeaderboard()">Réessayer</button></div>';
   }
 }
+
+// ── Tooltip ──
+let _tooltipEl = null;
+function setupTooltip() { _tooltipEl = document.getElementById('player-tooltip'); }
+function showPlayerTooltip(e, data) {
+  if (!_tooltipEl) _tooltipEl = document.getElementById('player-tooltip');
+  if (!_tooltipEl) return;
+  const wr = data.winRate;
+  const wrColor = wr >= 60 ? 'good' : wr >= 40 ? 'mid' : 'bad';
+  _tooltipEl.innerHTML =
+    '<div style="font-weight:700;margin-bottom:.5rem">'+(data.flag||'')+' '+esc(data.pseudo)+'</div>'+
+    '<div class="tooltip-row"><span class="tooltip-label">Elo</span><span class="tooltip-val">'+esc(data.elo)+'</span></div>'+
+    '<div class="tooltip-row"><span class="tooltip-label">Win rate</span><span class="tooltip-val '+wrColor+'">'+wr+'%</span></div>'+
+    '<div class="tooltip-row"><span class="tooltip-label">Parties</span><span class="tooltip-val">'+esc(data.total_games)+'</span></div>'+
+    (data.bestCat ? '<div class="tooltip-row"><span class="tooltip-label">Meilleur thème</span><span class="tooltip-val good">'+esc(data.bestCat)+'</span></div>' : '')+
+    '<div class="tooltip-row"><span class="tooltip-label">Record</span><span class="tooltip-val">'+esc(data.wins)+'V / '+esc(data.losses)+'D</span></div>';
+  _tooltipEl.classList.remove('hidden');
+  moveTooltip(e);
+}
+function movePlayerTooltip(e) { moveTooltip(e); }
+function moveTooltip(e) {
+  if (!_tooltipEl || _tooltipEl.classList.contains('hidden')) return;
+  let x = e.clientX + 14, y = e.clientY - 10;
+  const w = _tooltipEl.offsetWidth || 180;
+  if (x + w > window.innerWidth - 10) x = e.clientX - w - 10;
+  _tooltipEl.style.left = x + 'px';
+  _tooltipEl.style.top = y + 'px';
+}
+function hidePlayerTooltip() { _tooltipEl?.classList.add('hidden'); }
 
 // ── Session time ──
 let _ss = Date.now();
@@ -667,10 +812,48 @@ setInterval(async()=>{if(!S.isAuth)return;const s=Math.round((Date.now()-_ss)/10
 socket.on('game_created',({roomCode,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting([{pseudo:S.pseudo,ready:false,avatar:S.avatar}],options.maxPlayers);});
 socket.on('game_joined',({roomCode,players,options,isHost})=>{S.roomCode=roomCode;S.isHost=isHost;S.gameOptions=options;go('screen-waiting');document.getElementById('display-room-code').textContent=roomCode;renderOptsDisplay(options);renderWaiting(players,options.maxPlayers);});
 socket.on('player_list_update',({players,maxPlayers})=>renderWaiting(players,maxPlayers));
-socket.on('game_start',({players,options})=>{sfx.start();S.gameMode=options.mode;S.gameOptions=options;S.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false}));S.powerups={fifty50:1,timeBonus:1,stress:1};S.gamePlaying=true;go('screen-game');renderHUD();});
-socket.on('new_question',data=>{S.allPlayers.forEach(p=>p.answered=false);renderDuelQuestion(data);});
-socket.on('scores_update',({players})=>{S.allPlayers=players;renderHUD();});
-socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;}showDuelResult(data);renderHUD();});
+socket.on('game_start',({players,options})=>{sfx.start();S.gameMode=options.mode;S.gameOptions=options;S.allPlayers=players.map(p=>({...p,score:0,streak:0,answered:false,_lastCorrect:undefined}));S.powerups={fifty50:1,timeBonus:1,stress:1};S.gamePlaying=true;go('screen-game');renderHUD();});
+socket.on('new_question',data=>{
+  S.allPlayers.forEach(p=>{p.answered=false;p._lastCorrect=undefined;});
+  document.getElementById('answers-revealed-panel')?.remove();
+  renderDuelQuestion(data);
+});
+socket.on('scores_update',({players})=>{
+  S.allPlayers=players.map(p=>({...p,_lastCorrect:S.allPlayers.find(x=>x.pseudo===p.pseudo)?._lastCorrect}));
+  renderHUD();
+});
+socket.on('answer_result',data=>{const me=S.allPlayers.find(p=>p.pseudo===S.pseudo);if(me){me.score=data.score;me.streak=data.streak;me.answered=true;me._lastCorrect=data.isCorrect;}showDuelResult(data);renderHUD();});
+socket.on('answers_revealed',({correctAnswers, playerAnswers})=>{
+  const existing = document.getElementById('answers-revealed-panel');
+  if (existing) existing.remove();
+  const fb = document.getElementById('answer-feedback');
+  if (!fb) return;
+  const panel = document.createElement('div');
+  panel.id = 'answers-revealed-panel';
+  panel.className = 'answers-revealed';
+  const qData = S.currentQ;
+  panel.innerHTML = '<div class="ar-title">📊 Réponses de tout le monde</div>' +
+    playerAnswers.map(p => {
+      const avSrc = p.avatar && p.avatar.startsWith('data:image/');
+      const avContent = avSrc ? '<img src="'+p.avatar+'" alt="">' : '<span>'+esc((p.pseudo[0]||'?').toUpperCase())+'</span>';
+      const flag = countryFlag(p.country);
+      const answerTexts = (p.answers || []).map(id => {
+        const ans = qData?.answers?.find(a => a.id === id);
+        return ans ? id.toUpperCase()+') '+ans.text : id.toUpperCase();
+      });
+      const isNone = !p.answers || p.answers.length === 0;
+      const cls = isNone ? 'none' : (p.isCorrect ? 'correct' : 'wrong');
+      const label = isNone ? '⏰ Pas répondu' : (p.isCorrect ? '✅ ' : '❌ ') + answerTexts.join(', ');
+      return '<div class="ar-player"><div class="ar-avatar">'+avContent+'</div><div class="ar-pseudo">'+(flag?flag+' ':'')+esc(p.pseudo)+'</div><div class="ar-answer '+cls+'">'+esc(label)+'</div></div>';
+    }).join('');
+  fb.after(panel);
+  S.allPlayers = S.allPlayers.map(p => {
+    const found = playerAnswers.find(x => x.pseudo === p.pseudo);
+    return found ? {...p, _lastCorrect: found.isCorrect} : p;
+  });
+  renderHUD();
+});
+
 socket.on('powerup_result',({type,removed,bonusSeconds})=>{if(type==='fifty50'&&removed){removed.forEach(id=>document.querySelector('.answer-btn[data-id="'+id+'"]')?.classList.add('removed'));toast('⚡ 50/50 !');}else if(type==='timeBonus'&&bonusSeconds){S.timerSecs+=bonusSeconds;toast('⏱️ +'+bonusSeconds+'s !');}else if(type==='stress')toast('😱 Stress envoyé !');});
 socket.on('powerup_applied',({type,penaltySeconds,from})=>{if(type==='stress'){S.timerSecs=Math.max(3,S.timerSecs-penaltySeconds);toast('😱 '+esc(from)+' t\'a stressé ! -'+penaltySeconds+'s',3000);}});
 socket.on('game_end',data=>{
@@ -704,6 +887,8 @@ socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
   document.getElementById('queue-opp-pseudo').style.color='';
   document.getElementById('queue-opp-elo').textContent=opponent.elo+' Elo';
   document.getElementById('queue-opp-elo').style.color='';
+  const oppFlagEl=document.getElementById('queue-opp-flag');
+  if(oppFlagEl) oppFlagEl.textContent=countryFlag(opponent.country)||'';
   document.getElementById('queue-searching-row').classList.add('hidden');
   document.getElementById('queue-elo-range').classList.add('hidden');
   document.getElementById('btn-leave-queue').classList.add('hidden');
@@ -713,6 +898,9 @@ socket.on('queue_matched',({roomCode,isHost,opponent,totalQuestions})=>{
   if(diff>50)diffEl.textContent='⚠️ Adversaire plus fort (+'+diff+' Elo) — bonne chance 💪';
   else if(diff<-50)diffEl.textContent='🎯 Tu es le favori ('+diff+' Elo) — reste concentré !';
   else diffEl.textContent='⚖️ Niveau équilibré — que le meilleur gagne !';
+  const eloWin = Math.round(32*(1-1/(1+Math.pow(10,(opponent.elo-S.elo)/400))));
+  const predEl = document.getElementById('queue-elo-prediction');
+  if(predEl) predEl.innerHTML='<div class="elo-pred-item"><span class="elo-pred-label">Victoire</span><span class="elo-pred-val pos">+'+eloWin+' Elo</span></div><div class="elo-pred-item"><span class="elo-pred-label">Défaite</span><span class="elo-pred-val neg">-'+eloWin+' Elo</span></div><div class="elo-pred-item"><span class="elo-pred-label">Adversaire</span><span class="elo-pred-val">'+opponent.elo+' Elo</span></div>';
   sfx.start();
   let count=3;
   document.getElementById('queue-countdown').textContent=count;
@@ -749,6 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (d) {
         S.isAuth=true; S.pseudo=d.pseudo; S.elo=d.elo;
         if (d.avatar) S.avatar=d.avatar;
+        if (d.country !== undefined) { S.country=d.country; if(d.country) localStorage.setItem('country',d.country); else localStorage.removeItem('country'); }
         localStorage.setItem('pseudo', d.pseudo);
         localStorage.setItem('elo', String(d.elo));
         if (d.avatar) localStorage.setItem('avatar', d.avatar);
@@ -836,6 +1025,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('avatar-modal').addEventListener('click', closeAvatarModal);
   document.getElementById('avatar-upload').addEventListener('change', uploadAvatar);
   document.getElementById('btn-close-avatar-modal').addEventListener('click', () => document.getElementById('avatar-modal').classList.add('hidden'));
+
+  // ── Country modal ──
+  document.getElementById('country-modal').addEventListener('click', e => { if(e.target.id==='country-modal') closeCountryModal(); });
+  document.getElementById('btn-close-country-modal').addEventListener('click', closeCountryModal);
+  document.querySelectorAll('.country-option').forEach(opt => {
+    opt.addEventListener('click', () => selectCountry(opt.dataset.country));
+  });
 
   // ── Pseudo modal ──
   document.getElementById('pseudo-modal').addEventListener('click', e => { if (e.target.id === 'pseudo-modal') closePseudoModal(); });
