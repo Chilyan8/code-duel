@@ -558,6 +558,7 @@ function renderDuelQuestion(data){
     iw.innerHTML='';
     const img=document.createElement('img');
     img.alt=''; img.style.cssText='max-width:100%;max-height:220px;object-fit:contain;border-radius:8px';
+    img.onerror=()=>{iw.classList.add('hidden');};
     img.src=data.image_url;
     iw.appendChild(img); iw.classList.remove('hidden');
   } else{iw.innerHTML='';iw.classList.add('hidden');}
@@ -675,6 +676,7 @@ function renderSoloQ(){
     iw.innerHTML='';
     const img=document.createElement('img');
     img.alt=''; img.style.cssText='max-width:100%;max-height:220px;object-fit:contain;border-radius:8px';
+    img.onerror=()=>{iw.classList.add('hidden');};
     img.src=q.image_url;
     iw.appendChild(img); iw.classList.remove('hidden');
   }else{iw.innerHTML='';iw.classList.add('hidden');}

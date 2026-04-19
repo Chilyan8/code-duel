@@ -116,8 +116,8 @@ input:focus{outline:none;border-color:var(--accent)}
 .category-badge{display:inline-block;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:.28rem .7rem;font-size:.73rem;color:var(--text2);margin-bottom:.65rem;align-self:flex-start}
 .trap-indicator{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:var(--yellow);border-radius:8px;padding:.35rem .7rem;font-size:.78rem;margin-bottom:.65rem;align-self:flex-start}
 .situation-box{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);color:var(--blue);border-radius:10px;padding:.7rem .9rem;font-size:.87rem;margin-bottom:.65rem;line-height:1.5}
-.q-image-wrap{margin-bottom:.9rem;border-radius:12px;overflow:hidden;border:1px solid var(--border);max-height:200px;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
-.q-image-wrap img{max-width:100%;max-height:200px;object-fit:contain}
+.q-image-wrap{margin-bottom:.9rem;border-radius:12px;overflow:hidden;border:1px solid var(--border);min-height:80px;max-height:220px;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
+.q-image-wrap img{max-width:100%;max-height:220px;object-fit:contain}
 .question-text{font-size:clamp(.97rem,2.5vw,1.15rem);font-weight:600;line-height:1.55;margin-bottom:1rem}
 .answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
 @media(max-width:500px){.answers-grid{grid-template-columns:1fr}}
