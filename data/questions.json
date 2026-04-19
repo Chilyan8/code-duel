@@ -644,7 +644,7 @@
     "category": "situation",
     "question": "🎬 Regardez cette situation : vous arrivez à ce carrefour giratoire. Quelle est la règle ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-giratoire.jpg",
     "answers": [
       {
         "id": "a",
@@ -676,7 +676,7 @@
     "category": "situation",
     "question": "🎬 Situation nocturne : vous roulez phares en route (plein phares). Un véhicule arrive en face. Que faites-vous ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-nuit-phares.jpg",
     "answers": [
       {
         "id": "a",
@@ -708,7 +708,7 @@
     "category": "situation",
     "question": "🎬 Situation : vous roulez à 80 km/h. La route devient mouillée. Que faites-vous ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-pluie.jpg",
     "answers": [
       {
         "id": "a",
@@ -740,7 +740,7 @@
     "category": "situation",
     "question": "🎬 Vous êtes sur autoroute, voie de droite. Voyez-vous une erreur dans ce comportement ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-autoroute.jpg",
     "answers": [
       {
         "id": "a",
@@ -772,7 +772,7 @@
     "category": "situation",
     "question": "🎬 Ce conducteur s'apprête à dépasser. La manœuvre est-elle correcte ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-depassement.jpg",
     "answers": [
       {
         "id": "a",
@@ -804,7 +804,7 @@
     "category": "situation",
     "question": "🎬 Situation : votre voiture dérape sur verglas. Quelle est la bonne réaction ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-verglas.jpg",
     "answers": [
       {
         "id": "a",
@@ -836,7 +836,7 @@
     "category": "situation",
     "question": "🎬 Situation d'urgence : votre voiture prend feu. Que faites-vous en priorité ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-incendie.jpg",
     "answers": [
       {
         "id": "a",
@@ -868,7 +868,7 @@
     "category": "situation",
     "question": "🎬 Intersection : qui a la priorité dans cette situation ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-intersection.jpg",
     "answers": [
       {
         "id": "a",
@@ -900,7 +900,7 @@
     "category": "situation",
     "question": "🎬 Autoroute : un véhicule est en panne sur la voie. Que faire ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-panne-autoroute.jpg",
     "answers": [
       {
         "id": "a",
@@ -932,7 +932,7 @@
     "category": "situation",
     "question": "🎬 Situation scolaire : un bus scolaire est arrêté avec ses clignotants oranges. Que faites-vous ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-bus-scolaire.jpg",
     "answers": [
       {
         "id": "a",
@@ -1155,7 +1155,7 @@
     "id": 37,
     "category": "priorites",
     "question": "À une intersection sans aucune signalisation, quelle règle s'applique ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1187,7 +1187,7 @@
     "id": 38,
     "category": "priorites",
     "question": "Un cycliste arrive à votre droite à une intersection non signalisée. Qui est prioritaire ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1251,7 +1251,7 @@
     "id": 40,
     "category": "priorites",
     "question": "À un passage piéton sans feux, un piéton s'apprête à traverser. Que faites-vous ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/French_road_sign_AB6.svg/240px-French_road_sign_AB6.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1283,7 +1283,7 @@
     "id": 41,
     "category": "priorites",
     "question": "Un véhicule prioritaire (ambulance avec sirène) approche. Que faites-vous ?",
-    "image_url": null,
+    "image_url": "/images/situation-couloir-urgence.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1315,7 +1315,7 @@
     "id": 42,
     "category": "priorites",
     "question": "Sur un rond-point sans signalisation (rare en France), qui est prioritaire ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/French_road_sign_AB25.svg/240px-French_road_sign_AB25.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1347,7 +1347,7 @@
     "id": 43,
     "category": "priorites",
     "question": "Un bus à l'arrêt repart et met son clignotant. Qui est prioritaire ?",
-    "image_url": null,
+    "image_url": "/images/situation-bus-scolaire.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1475,7 +1475,7 @@
     "id": 47,
     "category": "vitesse",
     "question": "Zone de rencontre — vitesse maximum ?",
-    "image_url": null,
+    "image_url": "/images/zone_rencontre.png",
     "video_url": null,
     "answers": [
       {
@@ -1539,7 +1539,7 @@
     "id": 49,
     "category": "vitesse",
     "question": "Conducteur en permis probatoire : vitesse max sur autoroute ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/120px-France_road_sign_B14-110.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1571,7 +1571,7 @@
     "id": 50,
     "category": "vitesse",
     "question": "Distance d'arrêt totale à 50 km/h sur route sèche (réaction + freinage) ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/120px-France_road_sign_B14-50.svg.png",
     "video_url": null,
     "answers": [
       {
@@ -1603,7 +1603,7 @@
     "id": 51,
     "category": "alcool",
     "question": "Taux légal maximum d'alcoolémie pour un conducteur standard ?",
-    "image_url": null,
+    "image_url": "/images/alcool-taux.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1635,7 +1635,7 @@
     "id": 52,
     "category": "alcool",
     "question": "Taux légal pour un conducteur en permis probatoire ?",
-    "image_url": null,
+    "image_url": "/images/alcool-probatoire.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1667,7 +1667,7 @@
     "id": 53,
     "category": "alcool",
     "question": "La conduite sous emprise de drogue est-elle tolérée à faible dose ?",
-    "image_url": null,
+    "image_url": "/images/drogue-volant.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1699,7 +1699,7 @@
     "id": 54,
     "category": "alcool",
     "question": "Comment éliminer l'alcool plus rapidement avant de conduire ?",
-    "image_url": null,
+    "image_url": "/images/alcool-cafe.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1731,7 +1731,7 @@
     "id": 55,
     "category": "alcool",
     "question": "Un médicament niveau 2 (fond orange). Peut-on conduire ?",
-    "image_url": null,
+    "image_url": "/images/medicament-orange.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1795,7 +1795,7 @@
     "id": 57,
     "category": "regles",
     "question": "Peut-on dépasser une ligne continue blanche axiale ?",
-    "image_url": null,
+    "image_url": "/images/double_ligne.png",
     "video_url": null,
     "answers": [
       {
@@ -1827,7 +1827,7 @@
     "id": 58,
     "category": "regles",
     "question": "La ceinture est-elle obligatoire sur les sièges arrière ?",
-    "image_url": null,
+    "image_url": "/images/securite-ceinture-be.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1859,7 +1859,7 @@
     "id": 59,
     "category": "regles",
     "question": "Sur autoroute, sur quelle voie doit-on normalement rouler ?",
-    "image_url": null,
+    "image_url": "/images/situation-autoroute.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1891,7 +1891,7 @@
     "id": 60,
     "category": "regles",
     "question": "Peut-on faire demi-tour sur autoroute ?",
-    "image_url": null,
+    "image_url": "/images/situation-autoroute.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1923,7 +1923,7 @@
     "id": 61,
     "category": "regles",
     "question": "Dans un tunnel, que faire en cas d'incendie ?",
-    "image_url": null,
+    "image_url": "/images/situation-incendie.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1955,7 +1955,7 @@
     "id": 62,
     "category": "regles",
     "question": "Lors d'un dépassement, quand peut-on se rabattre ?",
-    "image_url": null,
+    "image_url": "/images/situation-depassement.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1987,7 +1987,7 @@
     "id": 63,
     "category": "regles",
     "question": "Le dépassement par la droite est-il toujours interdit ?",
-    "image_url": null,
+    "image_url": "/images/situation-depassement.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2019,7 +2019,7 @@
     "id": 64,
     "category": "regles",
     "question": "Dans un carrefour giratoire, dans quel sens circule-t-on ?",
-    "image_url": null,
+    "image_url": "/images/panneau_giratoire.png",
     "video_url": null,
     "answers": [
       {
@@ -2051,7 +2051,7 @@
     "id": 65,
     "category": "regles",
     "question": "Les feux de détresse (warnings) sont obligatoires dans quelle situation ?",
-    "image_url": null,
+    "image_url": "/images/situation-panne-autoroute.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2083,7 +2083,7 @@
     "id": 66,
     "category": "securite",
     "question": "Un enfant de 4 ans doit être installé comment dans un véhicule ?",
-    "image_url": null,
+    "image_url": "/images/securite-siege-enfant.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2115,7 +2115,7 @@
     "id": 67,
     "category": "securite",
     "question": "En cas d'accident avec blessés, quelle est la priorité absolue ?",
-    "image_url": null,
+    "image_url": "/images/securite-accident.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2147,7 +2147,7 @@
     "id": 68,
     "category": "securite",
     "question": "Le gilet de haute visibilité doit être accessible :",
-    "image_url": null,
+    "image_url": "/images/securite-gilet.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2179,7 +2179,7 @@
     "id": 69,
     "category": "securite",
     "question": "La profondeur minimale légale des sculptures de pneus ?",
-    "image_url": null,
+    "image_url": "/images/securite-pneu-usure.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2211,7 +2211,7 @@
     "id": 70,
     "category": "securite",
     "question": "L'aquaplanage se produit quand :",
-    "image_url": null,
+    "image_url": "/images/securite-aquaplanage.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2243,7 +2243,7 @@
     "id": 71,
     "category": "securite",
     "question": "La fatigue au volant multiplie le risque d'accident par :",
-    "image_url": null,
+    "image_url": "/images/securite-fatigue.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2275,7 +2275,7 @@
     "id": 72,
     "category": "securite",
     "question": "En cas de crevaison sur autoroute, que faire en priorité ?",
-    "image_url": null,
+    "image_url": "/images/securite-crevaison.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2339,7 +2339,7 @@
     "id": 74,
     "category": "securite",
     "question": "Dans un virage, pourquoi ne pas freiner brutalement ?",
-    "image_url": null,
+    "image_url": "/images/securite-virage.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2371,7 +2371,7 @@
     "id": 75,
     "category": "permis",
     "question": "Combien de points possède un nouveau conducteur ?",
-    "image_url": null,
+    "image_url": "/images/permis-points.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2403,7 +2403,7 @@
     "id": 76,
     "category": "permis",
     "question": "Le permis de conduire comporte combien de points maximum ?",
-    "image_url": null,
+    "image_url": "/images/permis-12points.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2435,7 +2435,7 @@
     "id": 77,
     "category": "permis",
     "question": "Combien de temps sans infraction pour reconstituer intégralement son capital de points ?",
-    "image_url": null,
+    "image_url": "/images/permis-reconstitution.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2467,7 +2467,7 @@
     "id": 78,
     "category": "vehicule",
     "question": "À quelle fréquence le contrôle technique est-il obligatoire ?",
-    "image_url": null,
+    "image_url": "/images/vehicule-ct.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2499,7 +2499,7 @@
     "id": 79,
     "category": "vehicule",
     "question": "L'assurance responsabilité civile est-elle obligatoire ?",
-    "image_url": null,
+    "image_url": "/images/vehicule-assurance.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2531,7 +2531,7 @@
     "id": 80,
     "category": "vehicule",
     "question": "Un extincteur est-il obligatoire dans une voiture particulière ?",
-    "image_url": null,
+    "image_url": "/images/vehicule-extincteur.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2596,7 +2596,7 @@
     "category": "situation",
     "question": "🎬 Situation : vous circulez en agglomération la nuit. Devez-vous allumer vos feux ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-ville-nuit.jpg",
     "answers": [
       {
         "id": "a",
@@ -2628,7 +2628,7 @@
     "category": "situation",
     "question": "🎬 Un piéton traverse en dehors du passage piéton. Qui a la priorité ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-pieton-hors.jpg",
     "answers": [
       {
         "id": "a",
@@ -2660,7 +2660,7 @@
     "category": "situation",
     "question": "🎬 Vous approchez d'une intersection. Le feu passe à l'orange. Que faites-vous ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-feu-orange.jpg",
     "answers": [
       {
         "id": "a",
@@ -2692,7 +2692,7 @@
     "category": "situation",
     "question": "🎬 Sur une voie à sens unique, vous tournez à gauche. Devez-vous vous placer à gauche avant de tourner ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-sens-unique.jpg",
     "answers": [
       {
         "id": "a",
@@ -2756,7 +2756,7 @@
     "category": "situation",
     "question": "🎬 Vous circulez sur route à 80 km/h derrière un tracteur. Pouvez-vous dépasser ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-tracteur.jpg",
     "answers": [
       {
         "id": "a",
@@ -2820,7 +2820,7 @@
     "category": "situation",
     "question": "🎬 Situation : embouteillage sur autoroute. Un véhicule de secours approche avec sirène. Que fait-on ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-couloir-urgence.jpg",
     "answers": [
       {
         "id": "a",
@@ -2851,7 +2851,7 @@
     "id": 90,
     "category": "situation",
     "question": "Sur route de montagne étroite, deux voitures se croisent. Qui cède ?",
-    "image_url": null,
+    "image_url": "/images/situation-montagne.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2884,7 +2884,7 @@
     "category": "situation",
     "question": "🎬 Vous circulez en ville. Un enfant court vers la route. Que faites-vous ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-enfant.jpg",
     "answers": [
       {
         "id": "a",
@@ -2915,7 +2915,7 @@
     "id": 92,
     "category": "regles",
     "question": "Que signifie la ligne jaune discontinue sur le bord de la chaussée ?",
-    "image_url": null,
+    "image_url": "/images/ligne_jaune.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2947,7 +2947,7 @@
     "id": 93,
     "category": "regles",
     "question": "Recharger son téléphone (branché, sans y toucher) en conduisant est-il autorisé ?",
-    "image_url": null,
+    "image_url": "/images/securite-gilet.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2979,7 +2979,7 @@
     "id": 94,
     "category": "securite",
     "question": "Le triangle de présignalisation est-il obligatoire dans le véhicule ?",
-    "image_url": null,
+    "image_url": "/images/securite-triangle.jpg",
     "video_url": null,
     "answers": [
       {
@@ -3011,7 +3011,7 @@
     "id": 95,
     "category": "securite",
     "question": "Une trousse de premiers secours est-elle obligatoire en voiture particulière ?",
-    "image_url": null,
+    "image_url": "/images/securite-trousse.jpg",
     "video_url": null,
     "answers": [
       {
@@ -3043,7 +3043,7 @@
     "id": 96,
     "category": "regles",
     "question": "Peut-on stationner devant un passage piéton ?",
-    "image_url": null,
+    "image_url": "/images/situation-pieton-hors.jpg",
     "video_url": null,
     "answers": [
       {
@@ -3075,7 +3075,7 @@
     "id": 97,
     "category": "regles",
     "question": "Peut-on dépasser un véhicule arrêté devant un passage piéton ?",
-    "image_url": null,
+    "image_url": "/images/situation-pieton-hors.jpg",
     "video_url": null,
     "answers": [
       {
@@ -3107,7 +3107,7 @@
     "id": 98,
     "category": "regles",
     "question": "Dans quel sens doit-on circuler dans un carrefour giratoire ?",
-    "image_url": null,
+    "image_url": "/images/panneau_giratoire.png",
     "video_url": null,
     "answers": [
       {
@@ -3139,7 +3139,7 @@
     "id": 99,
     "category": "vitesse",
     "question": "Votre voiture équipée de pneus neige peut-elle rouler à la vitesse normale en été ?",
-    "image_url": null,
+    "image_url": "/images/securite-pneu-usure.jpg",
     "video_url": null,
     "answers": [
       {
@@ -3172,7 +3172,7 @@
     "category": "securite",
     "question": "🎬 Votre capot s'ouvre brusquement en roulant. Que faire ?",
     "video_url": null,
-    "image_url": null,
+    "image_url": "/images/situation-capot.jpg",
     "answers": [
       {
         "id": "a",
@@ -3384,7 +3384,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, quelle est la vitesse maximale sur une route ordinaire hors agglomération ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Belgian_road_sign_C43_%2890%29.svg/240px-Belgian_road_sign_C43_%2890%29.svg.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "80 km/h" },
@@ -3403,7 +3403,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, quelle est la vitesse maximale autorisée sur autoroute par temps sec ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Belgian_road_sign_C43_%28120%29.svg/240px-Belgian_road_sign_C43_%28120%29.svg.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "110 km/h" },
@@ -3498,7 +3498,7 @@
     "category": "priorites",
     "country": "belgique",
     "question": "En Belgique, à une intersection sans panneau ni marquage, qui est prioritaire ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Le véhicule venant de gauche" },
@@ -3517,7 +3517,7 @@
     "category": "alcool",
     "country": "belgique",
     "question": "Quel est le taux d'alcoolémie maximal autorisé pour conduire en Belgique (conducteur ordinaire) ?",
-    "image_url": null,
+    "image_url": "/images/alcool-belgique.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "0,2 g/L" },
@@ -3536,7 +3536,7 @@
     "category": "alcool",
     "country": "belgique",
     "question": "En Belgique, quel taux s'applique aux nouveaux conducteurs (permis de moins de 2 ans) ?",
-    "image_url": null,
+    "image_url": "/images/alcool-probatoire-be.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "0,5 g/L" },
@@ -3555,7 +3555,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, dans une agglomération, quelle est la vitesse maximale par défaut ?",
-    "image_url": null,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Belgian_road_sign_C43_%2850%29.svg/240px-Belgian_road_sign_C43_%2850%29.svg.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "30 km/h" },
@@ -3574,7 +3574,7 @@
     "category": "securite",
     "country": "belgique",
     "question": "En Belgique, le port de la ceinture de sécurité est-il obligatoire à l'arrière du véhicule ?",
-    "image_url": null,
+    "image_url": "/images/securite-ceinture-be.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Non, uniquement à l'avant" },
@@ -3593,7 +3593,7 @@
     "category": "regles",
     "country": "belgique",
     "question": "En Belgique, combien de gilets réfléchissants doit-on avoir dans son véhicule ?",
-    "image_url": null,
+    "image_url": "/images/securite-gilet.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Aucun, ce n'est pas obligatoire" },
@@ -3612,7 +3612,7 @@
     "category": "regles",
     "country": "belgique",
     "question": "En Belgique, le triangle de signalisation est-il obligatoire dans votre véhicule ?",
-    "image_url": null,
+    "image_url": "/images/securite-triangle.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Non, il n'est pas obligatoire" },
@@ -3650,7 +3650,7 @@
     "category": "securite",
     "country": "belgique",
     "question": "En Belgique, que devez-vous faire lorsqu'un véhicule de secours (gyrophare + sirène) s'approche ?",
-    "image_url": null,
+    "image_url": "/images/securite-couloir-be.jpg",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Continuer normalement, ils doivent s'adapter" },
