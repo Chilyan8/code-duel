@@ -3,7 +3,7 @@
     "id": 1,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/France_road_sign_B1.svg/240px-France_road_sign_B1.svg.png",
+    "image_url": "/images/panneau-b1.png",
     "video_url": null,
     "answers": [
       {
@@ -35,7 +35,7 @@
     "id": 2,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/France_road_sign_AB3a.svg/240px-France_road_sign_AB3a.svg.png",
+    "image_url": "/images/panneau-ab3a.png",
     "video_url": null,
     "answers": [
       {
@@ -67,7 +67,7 @@
     "id": 3,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/240px-France_road_sign_AB4.svg.png",
+    "image_url": "/images/panneau-ab4.png",
     "video_url": null,
     "answers": [
       {
@@ -99,7 +99,7 @@
     "id": 4,
     "category": "panneaux",
     "question": "Quelle est la limitation indiquée par ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/240px-France_road_sign_B14-50.svg.png",
+    "image_url": "/images/panneau-b14-50.png",
     "video_url": null,
     "answers": [
       {
@@ -131,7 +131,7 @@
     "id": 5,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/France_road_sign_B2a.svg/240px-France_road_sign_B2a.svg.png",
+    "image_url": "/images/panneau-b2a.png",
     "video_url": null,
     "answers": [
       {
@@ -163,7 +163,7 @@
     "id": 6,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/France_road_sign_B26.svg/240px-France_road_sign_B26.svg.png",
+    "image_url": "/images/panneau-b26.png",
     "video_url": null,
     "answers": [
       {
@@ -195,7 +195,7 @@
     "id": 7,
     "category": "panneaux",
     "question": "Que signifie ce panneau triangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/France_road_sign_A7.svg/240px-France_road_sign_A7.svg.png",
+    "image_url": "/images/panneau-a7.png",
     "video_url": null,
     "answers": [
       {
@@ -227,7 +227,7 @@
     "id": 8,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/France_road_sign_B21d1.svg/240px-France_road_sign_B21d1.svg.png",
+    "image_url": "/images/panneau-b21d1.png",
     "video_url": null,
     "answers": [
       {
@@ -259,7 +259,7 @@
     "id": 9,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/France_road_sign_B22a.svg/240px-France_road_sign_B22a.svg.png",
+    "image_url": "/images/panneau-b22a.png",
     "video_url": null,
     "answers": [
       {
@@ -291,7 +291,7 @@
     "id": 10,
     "category": "panneaux",
     "question": "Ce panneau rouge avec deux voitures signifie :",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/France_road_sign_B3.svg/240px-France_road_sign_B3.svg.png",
+    "image_url": "/images/panneau-b3.png",
     "video_url": null,
     "answers": [
       {
@@ -323,7 +323,7 @@
     "id": 11,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/France_road_sign_B14-30.svg/240px-France_road_sign_B14-30.svg.png",
+    "image_url": "/images/panneau-b14-30.png",
     "video_url": null,
     "answers": [
       {
@@ -355,7 +355,7 @@
     "id": 12,
     "category": "panneaux",
     "question": "Sur autoroute, que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/France_road_sign_B14-130.svg/240px-France_road_sign_B14-130.svg.png",
+    "image_url": "/images/panneau-b14-130.png",
     "video_url": null,
     "answers": [
       {
@@ -387,7 +387,7 @@
     "id": 13,
     "category": "panneaux",
     "question": "Que signifie ce panneau triangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/France_road_sign_A6a.svg/240px-France_road_sign_A6a.svg.png",
+    "image_url": "/images/panneau-a6a.png",
     "video_url": null,
     "answers": [
       {
@@ -419,7 +419,7 @@
     "id": 14,
     "category": "panneaux",
     "question": "Que signifie ce panneau triangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/France_road_sign_A1a.svg/240px-France_road_sign_A1a.svg.png",
+    "image_url": "/images/panneau-a1a.png",
     "video_url": null,
     "answers": [
       {
@@ -451,7 +451,7 @@
     "id": 15,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/France_road_sign_B14-80.svg/240px-France_road_sign_B14-80.svg.png",
+    "image_url": "/images/panneau-b14-80.png",
     "video_url": null,
     "answers": [
       {
@@ -483,7 +483,7 @@
     "id": 16,
     "category": "panneaux",
     "question": "Que signifie ce panneau ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/240px-France_road_sign_B14-110.svg.png",
+    "image_url": "/images/panneau-b14-110.png",
     "video_url": null,
     "answers": [
       {
@@ -515,7 +515,7 @@
     "id": 17,
     "category": "panneaux",
     "question": "Ce panneau avec une croix de Saint-André signifie :",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/France_road_sign_AB1.svg/240px-France_road_sign_AB1.svg.png",
+    "image_url": "/images/panneau-ab1.png",
     "video_url": null,
     "answers": [
       {
@@ -547,7 +547,7 @@
     "id": 18,
     "category": "panneaux",
     "question": "Que signifie ce panneau bleu rectangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/France_road_sign_C13a.svg/240px-France_road_sign_C13a.svg.png",
+    "image_url": "/images/panneau-c13a.png",
     "video_url": null,
     "answers": [
       {
@@ -579,7 +579,7 @@
     "id": 19,
     "category": "panneaux",
     "question": "Que signifie ce panneau triangulaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/France_road_sign_A2a.svg/240px-France_road_sign_A2a.svg.png",
+    "image_url": "/images/panneau-a2a.png",
     "video_url": null,
     "answers": [
       {
@@ -611,7 +611,7 @@
     "id": 20,
     "category": "panneaux",
     "question": "Que signifie ce panneau bleu avec un 'P' et une horloge ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/France_road_sign_B6a1.svg/240px-France_road_sign_B6a1.svg.png",
+    "image_url": "/images/panneau-b6a1.png",
     "video_url": null,
     "answers": [
       {
@@ -963,7 +963,7 @@
     "id": 31,
     "category": "situation",
     "question": "Vous voyez ce marquage au sol. Que signifie-t-il ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Stop_line_France.jpg/320px-Stop_line_France.jpg",
+    "image_url": "/images/marquage-ligne-arret.jpg",
     "video_url": null,
     "answers": [
       {
@@ -995,7 +995,7 @@
     "id": 32,
     "category": "situation",
     "question": "Vous approchez de ce croisement. Quel panneau dicte votre comportement ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/STOP_sign.jpg/320px-STOP_sign.jpg",
+    "image_url": "/images/panneau-stop.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1027,7 +1027,7 @@
     "id": 33,
     "category": "situation",
     "question": "Cette signalisation au sol indique :",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Zebra_crossing_France.jpg/320px-Zebra_crossing_France.jpg",
+    "image_url": "/images/marquage-pieton.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1059,7 +1059,7 @@
     "id": 34,
     "category": "situation",
     "question": "Vous voyez ce panneau en entrant dans une commune. Quelle est votre vitesse maximale ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/France_road_sign_EB10.svg/320px-France_road_sign_EB10.svg.png",
+    "image_url": "/images/panneau-eb10.png",
     "video_url": null,
     "answers": [
       {
@@ -1091,7 +1091,7 @@
     "id": 35,
     "category": "situation",
     "question": "Vous voyez ces marquages sur la chaussée. Pouvez-vous dépasser ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/French_road_marking_continuous_line.jpg/320px-French_road_marking_continuous_line.jpg",
+    "image_url": "/images/marquage-ligne-continue.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1123,7 +1123,7 @@
     "id": 36,
     "category": "situation",
     "question": "Que représente ce panneau de signalisation temporaire orange ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/France_route_travaux.jpg/320px-France_route_travaux.jpg",
+    "image_url": "/images/panneau-travaux.jpg",
     "video_url": null,
     "answers": [
       {
@@ -1155,7 +1155,7 @@
     "id": 37,
     "category": "priorites",
     "question": "À une intersection sans aucune signalisation, quelle règle s'applique ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
+    "image_url": "/images/panneau-priorite-droite.png",
     "video_url": null,
     "answers": [
       {
@@ -1187,7 +1187,7 @@
     "id": 38,
     "category": "priorites",
     "question": "Un cycliste arrive à votre droite à une intersection non signalisée. Qui est prioritaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
+    "image_url": "/images/panneau-priorite-droite.png",
     "video_url": null,
     "answers": [
       {
@@ -1219,7 +1219,7 @@
     "id": 39,
     "category": "priorites",
     "question": "Vous êtes sur une route prioritaire (losange jaune). À une intersection, qui passe ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/France_road_sign_AB4.svg/120px-France_road_sign_AB4.svg.png",
+    "image_url": "/images/panneau-ab4.png",
     "video_url": null,
     "answers": [
       {
@@ -1251,7 +1251,7 @@
     "id": 40,
     "category": "priorites",
     "question": "À un passage piéton sans feux, un piéton s'apprête à traverser. Que faites-vous ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/French_road_sign_AB6.svg/240px-French_road_sign_AB6.svg.png",
+    "image_url": "/images/panneau-ab6.png",
     "video_url": null,
     "answers": [
       {
@@ -1315,7 +1315,7 @@
     "id": 42,
     "category": "priorites",
     "question": "Sur un rond-point sans signalisation (rare en France), qui est prioritaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/French_road_sign_AB25.svg/240px-French_road_sign_AB25.svg.png",
+    "image_url": "/images/panneau-ab25.png",
     "video_url": null,
     "answers": [
       {
@@ -1379,7 +1379,7 @@
     "id": 44,
     "category": "vitesse",
     "question": "Vitesse maximale sur autoroute par temps sec ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/France_road_sign_B14-130.svg/120px-France_road_sign_B14-130.svg.png",
+    "image_url": "/images/panneau-b14-130.png",
     "video_url": null,
     "answers": [
       {
@@ -1411,7 +1411,7 @@
     "id": 45,
     "category": "vitesse",
     "question": "Quelle est la vitesse max sur route hors agglo sans séparateur central depuis 2018 ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/France_road_sign_B14-80.svg/120px-France_road_sign_B14-80.svg.png",
+    "image_url": "/images/panneau-b14-80.png",
     "video_url": null,
     "answers": [
       {
@@ -1443,7 +1443,7 @@
     "id": 46,
     "category": "vitesse",
     "question": "En agglomération, sauf panneau contraire, quelle est la vitesse maximum ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/120px-France_road_sign_B14-50.svg.png",
+    "image_url": "/images/panneau-b14-50.png",
     "video_url": null,
     "answers": [
       {
@@ -1507,7 +1507,7 @@
     "id": 48,
     "category": "vitesse",
     "question": "Sur autoroute par temps de pluie, quelle est la vitesse max ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/120px-France_road_sign_B14-110.svg.png",
+    "image_url": "/images/panneau-b14-110.png",
     "video_url": null,
     "answers": [
       {
@@ -1539,7 +1539,7 @@
     "id": 49,
     "category": "vitesse",
     "question": "Conducteur en permis probatoire : vitesse max sur autoroute ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/France_road_sign_B14-110.svg/120px-France_road_sign_B14-110.svg.png",
+    "image_url": "/images/panneau-b14-110.png",
     "video_url": null,
     "answers": [
       {
@@ -1571,7 +1571,7 @@
     "id": 50,
     "category": "vitesse",
     "question": "Distance d'arrêt totale à 50 km/h sur route sèche (réaction + freinage) ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/France_road_sign_B14-50.svg/120px-France_road_sign_B14-50.svg.png",
+    "image_url": "/images/panneau-b14-50.png",
     "video_url": null,
     "answers": [
       {
@@ -2307,7 +2307,7 @@
     "id": 73,
     "category": "securite",
     "question": "À un passage à niveau sans barrières, que faire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/France_road_sign_A7.svg/120px-France_road_sign_A7.svg.png",
+    "image_url": "/images/panneau-a7.png",
     "video_url": null,
     "answers": [
       {
@@ -2563,7 +2563,7 @@
     "id": 81,
     "category": "situation",
     "question": "Vous voyez ce marquage au sol avant un passage piéton. Que signifie-t-il ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Zig-zag_road_marking.jpg/320px-Zig-zag_road_marking.jpg",
+    "image_url": "/images/marquage-zigzag.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2723,7 +2723,7 @@
     "id": 86,
     "category": "situation",
     "question": "Quelle est la bonne position sur la route pour un cycliste ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Cyclist_on_road_France.jpg/320px-Cyclist_on_road_France.jpg",
+    "image_url": "/images/cycliste-route.jpg",
     "video_url": null,
     "answers": [
       {
@@ -2787,7 +2787,7 @@
     "id": 88,
     "category": "situation",
     "question": "Vous voyez ce panneau. Que signifie-t-il pour votre conduite ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/France_road_sign_A6a.svg/180px-France_road_sign_A6a.svg.png",
+    "image_url": "/images/panneau-a6a.png",
     "video_url": null,
     "answers": [
       {
@@ -3384,7 +3384,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, quelle est la vitesse maximale sur une route ordinaire hors agglomération ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Belgian_road_sign_C43_%2890%29.svg/240px-Belgian_road_sign_C43_%2890%29.svg.png",
+    "image_url": "/images/panneau-be-90.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "80 km/h" },
@@ -3403,7 +3403,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, quelle est la vitesse maximale autorisée sur autoroute par temps sec ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Belgian_road_sign_C43_%28120%29.svg/240px-Belgian_road_sign_C43_%28120%29.svg.png",
+    "image_url": "/images/panneau-be-120.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "110 km/h" },
@@ -3422,7 +3422,7 @@
     "category": "panneaux",
     "country": "belgique",
     "question": "Que signifie ce panneau belge C1 ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Belgian_road_sign_C1.svg/240px-Belgian_road_sign_C1.svg.png",
+    "image_url": "/images/panneau-be-c1.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Sens interdit à tous les véhicules" },
@@ -3441,7 +3441,7 @@
     "category": "panneaux",
     "country": "belgique",
     "question": "Que signifie ce panneau belge B5 ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Belgian_road_sign_B5.svg/240px-Belgian_road_sign_B5.svg.png",
+    "image_url": "/images/panneau-be-b5.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Cédez le passage" },
@@ -3460,7 +3460,7 @@
     "category": "panneaux",
     "country": "belgique",
     "question": "Que signifie ce panneau belge B7 (triangle pointe en bas) ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/Belgian_road_sign_B7.svg/240px-Belgian_road_sign_B7.svg.png",
+    "image_url": "/images/panneau-be-b7.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Route prioritaire" },
@@ -3479,7 +3479,7 @@
     "category": "panneaux",
     "country": "belgique",
     "question": "Que signifie ce panneau belge F1 (flèche blanche sur fond bleu) ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Belgian_road_sign_F1.svg/240px-Belgian_road_sign_F1.svg.png",
+    "image_url": "/images/panneau-be-f1.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Chaussée à sens unique" },
@@ -3498,7 +3498,7 @@
     "category": "priorites",
     "country": "belgique",
     "question": "En Belgique, à une intersection sans panneau ni marquage, qui est prioritaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Priorite_a_droite.svg/240px-Priorite_a_droite.svg.png",
+    "image_url": "/images/panneau-priorite-droite.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Le véhicule venant de gauche" },
@@ -3555,7 +3555,7 @@
     "category": "vitesse",
     "country": "belgique",
     "question": "En Belgique, dans une agglomération, quelle est la vitesse maximale par défaut ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Belgian_road_sign_C43_%2850%29.svg/240px-Belgian_road_sign_C43_%2850%29.svg.png",
+    "image_url": "/images/panneau-be-50.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "30 km/h" },
@@ -3631,7 +3631,7 @@
     "category": "priorites",
     "country": "belgique",
     "question": "En Belgique, comment est signalée la fin d'une route prioritaire ?",
-    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Belgian_road_sign_B4.svg/240px-Belgian_road_sign_B4.svg.png",
+    "image_url": "/images/panneau-be-b4.png",
     "video_url": null,
     "answers": [
       { "id": "a", "text": "Un losange jaune barré d'une bande diagonale noire" },
